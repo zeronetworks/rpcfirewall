@@ -660,6 +660,7 @@ void loadConfigurationFromMappedMemory()
 		{
 			WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("Error: Could not map view of file."));
 			CloseHandle(hConfigurationMapFile);
+			hConfigurationMapFile = NULL;
 		}
 
 		for (int i = 0; i < 5; i++)
