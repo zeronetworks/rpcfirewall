@@ -344,7 +344,7 @@ std::wstring StringToWString(const std::string& s)
 
 std::basic_string<TCHAR> extractKeyValueFromConfigLine(std::basic_string<TCHAR> confLine, std::basic_string<TCHAR> key)
 {
-	confLine.replace(confLine.size() - 2, 1, _T(" "));
+	confLine.replace(confLine.size() - 1, 1, _T(" "));
 	size_t keyOffset = confLine.find(key);
 
 	if (keyOffset == std::string::npos) return _T("\0");
