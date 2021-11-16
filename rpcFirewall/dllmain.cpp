@@ -496,15 +496,15 @@ BOOL checkKeyValueInConfigLine(TCHAR* confLine, TCHAR* key,DWORD keySize,std::ba
 
 	size_t keyEndOffset = confString.find(_T(" "), keyOffset);
 	size_t configValueSize = keyEndOffset - keyOffset - keySize;
-
-	TCHAR* configValue = (TCHAR*)confString.substr(keyOffset + keySize, configValueSize).c_str();
-
+	
 	if (configValueSize != value.size())
 	{
 		return FALSE;
 	}
 
-	return compareStringsCaseinsensitive(configValue, (TCHAR*)value.c_str(), configValueSize);
+	auto configValueStr = confString.substr(keyOffset + keySize, configValueSize);
+
+	return compareStringsCaseinsensitive((TCHAR*)configValueStr.c_str(), (TCHAR*)value.c_str(), configValueSize);
 }
 
 BOOL checkAudit(TCHAR* confLine)
