@@ -150,10 +150,8 @@ TCHAR* getFullPathOfFile(TCHAR* filename)
 	return filePath;
 }
 
-BOOL createSecurityAttributes(SECURITY_ATTRIBUTES * psa)
+BOOL createSecurityAttributes(SECURITY_ATTRIBUTES * psa, PSECURITY_DESCRIPTOR psd)
 {
-	PSECURITY_DESCRIPTOR psd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
-
 	if (InitializeSecurityDescriptor(psd, SECURITY_DESCRIPTOR_REVISION) != 0)
 	{
 		if (SetSecurityDescriptorDacl(psd, TRUE, NULL, FALSE) != 0)
@@ -161,29 +159,30 @@ BOOL createSecurityAttributes(SECURITY_ATTRIBUTES * psa)
 			(*psa).nLength = sizeof(*psa);
 			(*psa).lpSecurityDescriptor = psd;
 			(*psa).bInheritHandle = FALSE;
+
+			return TRUE;
 		}
 		else
 		{
 			_tprintf(TEXT("SetSecurityDescriptorDacl failed : %d.\n"), GetLastError());
-			return FALSE;
 		}
 	}
 	else
 	{
 		_tprintf(TEXT("InitializeSecurityDescriptor failed : %d.\n"), GetLastError());
-		return FALSE;
 	}
-	return TRUE;
 
+	return FALSE;
 }
 
 HANDLE createGlobalEvent(BOOL manualReset,BOOL initialState, TCHAR* eventName)
 {
 	HANDLE gEvent = NULL;
 	SECURITY_ATTRIBUTES sa = { 0 };
+	PSECURITY_DESCRIPTOR psd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 	
 	//TODO: return value instead of passing as ref
-	if (createSecurityAttributes(&sa))
+	if (createSecurityAttributes(&sa, psd))
 	{
 		gEvent = CreateEvent(&sa, manualReset, initialState, eventName);
 		if (gEvent != NULL)
@@ -199,6 +198,8 @@ HANDLE createGlobalEvent(BOOL manualReset,BOOL initialState, TCHAR* eventName)
 		}
 	}
 
+	LocalFree(psd);
+
 	return gEvent;
 }
 
@@ -211,8 +212,9 @@ HANDLE mapNamedMemory()
 {
 	HANDLE hMapFile = NULL;
 	SECURITY_ATTRIBUTES sa = { 0 };
+	PSECURITY_DESCRIPTOR psd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 
-	if (createSecurityAttributes(&sa))
+	if (createSecurityAttributes(&sa,psd))
 	{
 		hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE, 0, MEM_BUF_SIZE, GLOBAL_SHARED_MEMORY);
 		if (hMapFile == NULL)
@@ -220,6 +222,9 @@ HANDLE mapNamedMemory()
 			_tprintf(TEXT("Error calling CreateFileMapping %d.\n"), GetLastError());
 		}
 	}
+
+	LocalFree(psd);
+
 	return hMapFile;
 }
 
