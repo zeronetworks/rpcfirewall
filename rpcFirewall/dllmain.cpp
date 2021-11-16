@@ -48,7 +48,7 @@ std::vector<LineConfig> configVectorTwo = {};
 
 enum ActiveConfigBufferNumber { One, Two};
 ActiveConfigBufferNumber activeConfBufferNumber = One;
-CHAR* mappedBuf;
+CHAR* mappedBuf = NULL;
 BOOL AuditOnly = FALSE;
 BOOL detouredFunctions = FALSE;
 BOOL verbose = TRUE;
@@ -647,35 +647,47 @@ BOOL checkIfVerbose()
 
 void loadConfigurationFromMappedMemory()
 {
-	hConfigurationMapFile = OpenFileMapping(FILE_MAP_READ,FALSE,GLOBAL_SHARED_MEMORY);               
 	if (hConfigurationMapFile == NULL)
 	{
-		WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("Could not open configuration. Auditing only..."));
-		AuditOnly = TRUE;
+		WRITE_DEBUG_MSG(_TEXT("Calling OpenFileMapping..."));
+		hConfigurationMapFile = OpenFileMapping(FILE_MAP_READ, FALSE, GLOBAL_SHARED_MEMORY);
+
+		if (hConfigurationMapFile == NULL)
+		{
+			WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("Could not open configuration. Auditing only..."));
+			AuditOnly = TRUE;
+
+			return;
+		}
 	}
-	else
+	
+	if (mappedBuf == NULL)
 	{
+		WRITE_DEBUG_MSG(_TEXT("Calling MapViewOfFile..."));
 		mappedBuf = (CHAR*)MapViewOfFile(hConfigurationMapFile, FILE_MAP_READ, 0, 0, MEM_BUF_SIZE);
+
 		if (mappedBuf == NULL)
 		{
 			WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("Error: Could not map view of file."));
 			CloseHandle(hConfigurationMapFile);
 			hConfigurationMapFile = NULL;
-		}
 
-		for (int i = 0; i < 5; i++)
+			return;
+		}
+	}
+
+	for (int i = 0; i < 5; i++)
+	{
+		mappedBufferCopyToPrivateConfiguration();
+		if (isHashValid())
 		{
-			mappedBufferCopyToPrivateConfiguration();
-			if (isHashValid())
+			if (isNewVersion())
 			{
-				if (isNewVersion())
-				{
-					loadPrivateBufferToPassiveVectorConfiguration();
-					changeActiveConfigurationNumber();
-					verbose = checkIfVerbose();
-				}
-				break;
+				loadPrivateBufferToPassiveVectorConfiguration();
+				changeActiveConfigurationNumber();
+				verbose = checkIfVerbose();
 			}
+			break;
 		}
 	}
 }
