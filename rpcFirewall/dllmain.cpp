@@ -931,6 +931,13 @@ void rpcFunctionVerboseOutput(BOOL allowCall, RpcEventParameters eventParams)
 	}
 }
 
+void RpcRuntimeCleanups(RPC_BINDING_HANDLE serverBinding,TCHAR* szStringBinding, TCHAR* szStringBindingServer)
+{
+	if (serverBinding != NULL) RpcBindingFree(&serverBinding);
+	if (szStringBinding != NULL) RpcStringFree((RPC_WSTR*)&szStringBinding);
+	if (szStringBindingServer != NULL) RpcStringFree((RPC_WSTR*)&szStringBindingServer);
+}
+
 BOOL processRPCCallInternal(TCHAR* functionName, PRPC_MESSAGE pRpcMsg)
 {
 	RPC_BINDING_HANDLE serverBinding = NULL;
@@ -946,6 +953,8 @@ BOOL processRPCCallInternal(TCHAR* functionName, PRPC_MESSAGE pRpcMsg)
 		if (status != RPC_S_OK)
 		{
 			WRITE_DEBUG_MSG_WITH_STATUS(_T("RpcBindingServerFromClient failed"), status);
+			RpcRuntimeCleanups(serverBinding, szStringBinding, szStringBindingServer);
+
 			return allowCall;
 		}
 
@@ -953,11 +962,16 @@ BOOL processRPCCallInternal(TCHAR* functionName, PRPC_MESSAGE pRpcMsg)
 		if (status != RPC_S_OK)
 		{
 			WRITE_DEBUG_MSG_WITH_STATUS(_T("RpcBindingToStringBinding failed"), status);
+			RpcRuntimeCleanups(serverBinding, szStringBinding, szStringBindingServer);
+
 			return allowCall;
 		}
+
 		// Consider only calls over network transports
 		if (_tcsstr(szStringBinding, _T("ncalrpc")) != NULL)
 		{
+			RpcRuntimeCleanups(serverBinding, szStringBinding, szStringBindingServer);
+
 			return allowCall;
 		}
 
@@ -984,9 +998,7 @@ BOOL processRPCCallInternal(TCHAR* functionName, PRPC_MESSAGE pRpcMsg)
 		WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("Exception: Runtime error during call"));
 	}
 
-	if (serverBinding != NULL) RpcBindingFree(&serverBinding);
-	if (szStringBindingServer != NULL) RpcStringFree((RPC_WSTR*)&szStringBindingServer);
-	if (szStringBinding != NULL) RpcStringFree((RPC_WSTR*)&szStringBinding);
+	RpcRuntimeCleanups(serverBinding, szStringBinding, szStringBindingServer);
 
 	return allowCall;
 }
