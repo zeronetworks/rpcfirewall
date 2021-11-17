@@ -46,11 +46,11 @@ BOOL compareStringsCaseinsensitive(TCHAR* str1, TCHAR* str2)
     return true;
 }
 
-BOOL compareStringsCaseinsensitive(TCHAR* str1, TCHAR* str2, DWORD maxLen)
+BOOL compareStringsCaseinsensitive(TCHAR* str1, TCHAR* str2, size_t maxLen)
 {
     TCHAR tcharEnd = _T("\0")[0];
 
-    for (int i = 0; i < maxLen; i++)
+    for (size_t i = 0; i < maxLen; i++)
     {
         if ((str1[i] == tcharEnd) || (str2[i] == tcharEnd))
         {
@@ -173,7 +173,7 @@ void addEventSource()
     }
     
     // Register EventMessageFile
-    if (RegSetValueEx(hRegKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ, (PBYTE)szDLLPath, (_tcslen(szDLLPath) + 1) * sizeof TCHAR) != ERROR_SUCCESS)
+    if (RegSetValueEx(hRegKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ, (PBYTE)szDLLPath, (DWORD)((_tcslen(szDLLPath) + 1) *  (DWORD)sizeof(TCHAR))) != ERROR_SUCCESS)
     {
         _tprintf(TEXT("ERROR: setting value to EventMessageFile failed: [%d].\n"), GetLastError());
         return;
@@ -181,7 +181,7 @@ void addEventSource()
     
     // Register supported event types
     DWORD dwTypes = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
-    if (RegSetValueEx(hRegKey, _T("TypesSupported"), 0, REG_DWORD, (LPBYTE)&dwTypes, sizeof dwTypes) != ERROR_SUCCESS)
+    if (RegSetValueEx(hRegKey, _T("TypesSupported"), 0, REG_DWORD, (LPBYTE)&dwTypes, sizeof(dwTypes)) != ERROR_SUCCESS)
     {
         _tprintf(TEXT("ERROR: setting value to TypesSupported failed: [%d].\n"), GetLastError());
         return;
@@ -194,7 +194,7 @@ void addEventSource()
 BOOL processProtectedEvent(BOOL successfulInjection, TCHAR* processName, TCHAR* processID) {
 
     bool bSuccess = FALSE;
-    DWORD eventType = EVENTLOG_AUDIT_SUCCESS;
+    WORD eventType = EVENTLOG_AUDIT_SUCCESS;
     LPCTSTR aInsertions[2] = { NULL, NULL };
 
     if (!successfulInjection) {
@@ -229,7 +229,7 @@ BOOL processProtectedEvent(BOOL successfulInjection, TCHAR* processName, TCHAR* 
 BOOL processUnprotectedEvent(BOOL successfulIUnloading, TCHAR* processName, TCHAR* processID) {
 
     bool bSuccess = FALSE;
-    DWORD eventType = EVENTLOG_AUDIT_SUCCESS;
+    WORD eventType = EVENTLOG_AUDIT_SUCCESS;
     LPCTSTR aInsertions[2] = { NULL, NULL };
 
     if (!successfulIUnloading) {
@@ -280,7 +280,7 @@ std::basic_string<TCHAR> escapeIpv6Address(TCHAR* sourceAddress)
 BOOL rpcFunctionCalledEvent(BOOL callSuccessful, RpcEventParameters eventParams)
 {
     bool bSuccess = FALSE;
-    DWORD eventType = EVENTLOG_AUDIT_SUCCESS;
+    WORD eventType = EVENTLOG_AUDIT_SUCCESS;
     LPCWSTR aInsertions[11] = {NULL};
    
     if (!callSuccessful) {
@@ -319,7 +319,6 @@ BOOL rpcFunctionCalledEvent(BOOL callSuccessful, RpcEventParameters eventParams)
             NULL                       
         );
     }
-    else
 
     return bSuccess;
 }

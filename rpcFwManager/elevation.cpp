@@ -73,7 +73,6 @@ BOOL amISYSTEM()
 	DWORD dwError = ERROR_SUCCESS;
 
 	PTOKEN_MANDATORY_LABEL pTIL = NULL;
-	LPWSTR pStringSid;
 	DWORD dwIntegrityLevel;
 
 	hProcess = GetCurrentProcess();
@@ -121,7 +120,7 @@ BOOL setPrivilege(
 		lpszPrivilege,   // privilege to lookup 
 		&luid))        // receives LUID of privilege
 	{
-		_tprintf(TEXT("LookupPrivilegeValue error: %u\n", GetLastError()));
+		_tprintf(TEXT("LookupPrivilegeValue error: %u\n"), GetLastError());
 		return FALSE;
 	}
 
@@ -142,7 +141,7 @@ BOOL setPrivilege(
 		(PTOKEN_PRIVILEGES)NULL,
 		(PDWORD)NULL))
 	{
-		_tprintf(TEXT("AdjustTokenPrivileges error: %u\n", GetLastError()));
+		_tprintf(TEXT("AdjustTokenPrivileges error: %u\n"), GetLastError());
 		return FALSE;
 	}
 

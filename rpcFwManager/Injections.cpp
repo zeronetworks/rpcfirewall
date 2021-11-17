@@ -6,6 +6,7 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 	if (hProcess == NULL)
 	{
 		_tprintf(TEXT("OpenProcess failed for pid %u: [%d]\n"), processID,GetLastError());
+		return;
 	}
 
 	const char* szInjectionDLLName = _bstr_t(dllToInject);
@@ -84,8 +85,6 @@ std::pair<BOOL,BOOL> containsRPCModules(DWORD dwPID)
 
 void classicHookRPCProcesses(DWORD processID, TCHAR* dllToInject)
 {
-	DWORD cbNeeded;
-
 	std::pair<BOOL,BOOL> containsModules = containsRPCModules(processID);
 	BOOL containsRPC = containsModules.first;
 	BOOL containsRPCFW = containsModules.second;

@@ -158,7 +158,6 @@ copy /Y "$(SolutionDir)easyhook\Deploy\NetFX3.5\EasyHook*.lib" $(TargetDir)</Com
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
       <ControlFlowGuard>false</ControlFlowGuard>
       <AdditionalIncludeDirectories>$(SolutionDir)rpcMessages\</AdditionalIncludeDirectories>
     </ClCompile>
