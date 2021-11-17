@@ -46,8 +46,8 @@ std::basic_string<CHAR> privateConfigBuffer = {};
 std::vector<LineConfig> configVectorOne = {};
 std::vector<LineConfig> configVectorTwo = {};
 
-enum ActiveConfigBufferNumber { One, Two};
-ActiveConfigBufferNumber activeConfBufferNumber = One;
+enum class ActiveConfigBufferNumber { One, Two};
+ActiveConfigBufferNumber activeConfBufferNumber = ActiveConfigBufferNumber::One;
 CHAR* mappedBuf = NULL;
 BOOL AuditOnly = FALSE;
 BOOL detouredFunctions = FALSE;
@@ -94,19 +94,19 @@ std::basic_string<T> to_tstring(U arg)
 
 void changeActiveConfigurationNumber()
 {
-	if (activeConfBufferNumber == One)
+	if (activeConfBufferNumber == ActiveConfigBufferNumber::One)
 	{
-		activeConfBufferNumber = Two;
+		activeConfBufferNumber = ActiveConfigBufferNumber::Two;
 	}
 	else
 	{
-		activeConfBufferNumber = One;
+		activeConfBufferNumber = ActiveConfigBufferNumber::One;
 	}
 }
 
 std::vector<LineConfig>& getActiveConfigurationVector()
 {
-	if (activeConfBufferNumber == One)
+	if (activeConfBufferNumber == ActiveConfigBufferNumber::One)
 	{
 		return configVectorOne;
 	}
@@ -115,7 +115,7 @@ std::vector<LineConfig>& getActiveConfigurationVector()
 
 std::vector<LineConfig>& getNonActiveConfigurationVector()
 {
-	if (activeConfBufferNumber == One)
+	if (activeConfBufferNumber == ActiveConfigBufferNumber::One)
 	{
 		return configVectorTwo;
 	}
@@ -220,7 +220,7 @@ BOOL checkIfReleventRegisteredEndpointsForProcess()
 	RPC_STATUS status = RpcServerInqBindings(&binding_vector);
 	if (status == RPC_S_OK)
 	{
-		for (int i = 0; i < binding_vector->Count; i++)
+		for (unsigned long i = 0; i < binding_vector->Count; i++)
 		{
 			status = RpcBindingToStringBinding(binding_vector->BindingH[i], &szStringBinding);
 			if (status == RPC_S_OK)
@@ -261,7 +261,7 @@ BOOL checkIfRegisteredUUIDsForProcess()
 	RPC_STATUS status = RpcMgmtInqIfIds(NULL, &if_id_vector);
 	if (status == RPC_S_OK)
 	{
-		for (int i = 0; i < if_id_vector->Count; i++)
+		for (unsigned long i = 0; i < if_id_vector->Count; i++)
 		{
 			status = UuidToString(&(if_id_vector->IfId[i]->Uuid), &szStringUuid);
 			if (status == RPC_S_OK)
@@ -320,7 +320,7 @@ std::basic_string<TCHAR> convertAuthSvcToString(unsigned long authSvc)
 	return TEXT("UNKNOWN");
 }
 
-std::tuple<DWORD, DWORD, BOOL> getConfigOffsets(std::basic_string<CHAR> confStr)
+std::tuple<size_t, size_t, BOOL> getConfigOffsets(std::basic_string<CHAR> confStr)
 {
 	size_t start_pos = confStr.find("!start!");
 	size_t end_pos = confStr.find("!end!");
@@ -390,7 +390,7 @@ OpNumStruct extractOpNumFromConfigLine(std::basic_string<TCHAR> confLine)
 			opnumStruct.opnum = std::stoi(opnumString);
 			opnumStruct.anyOpnum = FALSE;
 		}
-		catch (const std::invalid_argument& ia) {
+		catch (const std::invalid_argument&) {
 			opnumStruct.anyOpnum = TRUE;
 			WRITE_DEBUG_MSG(_T("Invalid opnum provided: ") + opnumString);
 		}
@@ -989,10 +989,10 @@ BOOL processRPCCallInternal(TCHAR* functionName, PRPC_MESSAGE pRpcMsg)
 		if (auditCall) rpcFunctionCalledEvent(allowCall, eventParams);
 	}
 	catch (const std::runtime_error& re) {
-		WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("Exception: Runtime error during call"), (TCHAR*)re.what());
+		WRITE_DEBUG_MSG_WITH_ERROR_MSG(TEXT("Exception: Runtime error during call"), (TCHAR*)re.what());
 	}
 	catch (const std::exception& ex) {
-		WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("Exception: Runtime error during call"), (TCHAR*)ex.what());
+		WRITE_DEBUG_MSG_WITH_ERROR_MSG(TEXT("Exception: Runtime error during call"), (TCHAR*)ex.what());
 	}
 	catch (...) {
 		WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("Exception: Runtime error during call"));

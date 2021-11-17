@@ -4,12 +4,13 @@
 #include "stdafx.h"
 
 HANDLE globalMappedMemory = NULL;
-
 HANDLE globalUnprotectlEvent = NULL;
 
-enum eventSignal {signalSetEvent, signalResetEvent};
+enum class eventSignal {signalSetEvent, signalResetEvent};
 
 typedef std::vector<std::pair<DWORD, std::basic_string<TCHAR>>> ProcVector;
+
+CHAR configBuf[MEM_BUF_SIZE];
 
 void concatArguments(int argc, _TCHAR* argv[], TCHAR command[])
 {
@@ -61,7 +62,7 @@ void crawlProcesses(DWORD pid, TCHAR* pName)
 	ProcVector procToHook = getRelevantProcVector(pid, pName);
 
 	unsigned int i;
-	unsigned int vSize = procToHook.size();
+	size_t vSize = procToHook.size();
 	for (i = 0; i < vSize; i++)
 	{
 		DWORD pid = procToHook[i].first;
@@ -134,7 +135,7 @@ void writeFileToSysfolder(std::basic_string<TCHAR> sourcePath, std::basic_string
 	}
 }
 
-TCHAR* getFullPathOfFile(TCHAR* filename)
+std::basic_string<TCHAR> getFullPathOfFile(const std::basic_string<TCHAR> &filename)
 {
 	TCHAR  filePath[INFO_BUFFER_SIZE];
 	DWORD  bufCharCount = INFO_BUFFER_SIZE;
@@ -142,12 +143,11 @@ TCHAR* getFullPathOfFile(TCHAR* filename)
 	if (!GetCurrentDirectory(bufCharCount, filePath))
 	{
 		_tprintf(TEXT("ERROR: Couldn't get the current directory [%d].\n"), GetLastError());
-		return NULL;
+		return std::basic_string<TCHAR>();
 	}
 	_tcscat_s(filePath, TEXT("\\"));
-	_tcscat_s(filePath, filename);
 
-	return filePath;
+	return std::basic_string<TCHAR>(filePath) + _T("\\") + filename;
 }
 
 BOOL createSecurityAttributes(SECURITY_ATTRIBUTES * psa, PSECURITY_DESCRIPTOR psd)
@@ -230,9 +230,7 @@ HANDLE mapNamedMemory()
 
 CHAR* readConfigFile(DWORD * bufLen)
 {
-	CHAR configBuf[MEM_BUF_SIZE];
-
-	std::basic_string<TCHAR> cfgFwPath = getFullPathOfFile((TCHAR*)CONF_FILE_NAME);
+	std::basic_string<TCHAR> cfgFwPath = getFullPathOfFile(std::basic_string<TCHAR>(CONF_FILE_NAME));
 	HANDLE hFile = CreateFile(cfgFwPath.c_str(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -326,7 +324,7 @@ void sendSignalToGlobalEvent(TCHAR* globalEventName, eventSignal eSig)
 		return;
 	}
 
-	if (eSig == signalSetEvent)
+	if (eSig == eventSignal::signalSetEvent)
 	{
 		if (SetEvent(hEvent) == 0)
 		{
@@ -347,8 +345,8 @@ void cmdInstall()
 	_tprintf(TEXT("installing RPCFW ...\n"));
 	elevateCurrentProcessToSystem();
 	
-	writeFileToSysfolder(getFullPathOfFile((TCHAR*)RPC_FW_DLL_NAME), RPC_FW_DLL_NAME);
-	writeFileToSysfolder(getFullPathOfFile((TCHAR*)RPC_MESSAGES_DLL_NAME), RPC_MESSAGES_DLL_NAME);
+	writeFileToSysfolder(getFullPathOfFile(std::basic_string<TCHAR>(RPC_FW_DLL_NAME)), RPC_FW_DLL_NAME);
+	writeFileToSysfolder(getFullPathOfFile(std::basic_string<TCHAR>(RPC_MESSAGES_DLL_NAME)), RPC_MESSAGES_DLL_NAME);
 
 	addEventSource();
 }
@@ -381,7 +379,7 @@ void cmdUnprotect()
 {
 	elevateCurrentProcessToSystem();
 	_tprintf(TEXT("Dispatching unprotect request...\n"));
-	sendSignalToGlobalEvent((TCHAR*)GLOBAL_RPCFW_EVENT_UNPROTECT, signalSetEvent);
+	sendSignalToGlobalEvent((TCHAR*)GLOBAL_RPCFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
 }
 
 void cmdProcess(int argc, _TCHAR* argv[])

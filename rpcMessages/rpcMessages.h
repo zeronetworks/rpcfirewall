@@ -13,6 +13,8 @@
 #define GLOBAL_SHARED_MEMORY TEXT("Global\\RpcFwRules")
 #define MEM_BUF_SIZE 0xFFFF
 
+#define DllExport   __declspec( dllexport )
+
 struct RpcEventParameters
 {
 	BOOL rpcAllowd;
@@ -29,18 +31,18 @@ struct RpcEventParameters
 	std::basic_string<TCHAR> authnSvc;
 };
 
-LIBRARY_API BOOL deleteEventSource();
+DllExport BOOL deleteEventSource();
 
-LIBRARY_API void addEventSource();
+DllExport void addEventSource();
 
-LIBRARY_API BOOL processProtectedEvent(BOOL , TCHAR*, TCHAR* );
+DllExport BOOL processProtectedEvent(BOOL , TCHAR*, TCHAR* );
 
-LIBRARY_API BOOL processUnprotectedEvent(BOOL, TCHAR*, TCHAR* );
+DllExport BOOL processUnprotectedEvent(BOOL, TCHAR*, TCHAR* );
 
-LIBRARY_API BOOL rpcFunctionCalledEvent(BOOL , RpcEventParameters );
+DllExport BOOL rpcFunctionCalledEvent(BOOL , RpcEventParameters );
 
-LIBRARY_API BOOL compareCharCaseInsensitive(TCHAR , TCHAR );
+DllExport BOOL compareCharCaseInsensitive(TCHAR , TCHAR );
 
-LIBRARY_API BOOL compareStringsCaseinsensitive(TCHAR*, TCHAR* );
+DllExport BOOL compareStringsCaseinsensitive(TCHAR*, TCHAR* );
 
-LIBRARY_API BOOL compareStringsCaseinsensitive(TCHAR* , TCHAR* , DWORD );
+DllExport BOOL compareStringsCaseinsensitive(TCHAR* , TCHAR* , size_t);
