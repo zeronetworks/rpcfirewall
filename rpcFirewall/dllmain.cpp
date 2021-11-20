@@ -11,44 +11,14 @@
 #include <tuple>
 #include <vector>
 #include <type_traits>
+#include <algorithm>
+#include "config.hpp"
 
 HMODULE myhModule;
 
-struct OpNumStruct
-{
-	bool anyOpnum;
-	DWORD opnum;
-};
-
-struct UUIDStruct
-{
-	bool anyUUID;
-	std::wstring uuid;
-};
-
-struct AddressStruct
-{
-	bool anyAddress;
-	std::wstring address;
-};
-
-struct LineConfig
-{
-	UUIDStruct uuid;
-	OpNumStruct opnum;
-	AddressStruct source_addr;
-	bool allow;
-	bool audit;
-	bool verbose;
-};
-
+DoubleBufferedConfig config;
 std::string privateConfigBuffer = {};
 
-std::vector<LineConfig> configVectorOne = {};
-std::vector<LineConfig> configVectorTwo = {};
-
-enum class ActiveConfigBufferNumber { One, Two};
-ActiveConfigBufferNumber activeConfBufferNumber = ActiveConfigBufferNumber::One;
 CHAR* mappedBuf = NULL;
 bool AuditOnly = false;
 bool detouredFunctions = false;
@@ -79,36 +49,6 @@ std::basic_string<T> to_tstring(U arg)
 	{
 		static_assert(false);
 	}
-}
-
-void changeActiveConfigurationNumber()
-{
-	if (activeConfBufferNumber == ActiveConfigBufferNumber::One)
-	{
-		activeConfBufferNumber = ActiveConfigBufferNumber::Two;
-	}
-	else
-	{
-		activeConfBufferNumber = ActiveConfigBufferNumber::One;
-	}
-}
-
-std::vector<LineConfig>& getActiveConfigurationVector()
-{
-	if (activeConfBufferNumber == ActiveConfigBufferNumber::One)
-	{
-		return configVectorOne;
-	}
-	return configVectorTwo;
-}
-
-std::vector<LineConfig>& getNonActiveConfigurationVector()
-{
-	if (activeConfBufferNumber == ActiveConfigBufferNumber::One)
-	{
-		return configVectorTwo;
-	}
-	return configVectorOne;
 }
 
 static long (WINAPI* realNdrStubCall2)(void* pThis, void* pChannel, PRPC_MESSAGE pRpcMsg, unsigned long* pdwStubPhase) = NdrStubCall2;
@@ -145,18 +85,18 @@ void WINAPI detouredNdrServerCallNdr64(PRPC_MESSAGE pRpcMsg);
 	if (verbose) \
 		writeDebugOutputWithPIDGetLastError(msg)
 
-void writeDebugOutputWithPID(std::wstring dbgMsg)
+void writeDebugOutputWithPID(const std::wstring& dbgMsg)
 {
 	OutputDebugString(dbgMsg.c_str());
 }
 
-void writeDebugOutputWithPIDWithStatusMessage(std::wstring dbgMsg, DWORD status)
+void writeDebugOutputWithPIDWithStatusMessage(const std::wstring& dbgMsg, DWORD status)
 {
 	std::wstring errMsg = dbgMsg + _T(" : ") + std::to_wstring(status);
 	writeDebugOutputWithPID(errMsg);
 }
 
-void writeDebugOutputWithPIDWithErrorMessage(std::wstring dbgMsg, wchar_t* errMsgPtr)
+void writeDebugOutputWithPIDWithErrorMessage(const std::wstring& dbgMsg, wchar_t* errMsgPtr)
 {
 	if (verbose)
 	{
@@ -175,7 +115,7 @@ void writeDebugOutputWithPIDWithErrorMessage(std::wstring dbgMsg, wchar_t* errMs
 	}
 }
 
-void writeDebugOutputWithPIDGetLastError(std::wstring dbgMsg)
+void writeDebugOutputWithPIDGetLastError(const std::wstring& dbgMsg)
 {
 	if (verbose)
 	{
@@ -331,14 +271,13 @@ std::wstring StringToWString(const std::string& s)
 	return temp;
 }
 
-std::wstring extractKeyValueFromConfigLine(std::wstring confLine, std::wstring key)
+std::wstring extractKeyValueFromConfigLineInner(const std::wstring& confLine, const std::wstring & key)
 {
-	confLine.replace(confLine.size() - 1, 1, _T(" "));
-	size_t keyOffset = confLine.find(key);
+	const size_t keyOffset = confLine.find(key);
 
 	if (keyOffset == std::string::npos) return _T("\0");
 
-	size_t nextKeyOffset = confLine.find(_T(" "), keyOffset + 1);
+	const size_t nextKeyOffset = confLine.find(_T(" "), keyOffset + 1);
 
 	if (nextKeyOffset == std::string::npos) return _T("\0");
 
@@ -347,94 +286,66 @@ std::wstring extractKeyValueFromConfigLine(std::wstring confLine, std::wstring k
 	return val;
 }
 
-UUIDStruct extractUUIDFromConfigLine(std::wstring confLine)
+std::wstring extractKeyValueFromConfigLine(const std::wstring& confLine, const std::wstring& key)
 {
-	UUIDStruct uuidStr = {};
-	uuidStr.uuid = extractKeyValueFromConfigLine(confLine, _T("uuid:"));
-	
-	if ((uuidStr.uuid).empty())
-	{
-		uuidStr.anyUUID = true;
-	}
-	else
-	{
-		uuidStr.anyUUID = false;
-	}
+	std::wstring fixedConfLine = confLine;
 
-	return uuidStr;
+	fixedConfLine.replace(fixedConfLine.size() - 1, 1, _T(" "));
+
+	return extractKeyValueFromConfigLineInner(fixedConfLine, key);
 }
 
-OpNumStruct extractOpNumFromConfigLine(std::wstring confLine)
+UUIDFilter extractUUIDFilterFromConfigLine(const std::wstring& confLine)
 {
-	OpNumStruct opnumStruct = {};
-	std::wstring opnumString = extractKeyValueFromConfigLine(confLine, _T("opnum:"));
+	const std::wstring uuid = extractKeyValueFromConfigLine(confLine, _T("uuid:"));
+
+	return uuid.empty() ? UUIDFilter{} : UUIDFilter{ uuid };
+}
+
+OpNumFilter extractOpNumFilterFromConfigLine(const std::wstring& confLine)
+{
+	const std::wstring opnumString = extractKeyValueFromConfigLine(confLine, _T("opnum:"));
 
 	if (opnumString.empty())
 	{
-		opnumStruct.anyOpnum = true;
+		return {};
 	}
-	else
-	{
-		try {
-			opnumStruct.opnum = std::stoi(opnumString);
-			opnumStruct.anyOpnum = false;
-		}
-		catch (const std::invalid_argument&) {
-			opnumStruct.anyOpnum = true;
-			WRITE_DEBUG_MSG(_T("Invalid opnum provided: ") + opnumString);
-		}
+
+	try {
+		return std::stoi(opnumString);
 	}
-	return opnumStruct;
+	catch (const std::invalid_argument&) {
+		WRITE_DEBUG_MSG(_T("Invalid opnum provided: ") + opnumString);
+		return {};
+	}
 }
 
-AddressStruct extractAddressFromConfigLine(std::wstring confLine)
+AddressFilter extractAddressFromConfigLine(const std::wstring& confLine)
 {
-	AddressStruct addrStruct = {};
-	addrStruct.address = extractKeyValueFromConfigLine(confLine, _T("addr:"));
+	const std::wstring address = extractKeyValueFromConfigLine(confLine, _T("addr:"));
 
-	if ((addrStruct.address).empty())
-	{
-		addrStruct.anyAddress = true;
-	}
-	else
-	{
-		addrStruct.anyAddress = false;
-	}
-	return addrStruct;
+	return address.empty() ? AddressFilter{} : AddressFilter{ address };
 }
 
-bool extractActionFromConfigLine(std::wstring confLine)
+bool extractActionFromConfigLine(const std::wstring& confLine)
 {
 	std::wstring action = extractKeyValueFromConfigLine(confLine, _T("action:"));
 
-	if (action.find(_T("block")) != std::string::npos)
-	{
-		return false;
-	}
-	
-	return true;
+	return action.find(_T("block")) == std::string::npos;
 }
 
-bool extractAuditFromConfigLine(std::wstring confLine)
+bool extractAuditFromConfigLine(const std::wstring& confLine)
 {
 	std::wstring audit = extractKeyValueFromConfigLine(confLine, _T("audit:"));
 
-	if (audit.find(_T("true")) != std::string::npos)
-	{
-		return true;
-	}
-
-	return false;
+	return audit.find(_T("true")) != std::string::npos;
 }
 
-bool extractVerboseFromConfigLine(std::wstring confLine)
+bool extractVerboseFromConfigLine(const std::wstring& confLine)
 {
 	std::wstring loc_verbose = extractKeyValueFromConfigLine(confLine, _T("verbose:"));
-	if (loc_verbose.find(_T("true")) != std::string::npos)
-	{
-		return true;
-	}
-	return false;
+
+	return loc_verbose.find(_T("true")) != std::string::npos;
 }
 
 void loadPrivateBufferToPassiveVectorConfiguration()
@@ -452,7 +363,7 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 	wchar_t configLine[256];
 
 	size_t size = privateConfigBuffer.size() + 1;
-	std::vector<LineConfig> passiveConfigVector = {};
+	ConfigVector passiveConfigVector = {};
 
 	if (size > 1)
 	{
@@ -462,8 +373,8 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 			confLineString += _T(" ");
 			LineConfig lineConfig = {};
 
-			lineConfig.uuid = extractUUIDFromConfigLine(confLineString);
-			lineConfig.opnum = extractOpNumFromConfigLine(confLineString);
+			lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
+			lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
 			lineConfig.source_addr = extractAddressFromConfigLine(confLineString);
 			lineConfig.allow = extractActionFromConfigLine(confLineString);
 			lineConfig.audit = extractAuditFromConfigLine(confLineString);
@@ -472,10 +383,10 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 		}
 	}
 
-	getNonActiveConfigurationVector() = passiveConfigVector;
+	config.setPassiveConfigurationVector(passiveConfigVector);
 }
 
-bool checkKeyValueInConfigLine(wchar_t* confLine, wchar_t* key,DWORD keySize,std::wstring value)
+bool checkKeyValueInConfigLine(wchar_t* confLine, wchar_t* key,DWORD keySize, const std::wstring& value)
 {
 	std::wstring confString = confLine;
 	confString += _T("");
@@ -498,47 +409,47 @@ bool checkKeyValueInConfigLine(wchar_t* confLine, wchar_t* key,DWORD keySize,std
 
 bool checkAudit(wchar_t* confLine)
 {
-	if (_tcsstr(confLine, TEXT("audit:true")))
-	{
-		return true;
-	}
-	return false;
+	return _tcsstr(confLine, TEXT("audit:true"));
 }
 
-bool checkUUID(UUIDStruct uuidStructure, std::wstring uuidString)
+bool checkUUID(const UUIDFilter& uuidFilter, const std::wstring& uuidString)
 {
-	if (uuidStructure.anyUUID)
+	if (!uuidFilter.has_value())
 	{
 		return true;
 	}
-	return uuidStructure.uuid.find(uuidString) != std::string::npos;
+	
+	return uuidFilter.value().find(uuidString) != std::string::npos;
 }
 
-bool checkOpNum(OpNumStruct opnumStructure, std::wstring opNum)
+bool checkOpNum(const OpNumFilter& opNumFilter, const std::wstring& opNumString)
 {
-	if (opnumStructure.anyOpnum)
+	if (!opNumFilter.has_value())
 	{
 		return true;
 	}
-	return (opnumStructure.opnum == std::stoi(opNum));
+
+	return opNumFilter == std::stoi(opNumString);
 }
 
-bool checkAddress(AddressStruct addrStructure, std::wstring srcAddr)
+bool checkAddress(const AddressFilter& addrFilter, const std::wstring& srcAddr)
 {
-	if (addrStructure.anyAddress)
+	if (!addrFilter.has_value())
 	{
 		return true;
 	}
-	return (addrStructure.address == srcAddr);
+	
+	return addrFilter == srcAddr;
 }
 
 std::pair<bool,bool> checkIfRPCCallFiltered(RpcEventParameters rpcEvent)
 {
-	std::vector<LineConfig> configurationVector = getActiveConfigurationVector();
+	const ConfigVector& configurationVector = config.getActiveConfigurationVector();
 
 	bool UUIDMatch, AddressMatch, OpNumMatch, auditCall, filterCall = false;
 	DWORD verboseCount = 0;
-	for (LineConfig lc : configurationVector)
+
+	for (const LineConfig& lc : configurationVector)
 	{
 		UUIDMatch = checkUUID(lc.uuid, rpcEvent.uuidString);
 		AddressMatch = checkAddress(lc.source_addr, rpcEvent.sourceAddress);
@@ -559,8 +470,7 @@ std::pair<bool,bool> checkIfRPCCallFiltered(RpcEventParameters rpcEvent)
 
 void mappedBufferCopyToPrivateConfiguration()
 {
-	std::string mappedBufStr = mappedBuf;
-	privateConfigBuffer = mappedBufStr;
+	privateConfigBuffer = mappedBuf;
 }
 
 bool isNewVersion()
@@ -622,16 +532,9 @@ bool isHashValid()
 
 bool checkIfVerbose()
 {
-	std::vector<LineConfig> configurationVector = getActiveConfigurationVector();
+	const ConfigVector& configurationVector = config.getActiveConfigurationVector();
 
-	for (LineConfig lc : configurationVector)
-	{
-		if (lc.verbose)
-		{
-			return true;
-		}
-	}
-	return false;
+	return std::any_of(configurationVector.begin(), configurationVector.end(), [](const LineConfig& lc) { return lc.verbose; });
 }
 
 void loadConfigurationFromMappedMemory()
@@ -673,7 +576,7 @@ void loadConfigurationFromMappedMemory()
 			if (isNewVersion())
 			{
 				loadPrivateBufferToPassiveVectorConfiguration();
-				changeActiveConfigurationNumber();
+				config.changeActiveConfigurationNumber();
 				verbose = checkIfVerbose();
 			}
 			break;
