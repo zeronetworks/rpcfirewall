@@ -17,32 +17,32 @@
 
 struct RpcEventParameters
 {
-	BOOL rpcAllowd;
-	std::basic_string<TCHAR> functionName;
-	std::basic_string<TCHAR> processID;
-	std::basic_string<TCHAR> processName;
-	std::basic_string<TCHAR> protocol;
-	std::basic_string<TCHAR> endpoint;
-	std::basic_string<TCHAR> sourceAddress;
-	std::basic_string<TCHAR> uuidString;
-	std::basic_string<TCHAR> OpNum;
-	std::basic_string<TCHAR> clientName;
-	std::basic_string<TCHAR> authnLevel;
-	std::basic_string<TCHAR> authnSvc;
+	bool rpcAllowd;
+	std::wstring functionName;
+	std::wstring processID;
+	std::wstring processName;
+	std::wstring protocol;
+	std::wstring endpoint;
+	std::wstring sourceAddress;
+	std::wstring uuidString;
+	std::wstring OpNum;
+	std::wstring clientName;
+	std::wstring authnLevel;
+	std::wstring authnSvc;
 };
 
-DllExport BOOL deleteEventSource();
+DllExport bool deleteEventSource();
 
 DllExport void addEventSource();
 
-DllExport BOOL processProtectedEvent(BOOL , TCHAR*, TCHAR* );
+DllExport bool processProtectedEvent(bool , wchar_t*, wchar_t* );
 
-DllExport BOOL processUnprotectedEvent(BOOL, TCHAR*, TCHAR* );
+DllExport bool processUnprotectedEvent(bool, wchar_t*, wchar_t* );
 
-DllExport BOOL rpcFunctionCalledEvent(BOOL , RpcEventParameters );
+DllExport bool rpcFunctionCalledEvent(bool , RpcEventParameters );
 
-DllExport BOOL compareCharCaseInsensitive(TCHAR , TCHAR );
+DllExport bool compareCharCaseInsensitive(wchar_t , wchar_t );
 
-DllExport BOOL compareStringsCaseinsensitive(TCHAR*, TCHAR* );
+DllExport bool compareStringsCaseinsensitive(wchar_t*, wchar_t* );
 
-DllExport BOOL compareStringsCaseinsensitive(TCHAR* , TCHAR* , size_t);
+DllExport bool compareStringsCaseinsensitive(wchar_t* , wchar_t* , size_t);

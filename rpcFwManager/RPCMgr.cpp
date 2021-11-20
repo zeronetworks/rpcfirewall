@@ -8,11 +8,11 @@ HANDLE globalUnprotectlEvent = NULL;
 
 enum class eventSignal {signalSetEvent, signalResetEvent};
 
-typedef std::vector<std::pair<DWORD, std::basic_string<TCHAR>>> ProcVector;
+typedef std::vector<std::pair<DWORD, std::wstring>> ProcVector;
 
 CHAR configBuf[MEM_BUF_SIZE];
 
-void concatArguments(int argc, _TCHAR* argv[], TCHAR command[])
+void concatArguments(int argc, wchar_t* argv[], wchar_t command[])
 {
 	_tcscpy_s(command, MAX_PATH *2, argv[0]);
 	
@@ -25,7 +25,7 @@ void concatArguments(int argc, _TCHAR* argv[], TCHAR command[])
 	_tcscat_s(command, MAX_PATH * 2, TEXT(" /elevated"));
 }
 
-ProcVector getRelevantProcVector(DWORD pid, TCHAR* pName)
+ProcVector getRelevantProcVector(DWORD pid, wchar_t* pName)
 {
 	ProcVector procVector;
 
@@ -33,9 +33,9 @@ ProcVector getRelevantProcVector(DWORD pid, TCHAR* pName)
 	pe32.dwSize = sizeof(PROCESSENTRY32W);
 
 	HANDLE hTool32 = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	BOOL bProcess = Process32FirstW(hTool32, &pe32);
+	bool bProcess = Process32FirstW(hTool32, &pe32);
 
-	if (bProcess == TRUE) {
+	if (bProcess == true) {
 		while ((Process32Next(hTool32, &pe32)) == TRUE) 
 		{
 			if (pName != NULL && compareStringsCaseinsensitive(pe32.szExeFile, pName))
@@ -57,7 +57,7 @@ ProcVector getRelevantProcVector(DWORD pid, TCHAR* pName)
 	return procVector;
 }
 
-void crawlProcesses(DWORD pid, TCHAR* pName) 
+void crawlProcesses(DWORD pid, wchar_t* pName) 
 {
 	ProcVector procToHook = getRelevantProcVector(pid, pName);
 
@@ -66,10 +66,10 @@ void crawlProcesses(DWORD pid, TCHAR* pName)
 	for (i = 0; i < vSize; i++)
 	{
 		DWORD pid = procToHook[i].first;
-		std::basic_string<TCHAR> procName = procToHook[i].second;
+		std::wstring procName = procToHook[i].second;
 
 		_tprintf(TEXT("Protecting %d : %s\n"),pid,procName.c_str());
-		classicHookRPCProcesses(pid, (TCHAR*)RPC_FW_DLL_NAME);
+		classicHookRPCProcesses(pid, (wchar_t*)RPC_FW_DLL_NAME);
 	}
 }
 
@@ -85,10 +85,10 @@ void getHelp()
 	_tprintf(TEXT("update\t\t - notify the rpcFirewall.dll on configuration changes \n"));
 }
 
-void deleteFileFromSysfolder(std::basic_string<TCHAR> fileName)
+void deleteFileFromSysfolder(std::wstring fileName)
 {
 
-	TCHAR  destPath[INFO_BUFFER_SIZE];
+	wchar_t  destPath[INFO_BUFFER_SIZE];
 	DWORD  bufCharCount = INFO_BUFFER_SIZE;
 
 	if (!GetSystemDirectory(destPath, INFO_BUFFER_SIZE))
@@ -97,7 +97,7 @@ void deleteFileFromSysfolder(std::basic_string<TCHAR> fileName)
 		return;
 	}
 
-	std::basic_string<TCHAR> destPathStr = destPath;
+	std::wstring destPathStr = destPath;
 	destPathStr += TEXT("\\");
 	destPathStr += fileName;
 
@@ -112,10 +112,10 @@ void deleteFileFromSysfolder(std::basic_string<TCHAR> fileName)
 	}
 }
 
-void writeFileToSysfolder(std::basic_string<TCHAR> sourcePath, std::basic_string<TCHAR> sourceFileName)
+void writeFileToSysfolder(std::wstring sourcePath, std::wstring sourceFileName)
 {
 
-	TCHAR  destPath[INFO_BUFFER_SIZE];
+	wchar_t  destPath[INFO_BUFFER_SIZE];
 	DWORD  bufCharCount = INFO_BUFFER_SIZE;
 
 	if (!GetSystemDirectory(destPath, INFO_BUFFER_SIZE))
@@ -124,43 +124,43 @@ void writeFileToSysfolder(std::basic_string<TCHAR> sourcePath, std::basic_string
 		return;
 	}
 
-	std::basic_string<TCHAR> destPathStr = destPath;
+	std::wstring destPathStr = destPath;
 	destPathStr += TEXT("\\");
 	destPathStr += sourceFileName;
 
-	if (!CopyFile(sourcePath.c_str(), destPathStr.c_str(), FALSE))
+	if (!CopyFile(sourcePath.c_str(), destPathStr.c_str(), false))
 	{
 		_tprintf(TEXT("ERROR: %s copy to system folder failed [%d].\n"), sourcePath.c_str(), GetLastError());
 		return;
 	}
 }
 
-std::basic_string<TCHAR> getFullPathOfFile(const std::basic_string<TCHAR> &filename)
+std::wstring getFullPathOfFile(const std::wstring &filename)
 {
-	TCHAR  filePath[INFO_BUFFER_SIZE];
+	wchar_t  filePath[INFO_BUFFER_SIZE];
 	DWORD  bufCharCount = INFO_BUFFER_SIZE;
 
 	if (!GetCurrentDirectory(bufCharCount, filePath))
 	{
 		_tprintf(TEXT("ERROR: Couldn't get the current directory [%d].\n"), GetLastError());
-		return std::basic_string<TCHAR>();
+		return std::wstring();
 	}
 	_tcscat_s(filePath, TEXT("\\"));
 
-	return std::basic_string<TCHAR>(filePath) + _T("\\") + filename;
+	return std::wstring(filePath) + _T("\\") + filename;
 }
 
-BOOL createSecurityAttributes(SECURITY_ATTRIBUTES * psa, PSECURITY_DESCRIPTOR psd)
+bool createSecurityAttributes(SECURITY_ATTRIBUTES * psa, PSECURITY_DESCRIPTOR psd)
 {
 	if (InitializeSecurityDescriptor(psd, SECURITY_DESCRIPTOR_REVISION) != 0)
 	{
-		if (SetSecurityDescriptorDacl(psd, TRUE, NULL, FALSE) != 0)
+		if (SetSecurityDescriptorDacl(psd, true, NULL, false) != 0)
 		{
 			(*psa).nLength = sizeof(*psa);
 			(*psa).lpSecurityDescriptor = psd;
-			(*psa).bInheritHandle = FALSE;
+			(*psa).bInheritHandle = false;
 
-			return TRUE;
+			return true;
 		}
 		else
 		{
@@ -172,10 +172,10 @@ BOOL createSecurityAttributes(SECURITY_ATTRIBUTES * psa, PSECURITY_DESCRIPTOR ps
 		_tprintf(TEXT("InitializeSecurityDescriptor failed : %d.\n"), GetLastError());
 	}
 
-	return FALSE;
+	return false;
 }
 
-HANDLE createGlobalEvent(BOOL manualReset,BOOL initialState, TCHAR* eventName)
+HANDLE createGlobalEvent(bool manualReset,bool initialState, wchar_t* eventName)
 {
 	HANDLE gEvent = NULL;
 	SECURITY_ATTRIBUTES sa = { 0 };
@@ -205,7 +205,7 @@ HANDLE createGlobalEvent(BOOL manualReset,BOOL initialState, TCHAR* eventName)
 
 void createAllGloblEvents()
 {
-	globalUnprotectlEvent = createGlobalEvent(TRUE, FALSE, (TCHAR*)GLOBAL_RPCFW_EVENT_UNPROTECT);
+	globalUnprotectlEvent = createGlobalEvent(true, false, (wchar_t*)GLOBAL_RPCFW_EVENT_UNPROTECT);
 }
 
 HANDLE mapNamedMemory()
@@ -230,7 +230,7 @@ HANDLE mapNamedMemory()
 
 CHAR* readConfigFile(DWORD * bufLen)
 {
-	std::basic_string<TCHAR> cfgFwPath = getFullPathOfFile(std::basic_string<TCHAR>(CONF_FILE_NAME));
+	std::wstring cfgFwPath = getFullPathOfFile(std::wstring(CONF_FILE_NAME));
 	HANDLE hFile = CreateFile(cfgFwPath.c_str(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -246,18 +246,18 @@ CHAR* readConfigFile(DWORD * bufLen)
 	return configBuf;
 }
 
-std::basic_string<CHAR> addHeaderToBuffer(DWORD verNumber,CHAR* confBuf, DWORD bufSize)
+std::string addHeaderToBuffer(DWORD verNumber,CHAR* confBuf, DWORD bufSize)
 {
-	std::basic_string<CHAR> strToHash = confBuf;
+	std::string strToHash = confBuf;
 	strToHash.resize(bufSize);
-	size_t hashValue = std::hash<std::basic_string<CHAR>>{}(strToHash);
+	size_t hashValue = std::hash<std::string>{}(strToHash);
 
-	std::basic_string<CHAR> resultBuf = "ver:" + std::to_string(verNumber) +  " hash:" + std::to_string(hashValue) + "\r\n" + "!start!" + strToHash + "!end!";
+	std::string resultBuf = "ver:" + std::to_string(verNumber) +  " hash:" + std::to_string(hashValue) + "\r\n" + "!start!" + strToHash + "!end!";
 
 	return resultBuf;
 }
 
-std::basic_string<CHAR> extractKeyValueFromConfig(std::basic_string<CHAR> confLine, std::basic_string<CHAR> key)
+std::string extractKeyValueFromConfig(std::string confLine, std::string key)
 {
 	confLine += (" ");
 	size_t keyOffset = confLine.find(key);
@@ -308,16 +308,16 @@ void readConfigAndMapToMemory()
 		}
 		
 		DWORD verNumber = getConfigVersionNumber(pBuf);
-		std::basic_string<CHAR> confBufHashed = addHeaderToBuffer(verNumber + 1,confBuf, bytesRead);
+		std::string confBufHashed = addHeaderToBuffer(verNumber + 1,confBuf, bytesRead);
 
 		memset(pBuf, '\0', MEM_BUF_SIZE);
 		CopyMemory((PVOID)pBuf, confBufHashed.c_str(), bytesRead + confBufHashed.length());
 	}
 }
 
-void sendSignalToGlobalEvent(TCHAR* globalEventName, eventSignal eSig)
+void sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
 {
-	HANDLE hEvent = createGlobalEvent(TRUE, FALSE, globalEventName);
+	HANDLE hEvent = createGlobalEvent(true, false, globalEventName);
 	if (hEvent == NULL)
 	{
 		_tprintf(TEXT("Could not get handle to event %s, error: %d\n"), globalEventName, GetLastError());
@@ -345,8 +345,8 @@ void cmdInstall()
 	_tprintf(TEXT("installing RPCFW ...\n"));
 	elevateCurrentProcessToSystem();
 	
-	writeFileToSysfolder(getFullPathOfFile(std::basic_string<TCHAR>(RPC_FW_DLL_NAME)), RPC_FW_DLL_NAME);
-	writeFileToSysfolder(getFullPathOfFile(std::basic_string<TCHAR>(RPC_MESSAGES_DLL_NAME)), RPC_MESSAGES_DLL_NAME);
+	writeFileToSysfolder(getFullPathOfFile(std::wstring(RPC_FW_DLL_NAME)), RPC_FW_DLL_NAME);
+	writeFileToSysfolder(getFullPathOfFile(std::wstring(RPC_MESSAGES_DLL_NAME)), RPC_MESSAGES_DLL_NAME);
 
 	addEventSource();
 }
@@ -356,7 +356,7 @@ void cmdUpdate()
 	readConfigAndMapToMemory();
 }
 
-void cmdPid(int argc, _TCHAR* argv[])
+void cmdPid(int argc, wchar_t* argv[])
 {
 	elevateCurrentProcessToSystem();
 	createAllGloblEvents();
@@ -379,10 +379,10 @@ void cmdUnprotect()
 {
 	elevateCurrentProcessToSystem();
 	_tprintf(TEXT("Dispatching unprotect request...\n"));
-	sendSignalToGlobalEvent((TCHAR*)GLOBAL_RPCFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
+	sendSignalToGlobalEvent((wchar_t*)GLOBAL_RPCFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
 }
 
-void cmdProcess(int argc, _TCHAR* argv[])
+void cmdProcess(int argc, wchar_t* argv[])
 {
 	createAllGloblEvents();
 	elevateCurrentProcessToSystem();
@@ -390,7 +390,7 @@ void cmdProcess(int argc, _TCHAR* argv[])
 	if (argc > 2)
 	{
 		_tprintf(TEXT("Enabling RPCFW for process : %s\n"), argv[2]);
-		crawlProcesses(17, (TCHAR*)argv[2]);
+		crawlProcesses(17, (wchar_t*)argv[2]);
 	}
 	else
 	{
@@ -417,13 +417,13 @@ void cmdUninstall()
 	}
 }
 
-int _tmain(int argc, _TCHAR* argv[])
+int _tmain(int argc, wchar_t* argv[])
 {
 	_tprintf(TEXT("rpcFwMannager started...\n"));
 
 	if (argc > 1)
 	{
-		std::basic_string<TCHAR> cmmd(argv[1]);
+		std::wstring cmmd(argv[1]);
 
 		if (cmmd.find(_T("/uninstall")) != std::string::npos)
 		{

@@ -2,7 +2,7 @@
 
 void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 
-	HANDLE hProcess = OpenProcess(MAXIMUM_ALLOWED, FALSE, processID);
+	HANDLE hProcess = OpenProcess(MAXIMUM_ALLOWED, false, processID);
 	if (hProcess == NULL)
 	{
 		_tprintf(TEXT("OpenProcess failed for pid %u: [%d]\n"), processID,GetLastError());
@@ -41,10 +41,10 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 	CloseHandle(hRemoteThread);
 }
 
-std::pair<BOOL,BOOL> containsRPCModules(DWORD dwPID)
+std::pair<bool,bool> containsRPCModules(DWORD dwPID)
 {
-	BOOL containsRpcRuntimeModule = FALSE;
-	BOOL containsRpcFirewallModule = FALSE;
+	bool containsRpcRuntimeModule = false;
+	bool containsRpcFirewallModule = false;
 
 	HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
 	hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwPID);
@@ -69,13 +69,13 @@ std::pair<BOOL,BOOL> containsRPCModules(DWORD dwPID)
 		if (_tcsstr(me32.szModule, _T("rpcrt4.dll")) || _tcsstr(me32.szModule, _T("RPCRT4.dll")))
 		{
 			_tprintf(TEXT("Process %d contains RPC module!\n"), dwPID);
-			containsRpcRuntimeModule = TRUE;
+			containsRpcRuntimeModule = true;
 		}
 
 		if (_tcsstr(me32.szModule, RPC_FW_DLL_NAME))
 		{
 			_tprintf(TEXT("Process %d contains RPCFW module!\n"), dwPID);
-			containsRpcFirewallModule = TRUE;
+			containsRpcFirewallModule = true;
 		}
 	};
 
@@ -83,11 +83,11 @@ std::pair<BOOL,BOOL> containsRPCModules(DWORD dwPID)
 	return std::make_pair(containsRpcRuntimeModule, containsRpcFirewallModule);;
 }
 
-void classicHookRPCProcesses(DWORD processID, TCHAR* dllToInject)
+void classicHookRPCProcesses(DWORD processID, wchar_t* dllToInject)
 {
-	std::pair<BOOL,BOOL> containsModules = containsRPCModules(processID);
-	BOOL containsRPC = containsModules.first;
-	BOOL containsRPCFW = containsModules.second;
+	std::pair<bool,bool> containsModules = containsRPCModules(processID);
+	bool containsRPC = containsModules.first;
+	bool containsRPCFW = containsModules.second;
 
 	if ( containsRPC && !containsRPCFW) 
 	{

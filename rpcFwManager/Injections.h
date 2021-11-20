@@ -3,8 +3,8 @@
 
 HANDLE hookProcessLoadLibrary(HANDLE hProcess, WCHAR* dllToInject);
 
-BOOL ContainsRPCModule(DWORD dwPID);
+bool ContainsRPCModule(DWORD dwPID);
 
-void classicHookRPCProcesses(DWORD processID, TCHAR* dllToInject);
+void classicHookRPCProcesses(DWORD processID, wchar_t* dllToInject);
 
-BOOL PESelfInjectToRemoteProcess(DWORD processID, TCHAR* procName);
+bool PESelfInjectToRemoteProcess(DWORD processID, wchar_t* procName);

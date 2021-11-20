@@ -15,7 +15,7 @@ HANDLE getAccessToken(DWORD pid, DWORD desiredAccess)
 		}
 		else
 		{
-			currentProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, TRUE, pid);
+			currentProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, true, pid);
 			if (!currentProcess)
 			{
 				LastError = GetLastError();
@@ -62,9 +62,9 @@ DWORD getProcessIDFromName(wchar_t* procName)
 
 }
 
-BOOL amISYSTEM()
+bool amISYSTEM()
 {
-	BOOL amisystem = FALSE;
+	bool amisystem = false;
 
 	HANDLE hToken;
 	HANDLE hProcess;
@@ -94,7 +94,7 @@ BOOL amISYSTEM()
 						if (dwIntegrityLevel >= SECURITY_MANDATORY_SYSTEM_RID)
 						{
 							// High Integrity
-							amisystem = TRUE;
+							amisystem = true;
 						}
 					}
 					LocalFree(pTIL);
@@ -106,10 +106,10 @@ BOOL amISYSTEM()
 	return amisystem;
 }
 
-BOOL setPrivilege(
+bool setPrivilege(
 	HANDLE hToken,          // access token handle
 	LPCTSTR lpszPrivilege,  // name of privilege to enable/disable
-	BOOL bEnablePrivilege   // to enable or disable privilege
+	bool bEnablePrivilege   // to enable or disable privilege
 )
 {
 	TOKEN_PRIVILEGES tp;
@@ -121,7 +121,7 @@ BOOL setPrivilege(
 		&luid))        // receives LUID of privilege
 	{
 		_tprintf(TEXT("LookupPrivilegeValue error: %u\n"), GetLastError());
-		return FALSE;
+		return false;
 	}
 
 	tp.PrivilegeCount = 1;
@@ -135,30 +135,30 @@ BOOL setPrivilege(
 
 	if (!AdjustTokenPrivileges(
 		hToken,
-		FALSE,
+		false,
 		&tp,
 		sizeof(TOKEN_PRIVILEGES),
 		(PTOKEN_PRIVILEGES)NULL,
 		(PDWORD)NULL))
 	{
 		_tprintf(TEXT("AdjustTokenPrivileges error: %u\n"), GetLastError());
-		return FALSE;
+		return false;
 	}
 
 	if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
 
 	{
 		_tprintf(TEXT("The token does not have the specified privilege. \n"));
-		return FALSE;
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
 void tryAndRunElevated(DWORD pid)
 {
 	// Enable core privileges  
-	if (!setPrivilege(getAccessToken(0, TOKEN_ADJUST_PRIVILEGES), TEXT("SeDebugPrivilege"), TRUE))
+	if (!setPrivilege(getAccessToken(0, TOKEN_ADJUST_PRIVILEGES), TEXT("SeDebugPrivilege"), true))
 	{
 		return;
 	}
@@ -178,7 +178,7 @@ void tryAndRunElevated(DWORD pid)
 				return;
 			}
 
-			TCHAR Imp_usrename[200];
+			wchar_t Imp_usrename[200];
 			DWORD name_len = 200;
 			GetUserName(Imp_usrename, &name_len);
 			_tprintf(TEXT("Running as: %s\n"), Imp_usrename);
@@ -188,6 +188,6 @@ void tryAndRunElevated(DWORD pid)
 
 void elevateCurrentProcessToSystem()
 {
-	TCHAR sysProcessName[] = TEXT("winlogon.exe");
+	wchar_t sysProcessName[] = TEXT("winlogon.exe");
 	tryAndRunElevated(getProcessIDFromName(sysProcessName));
 }
