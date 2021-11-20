@@ -112,9 +112,8 @@ void deleteFileFromSysfolder(std::wstring fileName)
 	}
 }
 
-void writeFileToSysfolder(std::wstring sourcePath, std::wstring sourceFileName)
+void writeFileToSysfolder(const std::wstring& sourcePath, const std::wstring& sourceFileName)
 {
-
 	wchar_t  destPath[INFO_BUFFER_SIZE];
 	DWORD  bufCharCount = INFO_BUFFER_SIZE;
 
@@ -145,7 +144,6 @@ std::wstring getFullPathOfFile(const std::wstring &filename)
 		_tprintf(TEXT("ERROR: Couldn't get the current directory [%d].\n"), GetLastError());
 		return std::wstring();
 	}
-	_tcscat_s(filePath, TEXT("\\"));
 
 	return std::wstring(filePath) + _T("\\") + filename;
 }
