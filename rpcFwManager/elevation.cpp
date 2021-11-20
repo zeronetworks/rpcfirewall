@@ -20,14 +20,14 @@ HANDLE getAccessToken(DWORD pid, DWORD desiredAccess)
 			{
 				LastError = GetLastError();
 				_tprintf(TEXT("ERROR: OpenProcess %d(): %d\n"), pid,LastError);
-				return (HANDLE)NULL;
+				return nullptr;
 			}
 		}
 		if (!OpenProcessToken(currentProcess, desiredAccess, &AccessToken))
 		{
 			LastError = GetLastError();
 			_tprintf(TEXT("ERROR: OpenProcessToken %d: %d\n"), pid ,LastError);
-			return (HANDLE)NULL;
+			return nullptr;
 		}
 		return AccessToken;
 	}
@@ -35,7 +35,7 @@ HANDLE getAccessToken(DWORD pid, DWORD desiredAccess)
 		LastError = GetLastError();
 		_tprintf(TEXT("Exception during GetAccessToken(): %d\n"), GetLastError());
 	}
-	return (HANDLE)NULL;
+	return nullptr;
 }
 
 DWORD getProcessIDFromName(wchar_t* procName)
@@ -44,7 +44,7 @@ DWORD getProcessIDFromName(wchar_t* procName)
 	entry.dwSize = sizeof(PROCESSENTRY32);
 	DWORD pid = 0;
 
-	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
 	if (Process32First(snapshot, &entry) == TRUE)
 	{
@@ -72,20 +72,20 @@ bool amISYSTEM()
 	DWORD dwLengthNeeded;
 	DWORD dwError = ERROR_SUCCESS;
 
-	PTOKEN_MANDATORY_LABEL pTIL = NULL;
+	PTOKEN_MANDATORY_LABEL pTIL = nullptr;
 	DWORD dwIntegrityLevel;
 
 	hProcess = GetCurrentProcess();
 	if (OpenProcessToken(hProcess, TOKEN_QUERY | TOKEN_QUERY_SOURCE, &hToken))
 	{
 		// Get the Integrity level.
-		if (!GetTokenInformation(hToken, TokenIntegrityLevel, NULL, 0, &dwLengthNeeded))
+		if (!GetTokenInformation(hToken, TokenIntegrityLevel, nullptr, 0, &dwLengthNeeded))
 		{
 			dwError = GetLastError();
 			if (dwError == ERROR_INSUFFICIENT_BUFFER)
 			{
 				pTIL = (PTOKEN_MANDATORY_LABEL)LocalAlloc(0,dwLengthNeeded);
-				if (pTIL != NULL)
+				if (pTIL != nullptr)
 				{
 					if (GetTokenInformation(hToken, TokenIntegrityLevel, pTIL, dwLengthNeeded, &dwLengthNeeded))
 					{
@@ -116,7 +116,7 @@ bool setPrivilege(
 	LUID luid;
 
 	if (!LookupPrivilegeValue(
-		NULL,            // lookup privilege on local system
+		nullptr,            // lookup privilege on local system
 		lpszPrivilege,   // privilege to lookup 
 		&luid))        // receives LUID of privilege
 	{
@@ -138,8 +138,8 @@ bool setPrivilege(
 		false,
 		&tp,
 		sizeof(TOKEN_PRIVILEGES),
-		(PTOKEN_PRIVILEGES)NULL,
-		(PDWORD)NULL))
+		(PTOKEN_PRIVILEGES)nullptr,
+		(PDWORD)nullptr))
 	{
 		_tprintf(TEXT("AdjustTokenPrivileges error: %u\n"), GetLastError());
 		return false;

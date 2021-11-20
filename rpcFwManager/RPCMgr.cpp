@@ -3,8 +3,8 @@
 
 #include "stdafx.h"
 
-HANDLE globalMappedMemory = NULL;
-HANDLE globalUnprotectlEvent = NULL;
+HANDLE globalMappedMemory = nullptr;
+HANDLE globalUnprotectlEvent = nullptr;
 
 enum class eventSignal {signalSetEvent, signalResetEvent};
 
@@ -38,7 +38,7 @@ ProcVector getRelevantProcVector(DWORD pid, wchar_t* pName)
 	if (bProcess == true) {
 		while ((Process32Next(hTool32, &pe32)) == TRUE) 
 		{
-			if (pName != NULL && compareStringsCaseinsensitive(pe32.szExeFile, pName))
+			if (pName != nullptr && compareStringsCaseinsensitive(pe32.szExeFile, pName))
 			{
 				procVector.push_back(std::make_pair(pe32.th32ProcessID, pe32.szExeFile));
 			}
@@ -154,7 +154,7 @@ bool createSecurityAttributes(SECURITY_ATTRIBUTES * psa, PSECURITY_DESCRIPTOR ps
 {
 	if (InitializeSecurityDescriptor(psd, SECURITY_DESCRIPTOR_REVISION) != 0)
 	{
-		if (SetSecurityDescriptorDacl(psd, true, NULL, false) != 0)
+		if (SetSecurityDescriptorDacl(psd, true, nullptr, false) != 0)
 		{
 			(*psa).nLength = sizeof(*psa);
 			(*psa).lpSecurityDescriptor = psd;
@@ -177,7 +177,7 @@ bool createSecurityAttributes(SECURITY_ATTRIBUTES * psa, PSECURITY_DESCRIPTOR ps
 
 HANDLE createGlobalEvent(bool manualReset,bool initialState, wchar_t* eventName)
 {
-	HANDLE gEvent = NULL;
+	HANDLE gEvent = nullptr;
 	SECURITY_ATTRIBUTES sa = { 0 };
 	PSECURITY_DESCRIPTOR psd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 	
@@ -185,7 +185,7 @@ HANDLE createGlobalEvent(bool manualReset,bool initialState, wchar_t* eventName)
 	if (createSecurityAttributes(&sa, psd))
 	{
 		gEvent = CreateEvent(&sa, manualReset, initialState, eventName);
-		if (gEvent != NULL)
+		if (gEvent != nullptr)
 		{
 			if (ResetEvent(gEvent) == 0)
 			{
@@ -210,14 +210,14 @@ void createAllGloblEvents()
 
 HANDLE mapNamedMemory()
 {
-	HANDLE hMapFile = NULL;
+	HANDLE hMapFile = nullptr;
 	SECURITY_ATTRIBUTES sa = { 0 };
 	PSECURITY_DESCRIPTOR psd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 
 	if (createSecurityAttributes(&sa,psd))
 	{
 		hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE, 0, MEM_BUF_SIZE, GLOBAL_SHARED_MEMORY);
-		if (hMapFile == NULL)
+		if (hMapFile == nullptr)
 		{
 			_tprintf(TEXT("Error calling CreateFileMapping %d.\n"), GetLastError());
 		}
@@ -231,13 +231,13 @@ HANDLE mapNamedMemory()
 CHAR* readConfigFile(DWORD * bufLen)
 {
 	std::wstring cfgFwPath = getFullPathOfFile(std::wstring(CONF_FILE_NAME));
-	HANDLE hFile = CreateFile(cfgFwPath.c_str(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hFile = CreateFile(cfgFwPath.c_str(),GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL, nullptr);
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
 		_tprintf(TEXT("No configuration file found %d.\n"), GetLastError());
 	}
-	else if (!ReadFile(hFile,configBuf, MEM_BUF_SIZE - 1, bufLen,NULL))
+	else if (!ReadFile(hFile,configBuf, MEM_BUF_SIZE - 1, bufLen,nullptr))
 	{
 		_tprintf(TEXT("ERROR: ReadFile %d.\n"), GetLastError());
 
@@ -294,13 +294,13 @@ void readConfigAndMapToMemory()
 	{
 		globalMappedMemory = mapNamedMemory();
 
-		if (globalMappedMemory == NULL)
+		if (globalMappedMemory == nullptr)
 		{
 			std::quick_exit(-1);
 		}
 
 		pBuf = (CHAR*)MapViewOfFile(globalMappedMemory, FILE_MAP_ALL_ACCESS, 0, 0, MEM_BUF_SIZE);
-		if (pBuf == NULL)
+		if (pBuf == nullptr)
 		{
 			_tprintf(TEXT("Error calling MapViewOfFile %d.\n"), GetLastError());
 			CloseHandle(globalMappedMemory);
@@ -318,7 +318,7 @@ void readConfigAndMapToMemory()
 void sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
 {
 	HANDLE hEvent = createGlobalEvent(true, false, globalEventName);
-	if (hEvent == NULL)
+	if (hEvent == nullptr)
 	{
 		_tprintf(TEXT("Could not get handle to event %s, error: %d\n"), globalEventName, GetLastError());
 		return;
@@ -366,12 +366,12 @@ void cmdPid(int argc, wchar_t* argv[])
 	{
 		procNum = std::stoi((std::wstring)argv[2], nullptr, 10);
 		_tprintf(TEXT("Enabling RPCFW for process : %d\n"), procNum);
-		crawlProcesses(procNum, NULL);
+		crawlProcesses(procNum, nullptr);
 	}
 	else
 	{
 		_tprintf(TEXT("Enabling RPCFW for ALL processes\n"));
-		crawlProcesses(0, NULL);
+		crawlProcesses(0, nullptr);
 	}
 }
 
@@ -395,7 +395,7 @@ void cmdProcess(int argc, wchar_t* argv[])
 	else
 	{
 		_tprintf(TEXT("Enabling RPCFW for ALL processes\n"));
-		crawlProcesses(0, NULL);
+		crawlProcesses(0, nullptr);
 	}
 }
 

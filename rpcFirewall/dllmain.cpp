@@ -19,7 +19,7 @@ HMODULE myhModule;
 DoubleBufferedConfig config;
 std::string privateConfigBuffer = {};
 
-CHAR* mappedBuf = NULL;
+CHAR* mappedBuf = nullptr;
 bool AuditOnly = false;
 bool detouredFunctions = false;
 bool verbose = true;
@@ -27,10 +27,10 @@ bool verbose = true;
 wchar_t myProcessName[MAX_PATH];
 wchar_t myProcessID[16] = { 0 };
 
-HANDLE uninstallEvent = NULL;
-HANDLE configurationUpdatedEvent = NULL;
-HANDLE managerDoneEvent = NULL;
-HANDLE hConfigurationMapFile = NULL;
+HANDLE uninstallEvent = nullptr;
+HANDLE configurationUpdatedEvent = nullptr;
+HANDLE managerDoneEvent = nullptr;
+HANDLE hConfigurationMapFile = nullptr;
 
 DWORD configurationVersion = 0;
 
@@ -155,7 +155,7 @@ bool checkIfReleventRegisteredEndpointsForProcess()
 			if (status == RPC_S_OK)
 			{
 				singleEndpoint = (wchar_t*)szStringBinding;
-				if (_tcsstr(singleEndpoint.c_str(), _T("ncalrpc")) == NULL)
+				if (_tcsstr(singleEndpoint.c_str(), _T("ncalrpc")) == nullptr)
 				{
 					relevantEndpoint = true;
 				}
@@ -187,7 +187,7 @@ bool checkIfRegisteredUUIDsForProcess()
 	std::wstring allUUIDs = _T("UUID LIST:");
 	std::wstring singleUUID;
 
-	RPC_STATUS status = RpcMgmtInqIfIds(NULL, &if_id_vector);
+	RPC_STATUS status = RpcMgmtInqIfIds(nullptr, &if_id_vector);
 	if (status == RPC_S_OK)
 	{
 		for (unsigned long i = 0; i < if_id_vector->Count; i++)
@@ -539,12 +539,12 @@ bool checkIfVerbose()
 
 void loadConfigurationFromMappedMemory()
 {
-	if (hConfigurationMapFile == NULL)
+	if (hConfigurationMapFile == nullptr)
 	{
 		WRITE_DEBUG_MSG(_TEXT("Calling OpenFileMapping..."));
 		hConfigurationMapFile = OpenFileMapping(FILE_MAP_READ, false, GLOBAL_SHARED_MEMORY);
 
-		if (hConfigurationMapFile == NULL)
+		if (hConfigurationMapFile == nullptr)
 		{
 			WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("Could not open configuration. Auditing only..."));
 			AuditOnly = true;
@@ -553,16 +553,16 @@ void loadConfigurationFromMappedMemory()
 		}
 	}
 	
-	if (mappedBuf == NULL)
+	if (mappedBuf == nullptr)
 	{
 		WRITE_DEBUG_MSG(_TEXT("Calling MapViewOfFile..."));
 		mappedBuf = (CHAR*)MapViewOfFile(hConfigurationMapFile, FILE_MAP_READ, 0, 0, MEM_BUF_SIZE);
 
-		if (mappedBuf == NULL)
+		if (mappedBuf == nullptr)
 		{
 			WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("Error: Could not map view of file."));
 			CloseHandle(hConfigurationMapFile);
-			hConfigurationMapFile = NULL;
+			hConfigurationMapFile = nullptr;
 
 			return;
 		}
@@ -605,7 +605,7 @@ void waitForFurtherInstructions()
 	loadConfigurationFromMappedMemory();
 	HANDLE uninstallEvent = OpenEvent(SYNCHRONIZE, false, GLOBAL_RPCFW_EVENT_UNPROTECT);
 
-	if (uninstallEvent != NULL)
+	if (uninstallEvent != nullptr)
 	{
 		HANDLE allEvents[2];
 		allEvents[0] = uninstallEvent;
@@ -646,7 +646,7 @@ void mainStart()
 		return;
 	}
 
-	if (!checkIfReleventRegisteredEndpointsForProcess() && _tcsstr(myProcessName,_T("spoolsv.exe")) == NULL)
+	if (!checkIfReleventRegisteredEndpointsForProcess() && _tcsstr(myProcessName,_T("spoolsv.exe")) == nullptr)
 	{
 		unloadSelf();
 		return;
@@ -730,23 +730,23 @@ void dllDetached()
 		}
 	}
 
-	if (uninstallEvent != NULL) CloseHandle(uninstallEvent);
-	if (configurationUpdatedEvent != NULL) CloseHandle(configurationUpdatedEvent);
-	if (managerDoneEvent != NULL) CloseHandle(managerDoneEvent);
-	if (hConfigurationMapFile != NULL) CloseHandle(hConfigurationMapFile);
+	if (uninstallEvent != nullptr) CloseHandle(uninstallEvent);
+	if (configurationUpdatedEvent != nullptr) CloseHandle(configurationUpdatedEvent);
+	if (managerDoneEvent != nullptr) CloseHandle(managerDoneEvent);
+	if (hConfigurationMapFile != nullptr) CloseHandle(hConfigurationMapFile);
 
 }
 
 bool APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
-	GetModuleFileName(NULL, myProcessName, MAX_PATH);
+	GetModuleFileName(nullptr, myProcessName, MAX_PATH);
 	_stprintf_s(myProcessID, TEXT("%d"), GetCurrentProcessId());
 
     switch (ul_reason_for_call)
     {
 		case DLL_PROCESS_ATTACH:
 			myhModule = hModule;
-			CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)mainStart, NULL, 0,NULL);
+			CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)mainStart, nullptr, 0,nullptr);
 			break;
 		case DLL_PROCESS_DETACH:
 			dllDetached();		
@@ -782,7 +782,7 @@ RpcEventParameters populateEventParameters(PRPC_MESSAGE pRpcMsg, wchar_t* szStri
 
 	_RPC_IF_ID* rpcifid = (_RPC_IF_ID*)(byteUuidPointer + 4);
 
-	RPC_WSTR szStringUuid = NULL;
+	RPC_WSTR szStringUuid = nullptr;
 	RPC_STATUS status = UuidToString(&(rpcifid->Uuid), &szStringUuid);
 	if (status == RPC_S_OK)
 	{
@@ -793,7 +793,7 @@ RpcEventParameters populateEventParameters(PRPC_MESSAGE pRpcMsg, wchar_t* szStri
 		unsigned long AuthnLevel;
 		unsigned long AuthnSvc;
 		unsigned long AuthzSvc;
-		status = RpcBindingInqAuthClient(NULL, &Privs, NULL, &AuthnLevel, &AuthnSvc, &AuthzSvc);
+		status = RpcBindingInqAuthClient(nullptr, &Privs, nullptr, &AuthnLevel, &AuthnSvc, &AuthzSvc);
 		if (status == RPC_S_BINDING_HAS_NO_AUTH || status != RPC_S_OK)
 		{
 			eventParams.clientName = TEXT("UNKNOWN");
@@ -808,7 +808,7 @@ RpcEventParameters populateEventParameters(PRPC_MESSAGE pRpcMsg, wchar_t* szStri
 		}
 	}
 
-	if (szStringUuid != NULL) RpcStringFree(&szStringUuid);
+	if (szStringUuid != nullptr) RpcStringFree(&szStringUuid);
 	return eventParams;
 }
 
@@ -825,16 +825,16 @@ void rpcFunctionVerboseOutput(bool allowCall, RpcEventParameters eventParams)
 
 void RpcRuntimeCleanups(RPC_BINDING_HANDLE serverBinding,wchar_t* szStringBinding, wchar_t* szStringBindingServer)
 {
-	if (serverBinding != NULL) RpcBindingFree(&serverBinding);
-	if (szStringBinding != NULL) RpcStringFree((RPC_WSTR*)&szStringBinding);
-	if (szStringBindingServer != NULL) RpcStringFree((RPC_WSTR*)&szStringBindingServer);
+	if (serverBinding != nullptr) RpcBindingFree(&serverBinding);
+	if (szStringBinding != nullptr) RpcStringFree((RPC_WSTR*)&szStringBinding);
+	if (szStringBindingServer != nullptr) RpcStringFree((RPC_WSTR*)&szStringBindingServer);
 }
 
 bool processRPCCallInternal(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 {
-	RPC_BINDING_HANDLE serverBinding = NULL;
-	wchar_t* szStringBinding = NULL;
-	wchar_t* szStringBindingServer = NULL;
+	RPC_BINDING_HANDLE serverBinding = nullptr;
+	wchar_t* szStringBinding = nullptr;
+	wchar_t* szStringBindingServer = nullptr;
 	bool allowCall = true;
 	bool auditCall = false;
 
@@ -860,7 +860,7 @@ bool processRPCCallInternal(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 		}
 
 		// Consider only calls over network transports
-		if (_tcsstr(szStringBinding, _T("ncalrpc")) != NULL)
+		if (_tcsstr(szStringBinding, _T("ncalrpc")) != nullptr)
 		{
 			RpcRuntimeCleanups(serverBinding, szStringBinding, szStringBindingServer);
 
