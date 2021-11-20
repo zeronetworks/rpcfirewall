@@ -277,7 +277,7 @@ std::wstring escapeIpv6Address(wchar_t* sourceAddress)
     return sourceAddressEscaped;
 }
 
-bool rpcFunctionCalledEvent(bool callSuccessful, RpcEventParameters eventParams)
+bool rpcFunctionCalledEvent(bool callSuccessful, const RpcEventParameters& eventParams)
 {
     bool bSuccess = false;
     WORD eventType = EVENTLOG_AUDIT_SUCCESS;

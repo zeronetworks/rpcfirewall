@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <algorithm>
 #include "config.hpp"
+#include "rpcWrappers.hpp"
 
 HMODULE myhModule;
 
@@ -336,6 +337,15 @@ bool extractAuditFromConfigLine(const std::wstring& confLine)
 	return audit.find(_T("true")) != std::string::npos;
 }
 
+RpcCallPolicy extractPolicyFromConfigLine(const std::wstring& confLine)
+{
+	return RpcCallPolicy
+	{
+		.allow = extractActionFromConfigLine(confLine),
+		.audit = extractAuditFromConfigLine(confLine),
+	};
+}
+
 bool extractVerboseFromConfigLine(const std::wstring& confLine)
 {
 	std::wstring loc_verbose = extractKeyValueFromConfigLine(confLine, _T("verbose:"));
@@ -371,8 +381,7 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 			lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
 			lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
 			lineConfig.source_addr = extractAddressFromConfigLine(confLineString);
-			lineConfig.allow = extractActionFromConfigLine(confLineString);
-			lineConfig.audit = extractAuditFromConfigLine(confLineString);
+			lineConfig.policy = extractPolicyFromConfigLine(confLineString);
 			lineConfig.verbose = extractVerboseFromConfigLine(confLineString);
 			passiveConfigVector.push_back(lineConfig);
 		}
@@ -437,30 +446,25 @@ bool checkAddress(const AddressFilter& addrFilter, const std::wstring& srcAddr)
 	return addrFilter == srcAddr;
 }
 
-std::pair<bool,bool> checkIfRPCCallFiltered(RpcEventParameters rpcEvent)
+RpcCallPolicy getMatchingPolicy(const RpcEventParameters& rpcEvent)
 {
 	const ConfigVector& configurationVector = config.getActiveConfigurationVector();
 
-	bool UUIDMatch, AddressMatch, OpNumMatch, auditCall, filterCall = false;
-	DWORD verboseCount = 0;
-
 	for (const LineConfig& lc : configurationVector)
 	{
-		UUIDMatch = checkUUID(lc.uuid, rpcEvent.uuidString);
-		AddressMatch = checkAddress(lc.source_addr, rpcEvent.sourceAddress);
-		OpNumMatch = checkOpNum(lc.opnum, rpcEvent.OpNum);
+		const bool UUIDMatch = checkUUID(lc.uuid, rpcEvent.uuidString);
+		const bool AddressMatch = checkAddress(lc.source_addr, rpcEvent.sourceAddress);
+		const bool OpNumMatch = checkOpNum(lc.opnum, rpcEvent.OpNum);
 
 		if (UUIDMatch && AddressMatch && OpNumMatch)
 		{
 			WRITE_DEBUG_MSG(_T("Rule Matched for RPC call."));
-			auditCall = lc.audit;
-			filterCall = !lc.allow;
 
-			break;
+			return lc.policy;
 		}
 	}
 
-	return std::make_pair(filterCall,auditCall);
+	return RpcCallPolicy{};
 }
 
 void mappedBufferCopyToPrivateConfiguration()
@@ -812,73 +816,71 @@ RpcEventParameters populateEventParameters(PRPC_MESSAGE pRpcMsg, wchar_t* szStri
 	return eventParams;
 }
 
-void rpcFunctionVerboseOutput(bool allowCall, RpcEventParameters eventParams)
+void rpcFunctionVerboseOutput(bool allowCall, const RpcEventParameters& eventParams)
 {
-	std::wstring allowed(_T("Allowed"));
-	if (!allowCall) allowed = _T("Blocked");
-	if (verbose)
-	{
-		std::wstring verboseRpcCall(allowed + _T(",") + eventParams.functionName + _T(",") + eventParams.uuidString + _T(",") + eventParams.OpNum + _T(",") + eventParams.endpoint + _T(",") + eventParams.sourceAddress + _T(",") + eventParams.clientName + _T(",") + eventParams.authnLevel + _T(",") + eventParams.authnSvc);
-		WRITE_DEBUG_MSG(verboseRpcCall.c_str());
-	}
-}
+	std::wstringstream wss;
 
-void RpcRuntimeCleanups(RPC_BINDING_HANDLE serverBinding,wchar_t* szStringBinding, wchar_t* szStringBindingServer)
-{
-	if (serverBinding != nullptr) RpcBindingFree(&serverBinding);
-	if (szStringBinding != nullptr) RpcStringFree((RPC_WSTR*)&szStringBinding);
-	if (szStringBindingServer != nullptr) RpcStringFree((RPC_WSTR*)&szStringBindingServer);
+	wss << (allowCall ? _T("Allowed") : _T("Blocked")) << _T(",");
+	wss << eventParams.functionName + _T(",");
+	wss << eventParams.uuidString << _T(",");
+	wss << eventParams.OpNum << _T(",");
+	wss << eventParams.endpoint << _T(",");
+	wss << eventParams.sourceAddress << _T(",");
+	wss << eventParams.clientName << _T(",");
+	wss << eventParams.authnLevel << _T(",");
+	wss << eventParams.authnSvc;
+
+	WRITE_DEBUG_MSG(wss.str());
 }
 
 bool processRPCCallInternal(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 {
-	RPC_BINDING_HANDLE serverBinding = nullptr;
-	wchar_t* szStringBinding = nullptr;
-	wchar_t* szStringBindingServer = nullptr;
-	bool allowCall = true;
-	bool auditCall = false;
+	RpcCallPolicy policy{};
 
-	try {
-		RPC_STATUS status;
-
-		status = RpcBindingServerFromClient(0, &serverBinding);
+	try
+	{
+		RpcBindingWrapper serverBinding;
+		RPC_STATUS status = RpcBindingServerFromClient(0, &serverBinding.binding);
 		if (status != RPC_S_OK)
 		{
 			WRITE_DEBUG_MSG_WITH_STATUS(_T("RpcBindingServerFromClient failed"), status);
-			RpcRuntimeCleanups(serverBinding, szStringBinding, szStringBindingServer);
-
-			return allowCall;
+			return true;
 		}
 
-		status = RpcBindingToStringBinding(serverBinding, (RPC_WSTR*)&szStringBinding);
+		RpcStringWrapper szStringBinding;
+		status = RpcBindingToStringBinding(serverBinding.binding, szStringBinding.getRpcPtr());
 		if (status != RPC_S_OK)
 		{
 			WRITE_DEBUG_MSG_WITH_STATUS(_T("RpcBindingToStringBinding failed"), status);
-			RpcRuntimeCleanups(serverBinding, szStringBinding, szStringBindingServer);
-
-			return allowCall;
+			return true;
 		}
 
 		// Consider only calls over network transports
-		if (_tcsstr(szStringBinding, _T("ncalrpc")) != nullptr)
+		if (_tcsstr(szStringBinding.str, _T("ncalrpc")) != nullptr)
 		{
-			RpcRuntimeCleanups(serverBinding, szStringBinding, szStringBindingServer);
-
-			return allowCall;
+			return true;
 		}
 
-		status = RpcBindingToStringBinding(pRpcMsg->Handle, (RPC_WSTR*)&szStringBindingServer);
+		RpcStringWrapper szStringBindingServer;
+		status = RpcBindingToStringBinding(pRpcMsg->Handle, szStringBindingServer.getRpcPtr());
 		if (status != RPC_S_OK)
 		{
 			WRITE_DEBUG_MSG_WITH_STATUS(_T("Could not extract server endpoint via RpcBindingToStringBinding"), status);
 		}
 
-		RpcEventParameters eventParams = populateEventParameters(pRpcMsg, szStringBindingServer, szStringBinding, functionName);
-		auto configResult = checkIfRPCCallFiltered(eventParams);
-		allowCall = !configResult.first;
-		auditCall = configResult.second;
-		rpcFunctionVerboseOutput(allowCall,eventParams);
-		if (auditCall) rpcFunctionCalledEvent(allowCall, eventParams);
+		const RpcEventParameters eventParams = populateEventParameters(pRpcMsg, szStringBindingServer.str, szStringBinding.str, functionName);
+		
+		policy = getMatchingPolicy(eventParams);
+
+		if (verbose)
+		{
+			rpcFunctionVerboseOutput(policy.allow, eventParams);
+		}
+
+		if (policy.audit)
+		{
+			rpcFunctionCalledEvent(policy.allow, eventParams);
+		}
 	}
 	catch (const std::runtime_error& re) {
 		WRITE_DEBUG_MSG_WITH_ERROR_MSG(TEXT("Exception: Runtime error during call"), (wchar_t*)re.what());
@@ -890,15 +892,15 @@ bool processRPCCallInternal(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 		WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("Exception: Runtime error during call"));
 	}
 
-	RpcRuntimeCleanups(serverBinding, szStringBinding, szStringBindingServer);
-
-	return allowCall;
+	return policy.allow;
 }
 
 void processRPCCall(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 {
-	bool allowCall = processRPCCallInternal(functionName, pRpcMsg);
-	if (!allowCall) {
+	const bool allowCall = processRPCCallInternal(functionName, pRpcMsg);
+	
+	if (!allowCall)
+	{
 		RpcRaiseException(ERROR_ACCESS_DENIED);
 	}
 }

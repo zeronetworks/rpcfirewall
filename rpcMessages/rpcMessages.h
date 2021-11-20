@@ -39,7 +39,7 @@ DllExport bool processProtectedEvent(bool , wchar_t*, wchar_t* );
 
 DllExport bool processUnprotectedEvent(bool, wchar_t*, wchar_t* );
 
-DllExport bool rpcFunctionCalledEvent(bool , RpcEventParameters );
+DllExport bool rpcFunctionCalledEvent(bool , const RpcEventParameters& );
 
 DllExport bool compareCharCaseInsensitive(wchar_t , wchar_t );
 
