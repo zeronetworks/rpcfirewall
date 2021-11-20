@@ -133,11 +133,6 @@ void writeDebugOutputWithPIDGetLastError(const std::wstring& dbgMsg)
 	}
 }
 
-void unloadSelf()
-{
-	FreeLibraryAndExitThread(myhModule, 0);
-}
-
 bool checkIfReleventRegisteredEndpointsForProcess()
 {
 	bool relevantEndpoint = false;
@@ -634,21 +629,29 @@ void waitForFurtherInstructions()
 	{
 		WRITE_DEBUG_MSG_WITH_GETLASTERROR(TEXT("OpenEvent failed, unloading firewall..."));
 	}
-	unloadSelf();
 }
+
+
+struct AutoUnloader
+{
+	~AutoUnloader()
+	{
+		FreeLibraryAndExitThread(myhModule, 0);
+	}
+};
 
 void mainStart()
 {
+	AutoUnloader autoUnloader;
+
 	WRITE_DEBUG_MSG(TEXT("RPCFirewall DLL Loaded..."));
 	if (!checkIfRegisteredUUIDsForProcess())
 	{
-		unloadSelf();
 		return;
 	}
 
 	if (!checkIfReleventRegisteredEndpointsForProcess() && _tcsstr(myProcessName,_T("spoolsv.exe")) == nullptr)
 	{
-		unloadSelf();
 		return;
 	}
 
@@ -692,14 +695,11 @@ void mainStart()
 		_stprintf_s(errMsg, TEXT("RpcFirewall installation error, DetourTransactionCommit() failed :%d"), errCode);
 		WRITE_DEBUG_MSG(errMsg);
 		processProtectedEvent(false, myProcessName, myProcessID);
-		unloadSelf();
 		return;
 	}
-	else
-	{
-		WRITE_DEBUG_MSG(TEXT("RpcFirewall installed!"));
-		processProtectedEvent(true, myProcessName, myProcessID);
-	}
+
+	WRITE_DEBUG_MSG(TEXT("RpcFirewall installed!"));
+	processProtectedEvent(true, myProcessName, myProcessID);
 
 	waitForFurtherInstructions();
 }

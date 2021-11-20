@@ -191,8 +191,8 @@ void addEventSource()
    
 }
 
-bool processProtectedEvent(bool successfulInjection, wchar_t* processName, wchar_t* processID) {
-
+bool processProtectedEvent(bool successfulInjection, wchar_t* processName, wchar_t* processID)
+{
     bool bSuccess = false;
     WORD eventType = EVENTLOG_AUDIT_SUCCESS;
     LPCTSTR aInsertions[2] = { nullptr, nullptr };
