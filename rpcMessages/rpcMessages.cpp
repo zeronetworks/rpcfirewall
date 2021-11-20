@@ -16,7 +16,7 @@
 #define PROVIDER_NAME TEXT("RPCFWP")
 #define DLL_PATH TEXT("%SystemRoot%\\system32\\rpcMessages.dll")
 
-HANDLE hEventLog = NULL;
+HANDLE hEventLog = nullptr;
 
 bool compareCharCaseInsensitive(wchar_t c1, wchar_t c2)
 {
@@ -103,8 +103,8 @@ bool regDelNodeRecurse(HKEY hKeyRoot, LPTSTR lpSubKey)
     }
 
     dwSize = MAX_PATH;
-    lResult = RegEnumKeyEx(hKey, 0, szName, &dwSize, NULL,
-        NULL, NULL, &ftWrite);
+    lResult = RegEnumKeyEx(hKey, 0, szName, &dwSize, nullptr,
+        nullptr, nullptr, &ftWrite);
 
     if (lResult == ERROR_SUCCESS)
     {
@@ -119,8 +119,8 @@ bool regDelNodeRecurse(HKEY hKeyRoot, LPTSTR lpSubKey)
 
             dwSize = MAX_PATH;
 
-            lResult = RegEnumKeyEx(hKey, 0, szName, &dwSize, NULL,
-                NULL, NULL, &ftWrite);
+            lResult = RegEnumKeyEx(hKey, 0, szName, &dwSize, nullptr,
+                nullptr, nullptr, &ftWrite);
 
         } while (lResult == ERROR_SUCCESS);
     }
@@ -151,7 +151,7 @@ bool deleteEventSource()
 
 void addEventSource()
 {
-    HKEY    hRegKey = NULL;
+    HKEY    hRegKey = nullptr;
     DWORD   dwError = 0;
     wchar_t   szRegPath[MAX_PATH];
     wchar_t   szDLLPath[MAX_PATH];
@@ -160,13 +160,13 @@ void addEventSource()
     _stprintf_s(szDLLPath, _T("%s"), DLL_PATH);
 
     // Create the event source registry key
-    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, szRegPath, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY | KEY_READ | KEY_WRITE | KEY_SET_VALUE, NULL, &hRegKey, NULL) != ERROR_SUCCESS)
+    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, szRegPath, 0, nullptr, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY | KEY_READ | KEY_WRITE | KEY_SET_VALUE, nullptr, &hRegKey, nullptr) != ERROR_SUCCESS)
     {
         _tprintf(TEXT("ERROR: Couldn't create event source registry key: [%d].\n"), GetLastError());
         return;
     }
         // Name of the PE module that contains the message resource
-    if (GetModuleFileName(NULL, szRegPath, MAX_PATH) == 0)
+    if (GetModuleFileName(nullptr, szRegPath, MAX_PATH) == 0)
     {
         _tprintf(TEXT("ERROR: call to GetModuleFileName failed: [%d].\n"), GetLastError());
         return;
@@ -195,14 +195,14 @@ bool processProtectedEvent(bool successfulInjection, wchar_t* processName, wchar
 
     bool bSuccess = false;
     WORD eventType = EVENTLOG_AUDIT_SUCCESS;
-    LPCTSTR aInsertions[2] = { NULL, NULL };
+    LPCTSTR aInsertions[2] = { nullptr, nullptr };
 
     if (!successfulInjection) {
         eventType = EVENTLOG_AUDIT_FAILURE;
     }
 
     // Open the eventlog
-    HANDLE hEventLog = RegisterEventSource(NULL, PROVIDER_NAME);
+    HANDLE hEventLog = RegisterEventSource(nullptr, PROVIDER_NAME);
     aInsertions[0] = processName;
     aInsertions[1] = processID;
 
@@ -213,11 +213,11 @@ bool processProtectedEvent(bool successfulInjection, wchar_t* processName, wchar
             eventType,  
             0,               
             PROCESS_PROTECTION_ADDED,           
-            NULL,                       
+            nullptr,                       
             2,                          
             0,                          
             aInsertions,                
-            NULL                        
+            nullptr                        
         );
     }
 
@@ -230,14 +230,14 @@ bool processUnprotectedEvent(bool successfulIUnloading, wchar_t* processName, wc
 
     bool bSuccess = false;
     WORD eventType = EVENTLOG_AUDIT_SUCCESS;
-    LPCTSTR aInsertions[2] = { NULL, NULL };
+    LPCTSTR aInsertions[2] = { nullptr, nullptr };
 
     if (!successfulIUnloading) {
         eventType = EVENTLOG_AUDIT_FAILURE;
     }
 
     // Open the eventlog
-    HANDLE hEventLog = RegisterEventSource(NULL, PROVIDER_NAME);
+    HANDLE hEventLog = RegisterEventSource(nullptr, PROVIDER_NAME);
     aInsertions[0] = processName;
     aInsertions[1] = processID;
 
@@ -248,11 +248,11 @@ bool processUnprotectedEvent(bool successfulIUnloading, wchar_t* processName, wc
             eventType,  
             0,               
             PROCESS_PROTECTION_REMOVED,           
-            NULL,                       
+            nullptr,                       
             2,                          
             0,                          
             aInsertions,                
-            NULL                        
+            nullptr                        
         );
     }
 
@@ -281,16 +281,16 @@ bool rpcFunctionCalledEvent(bool callSuccessful, RpcEventParameters eventParams)
 {
     bool bSuccess = false;
     WORD eventType = EVENTLOG_AUDIT_SUCCESS;
-    LPCWSTR aInsertions[11] = {NULL};
+    LPCWSTR aInsertions[11] = {nullptr};
    
     if (!callSuccessful) {
         eventType = EVENTLOG_AUDIT_FAILURE;
     }
 
     // Open the eventlog
-    if (hEventLog == NULL)
+    if (hEventLog == nullptr)
     {
-        hEventLog = RegisterEventSource(NULL, PROVIDER_NAME);
+        hEventLog = RegisterEventSource(nullptr, PROVIDER_NAME);
     }
       
     aInsertions[0] = (wchar_t*)eventParams.functionName.c_str();
@@ -312,11 +312,11 @@ bool rpcFunctionCalledEvent(bool callSuccessful, RpcEventParameters eventParams)
             eventType,  
             0,               
             RPC_SERVER_CALL,           
-            NULL,                      
+            nullptr,                      
             11,                        
             0,                         
             aInsertions,               
-            NULL                       
+            nullptr                       
         );
     }
 
@@ -335,7 +335,7 @@ bool APIENTRY DllMain( HMODULE hModule,
             break;
         case DLL_PROCESS_DETACH:
             // Close eventlog
-            if (hEventLog != NULL) DeregisterEventSource(hEventLog);
+            if (hEventLog != nullptr) DeregisterEventSource(hEventLog);
             break;
     }
     return true;

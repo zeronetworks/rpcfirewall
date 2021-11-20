@@ -3,7 +3,7 @@
 void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 
 	HANDLE hProcess = OpenProcess(MAXIMUM_ALLOWED, false, processID);
-	if (hProcess == NULL)
+	if (hProcess == nullptr)
 	{
 		_tprintf(TEXT("OpenProcess failed for pid %u: [%d]\n"), processID,GetLastError());
 		return;
@@ -11,8 +11,8 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 
 	const char* szInjectionDLLName = _bstr_t(dllToInject);
 
-	void* LLParam = (LPVOID)VirtualAllocEx(hProcess, NULL, MAX_PATH, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-	if (LLParam == NULL)
+	void* LLParam = (LPVOID)VirtualAllocEx(hProcess, nullptr, MAX_PATH, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	if (LLParam == nullptr)
 	{
 		_tprintf(TEXT("Error when calling VirtualAllocEx %d \n"), GetLastError());
 		return;
@@ -25,14 +25,14 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 	}
 	
 	FARPROC pLoadLib = GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "LoadLibraryA");
-	if (pLoadLib == NULL)
+	if (pLoadLib == nullptr)
 	{
 		_tprintf(TEXT("Error when calling GetProcAddress %d \n"), GetLastError());
 		return;
 	}
 	
-	HANDLE hRemoteThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pLoadLib, LLParam, 0, 0);
-	if (hRemoteThread == NULL)
+	HANDLE hRemoteThread = CreateRemoteThread(hProcess, nullptr, 0, (LPTHREAD_START_ROUTINE)pLoadLib, LLParam, 0, 0);
+	if (hRemoteThread == nullptr)
 	{
 		_tprintf(TEXT("Error when calling CreateRemoteThread %d \n"), GetLastError());
 		return;
