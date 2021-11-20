@@ -6,13 +6,18 @@ using OpNumFilter = std::optional<DWORD>;
 using UUIDFilter = std::optional<std::wstring>;
 using AddressFilter = std::optional<std::wstring>;
 
+struct RpcCallPolicy
+{
+	bool allow = true;
+	bool audit = false;
+};
+
 struct LineConfig
 {
 	UUIDFilter uuid;
 	OpNumFilter opnum;
 	AddressFilter source_addr;
-	bool allow;
-	bool audit;
+	RpcCallPolicy policy;
 	bool verbose;
 };
 
