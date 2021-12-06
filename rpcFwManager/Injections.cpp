@@ -14,7 +14,7 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 	void* LLParam = (LPVOID)VirtualAllocEx(hProcess, NULL, MAX_PATH, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 	if (LLParam == NULL)
 	{
-		_tprintf(TEXT("Error when calling WriteProcessMemory %d \n"), GetLastError());
+		_tprintf(TEXT("Error when calling VirtualAllocEx %d \n"), GetLastError());
 		return;
 	}
 
