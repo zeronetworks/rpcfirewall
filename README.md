@@ -97,6 +97,11 @@ Whenever the configuration changes, you need to notify the rpcFirewall.dll via t
 ```bash
 RpcFwManager.exe /update
 ```
+
+## Viewing Logs
+Open the Event Viewer -> Applications and Services Logs -> RPCFWP.
+Add the Keywords column - this column would contain Audit Success/Failure.
+
 # Can I Contribute?
 Yes! Don't be shy to do a pull request. 
 
