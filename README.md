@@ -33,6 +33,7 @@ It is made up from 3 components:
 # How to use?
 ## Installing / Uninstalling 
 Installation simply drops the RPC Firewall DLLs into the %SystemRoot%\System32, and configures the **RPCFWP** application log for the Event Viewer.
+Make sure the event viewer is closed during install/uninstall.
 ```bash
 RpcFwManager.exe /install
 ```
