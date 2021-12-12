@@ -293,7 +293,9 @@ std::wstring extractKeyValueFromConfigLine(const std::wstring& confLine, const s
 
 UUIDFilter extractUUIDFilterFromConfigLine(const std::wstring& confLine)
 {
-	const std::wstring uuid = extractKeyValueFromConfigLine(confLine, _T("uuid:"));
+	std::wstring uuid = extractKeyValueFromConfigLine(confLine, _T("uuid:"));
+	
+	std::transform(uuid.begin(), uuid.end(), uuid.begin(), ::tolower);
 
 	return uuid.empty() ? UUIDFilter{} : UUIDFilter{ uuid };
 }
