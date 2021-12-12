@@ -100,6 +100,7 @@ RpcFwManager.exe /update
 
 ## Viewing Logs
 Open the Event Viewer -> Applications and Services Logs -> RPCFWP.
+
 Add the Keywords column - this column would contain Audit Success/Failure.
 
 # Can I Contribute?
