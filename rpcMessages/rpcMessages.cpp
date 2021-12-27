@@ -13,7 +13,7 @@
 
 #pragma comment(lib, "advapi32.lib")
 
-#define PROVIDER_NAME TEXT("RPCFWP")
+#define PROVIDER_NAME TEXT("RPCFW")
 #define DLL_PATH TEXT("%SystemRoot%\\system32\\rpcMessages.dll")
 
 HANDLE hEventLog = nullptr;
@@ -152,10 +152,13 @@ bool deleteEventSource()
 void addEventSource()
 {
     HKEY    hRegKey = nullptr;
+    HKEY    hRegKeyParent = nullptr;
     DWORD   dwError = 0;
     wchar_t   szRegPath[MAX_PATH];
     wchar_t   szDLLPath[MAX_PATH];
+    wchar_t   szRegPathParent[MAX_PATH];
 
+    _stprintf_s(szRegPathParent, _T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s"), PROVIDER_NAME);
     _stprintf_s(szRegPath, _T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s"), PROVIDER_NAME, PROVIDER_NAME);
     _stprintf_s(szDLLPath, _T("%s"), DLL_PATH);
 
@@ -186,6 +189,20 @@ void addEventSource()
         _tprintf(TEXT("ERROR: setting value to TypesSupported failed: [%d].\n"), GetLastError());
         return;
     }   
+
+    if (RegOpenKeyW(HKEY_LOCAL_MACHINE, szRegPathParent, &hRegKeyParent) != ERROR_SUCCESS)
+    {
+        _tprintf(TEXT("ERROR: getting parent key %s : [%d].\n"), szRegPathParent,GetLastError());
+        return;
+    }
+
+    DWORD maxSize = 20971520;
+    if (RegSetValueEx(hRegKeyParent, _T("MaxSize"), 0, REG_DWORD, (LPBYTE)&maxSize, sizeof(maxSize)) != ERROR_SUCCESS)
+    {
+        _tprintf(TEXT("ERROR: setting value to MaxSize failed: [%d].\n"), GetLastError());
+        return;
+    }
+    
     _tprintf(TEXT("Finished configuring the Event Log.\n"));
    RegCloseKey(hRegKey);
    
