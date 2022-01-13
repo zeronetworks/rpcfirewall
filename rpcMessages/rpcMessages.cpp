@@ -278,7 +278,7 @@ bool processUnprotectedEvent(bool successfulIUnloading, wchar_t* processName, wc
     return bSuccess;
 }
 
-std::wstring escapeIpv6Address(wchar_t* sourceAddress)
+std::wstring escapeIpv6Address(const std::wstring& sourceAddress)
 {
     std::wstring sourceAddressEscaped = sourceAddress;
 
@@ -309,13 +309,15 @@ bool rpcFunctionCalledEvent(bool callSuccessful, const RpcEventParameters& event
     {
         hEventLog = RegisterEventSource(nullptr, PROVIDER_NAME);
     }
+
+    const std::wstring escapedSrcIp = escapeIpv6Address(eventParams.sourceAddress);
       
     aInsertions[0] = (wchar_t*)eventParams.functionName.c_str();
     aInsertions[1] = (wchar_t*)eventParams.processID.c_str();
     aInsertions[2] = (wchar_t*)eventParams.processName.c_str();
     aInsertions[3] = (wchar_t*)eventParams.protocol.c_str();
     aInsertions[4] = (wchar_t*)eventParams.endpoint.c_str();
-    aInsertions[5] = (wchar_t*)(escapeIpv6Address((wchar_t*)eventParams.sourceAddress.c_str())).c_str();
+    aInsertions[5] = (wchar_t*)escapedSrcIp.c_str();
     aInsertions[6] = (wchar_t*)eventParams.uuidString.c_str();
     aInsertions[7] = (wchar_t*)eventParams.OpNum.c_str();
     aInsertions[8] = (wchar_t*)eventParams.clientName.c_str();
