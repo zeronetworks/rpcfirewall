@@ -73,6 +73,15 @@ RpcFwManager.exe /unprotect
 ```
 This will unload the rpcFirewall.dll from all processes.
 
+## Persistency
+RPC Firewall is not persistent on its own. 
+One method of making sure that processes are continuesly protected is to create a scheduled task that executes a protection command. 
+The following is a poweshell command which does just that, just replace <RPCFW_PATH> with the path actual path to the RPC Firewall release folder.
+
+```bash
+Register-ScheduledTask -TaskName "RPCFW" -Trigger (New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 60)) -User "NT AUTHORITY\SYSTEM" -Action (New-ScheduledTaskAction -Execute "rpcFwManager.exe" -Argument "/pid" -WorkingDirectory "<RPCFW_PATH>")
+```
+
 ## Configuration
 The rpcFwManager.exe looks for a **RpcFw.conf** file, in the same directory of the executable. 
 This file uses the following configuration options: 
