@@ -1,5 +1,5 @@
 # I Need More Information
-Check out our [RPC Firewall](https://zeronetworks.com/blog/stopping_lateral_movement_via_the_rpc_firewall/) blog post to gain better understanding of RPC, RPC attacks and the solution: the RPC Firewall.
+Check out our [RPC Firewall](https://zeronetworks.com/blog/stopping_lateral_movement_via_the_rpc_firewall/) blog post or our [BlackHat talk](https://www.youtube.com/watch?v=hz_YPIMeBMI) to gain better understanding of RPC, RPC attacks and the solution: the RPC Firewall.
 For any questions, issues, or simlpy to shout out - we would love to hear from you! Contact us at [support@zeronetworks.com](mailto:support@zeronetworks.com)
 
 # Why should I care?
