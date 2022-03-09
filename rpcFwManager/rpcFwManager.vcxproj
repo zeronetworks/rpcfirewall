@@ -179,12 +179,14 @@ copy /Y "$(SolutionDir)easyhook\Deploy\NetFX3.5\EasyHook*.lib" $(TargetDir)</Com
   <ItemGroup>
     <ClCompile Include="elevation.cpp" />
     <ClCompile Include="Injections.cpp" />
+    <ClCompile Include="rpcfilters.cpp" />
     <ClCompile Include="RPCMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="elevation.h" />
     <ClInclude Include="Injections.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="rpcfilters.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
