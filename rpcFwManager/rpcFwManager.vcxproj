@@ -142,7 +142,7 @@ copy /Y "$(SolutionDir)easyhook\Deploy\NetFX3.5\EasyHook*.lib" $(TargetDir)</Com
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>psapi.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Fwpuclnt.lib;psapi.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
@@ -168,7 +168,7 @@ copy /Y "$(SolutionDir)easyhook\Deploy\NetFX3.5\EasyHook*.lib" $(TargetDir)</Com
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>psapi.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Fwpuclnt.lib;psapi.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
