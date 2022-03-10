@@ -341,6 +341,8 @@ void sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
 
 void cmdInstallRPCFLT()
 {
+	_tprintf(TEXT("installing RPCFLT Provider...\n"));
+	installRPCFWProvider();
 	_tprintf(TEXT("enabling RPCFLT...\n"));
 	if (!setSecurityPrivilege(TEXT("SeSecurityPrivilege")))
 	{
@@ -391,6 +393,31 @@ void cmdUnprotect()
 	sendSignalToGlobalEvent((wchar_t*)GLOBAL_RPCFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
 }
 
+void cmdProtect(std::wstring &param)
+{
+	if (param.empty())
+	{
+		//do something...
+	}
+	else
+	{
+		if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("flt")) != std::string::npos))
+		{
+			std::string ipadrr("192.168.64.1");
+			createIPBlockRPCFilter(ipadrr);
+		}
+		else if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("fw")) != std::string::npos))
+		{
+			_tprintf(TEXT("Enabling RPCFW for ALL processes\n"));
+			crawlProcesses(0, nullptr);
+		}
+		else
+		{
+			_tprintf(TEXT("usage: /protect <fw/flt/all>\n"));
+		}
+	}
+}
+
 void cmdProcess(int argc, wchar_t* argv[])
 {
 	createAllGloblEvents();
@@ -434,6 +461,7 @@ void cmdUninstallRPCFLT()
 		_tprintf(TEXT("Error: could not obtain SeSecurityPrivilege.\n"));
 		return;
 	}
+	deleteAllRPCFilters();
 	disableAuditingForRPCFilters();
 	return;
 }
@@ -494,19 +522,23 @@ int _tmain(int argc, wchar_t* argv[])
 	if (argc > 1)
 	{
 		std::wstring cmmd(argv[1]);
+		std::wstring param;
+		if (argc > 2)
+		{
+			param = std::wstring(argv[2]);
+		}
 
 		if (cmmd.find(_T("/uninstall")) != std::string::npos)
 		{
-			std::wstring param;
-			if (argc > 2)
-			{
-				param = std::wstring(argv[2]);
-			}
 			cmdUninstall(param);
 		}
 		else if (cmmd.find(_T("/unprotect")) != std::string::npos)
 		{
 			cmdUnprotect();
+		}
+		else if (cmmd.find(_T("/protect")) != std::string::npos)
+		{
+			cmdProtect(param);
 		}
 		else if (cmmd.find(_T("/update")) != std::string::npos) 
 		{
@@ -515,11 +547,6 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 		else if (cmmd.find(_T("/install")) != std::string::npos)
 		{
-			std::wstring param;
-			if (argc > 2)
-			{
-				param = std::wstring(argv[2]);
-			}
 			cmdInstall(param);
 		}
 		else if (cmmd.find(_T("/pid")) != std::string::npos)
