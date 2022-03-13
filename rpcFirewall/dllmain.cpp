@@ -871,16 +871,6 @@ bool processRPCCallInternal(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 			WRITE_DEBUG_MSG_WITH_STATUS(_T("Could not extract server endpoint via RpcBindingToStringBinding"), status);
 		}
 
-		std::wstringstream ss;
-		BYTE* data = (BYTE*)pRpcMsg->Buffer;
-		WRITE_DEBUG_MSG((wchar_t*)pRpcMsg->Buffer);
-		for (int bptr = 0; bptr < pRpcMsg->BufferLength; bptr++)
-		{
-			ss << std::hex << (int)(data[bptr]);
-		}
-
-		WRITE_DEBUG_MSG(ss.str().c_str());
-
 		const RpcEventParameters eventParams = populateEventParameters(pRpcMsg, szStringBindingServer.str, szStringBinding.str, functionName);
 		
 		policy = getMatchingPolicy(eventParams);

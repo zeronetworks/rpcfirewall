@@ -1,8 +1,11 @@
 // RPCrawler.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+#include <optional>
+
 #include "stdafx.h"
 #include "rpcfilters.h"
+#include <algorithm>
 
 HANDLE globalMappedMemory = nullptr;
 HANDLE globalUnprotectlEvent = nullptr;
@@ -12,6 +15,91 @@ enum class eventSignal {signalSetEvent, signalResetEvent};
 typedef std::vector<std::pair<DWORD, std::wstring>> ProcVector;
 
 CHAR configBuf[MEM_BUF_SIZE];
+
+std::tuple<size_t, size_t, bool> getConfigOffsets(std::string confStr)
+{
+	size_t start_pos = confStr.find("!start!");
+	size_t end_pos = confStr.find("!end!");
+
+	if (start_pos == std::string::npos || end_pos == std::string::npos)
+	{
+		_tprintf(_T("Error reading start or end markers"));
+		return std::make_tuple(0, 0, false);
+	}
+	start_pos += 7;
+
+	return std::make_tuple(start_pos, end_pos, true);
+}
+
+std::wstring StringToWString(const std::string& s)
+{
+	std::wstring temp(s.length(), L' ');
+	std::copy(s.begin(), s.end(), temp.begin());
+	return temp;
+}
+
+std::wstring extractKeyValueFromConfigLineInner(const std::wstring& confLine, const std::wstring& key)
+{
+	const size_t keyOffset = confLine.find(key);
+
+	if (keyOffset == std::string::npos) return _T("\0");
+
+	const size_t nextKeyOffset = confLine.find(_T(" "), keyOffset + 1);
+
+	if (nextKeyOffset == std::string::npos) return _T("\0");
+
+	std::wstring val = confLine.substr(keyOffset + key.size(), nextKeyOffset - keyOffset - key.size());
+
+	return val;
+}
+
+std::wstring extractKeyValueFromConfigLine(const std::wstring& confLine, const std::wstring& key)
+{
+	std::wstring fixedConfLine = confLine;
+
+	fixedConfLine.replace(fixedConfLine.size() - 1, 1, _T(" "));
+
+	return extractKeyValueFromConfigLineInner(fixedConfLine, key);
+}
+
+UUIDFilter extractUUIDFilterFromConfigLine(const std::wstring& confLine)
+{
+	std::wstring uuid = extractKeyValueFromConfigLine(confLine, _T("uuid:"));
+
+	std::transform(uuid.begin(), uuid.end(), uuid.begin(), ::tolower);
+
+	return uuid.empty() ? UUIDFilter{} : UUIDFilter{ uuid };
+}
+
+AddressFilter extractAddressFromConfigLine(const std::wstring& confLine)
+{
+	const std::wstring address = extractKeyValueFromConfigLine(confLine, _T("addr:"));
+
+	return address.empty() ? AddressFilter{} : AddressFilter{ address };
+}
+
+bool extractActionFromConfigLine(const std::wstring& confLine)
+{
+	std::wstring action = extractKeyValueFromConfigLine(confLine, _T("action:"));
+
+	return action.find(_T("block")) == std::string::npos;
+}
+
+bool extractAuditFromConfigLine(const std::wstring& confLine)
+{
+	std::wstring audit = extractKeyValueFromConfigLine(confLine, _T("audit:"));
+
+	return audit.find(_T("true")) != std::string::npos;
+}
+
+RpcCallPolicy extractPolicyFromConfigLine(const std::wstring& confLine)
+{
+	return RpcCallPolicy
+	{
+		.allow = extractActionFromConfigLine(confLine),
+		.audit = extractAuditFromConfigLine(confLine),
+	};
+}
 
 void concatArguments(int argc, wchar_t* argv[], wchar_t command[])
 {
@@ -339,6 +427,126 @@ void sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
 	}
 }
 
+void runCommandBasedOnParam(std::wstring &param, void funcFilter(void), void funcFireWall(void), std::wstring &errMsg)
+{
+	if (param.empty())
+	{
+		funcFilter();
+		funcFireWall();
+	}
+	else
+	{
+		if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("flt")) != std::string::npos))
+		{
+			funcFilter();
+		}
+		else if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("fw")) != std::string::npos))
+		{
+			funcFireWall();
+		}
+		else
+		{
+			_tprintf(errMsg.c_str());
+		}
+	}
+}
+
+void cmdUpdateRPCFW()
+{
+	readConfigAndMapToMemory();
+	WaitForSingleObject(globalUnprotectlEvent, 1000);
+}
+
+void cmdUnprotectRPCFLT()
+{
+	_tprintf(_T("disabling RPCFLT...\n"));
+	if (!setSecurityPrivilege(_T("SeSecurityPrivilege")))
+	{
+		_tprintf(_T("Error: could not obtain SeSecurityPrivilege.\n"));
+		return;
+	}
+	deleteAllRPCFilters();
+}
+
+void createRPCFiltersFromConfiguration()
+{
+	DWORD bytesRead = 0;
+	std::string confBuf(readConfigFile(&bytesRead));
+
+	unsigned int lineNum = 0;
+
+	if (bytesRead > 0)
+	{
+		std::stringstream configStream(confBuf);
+		std::wstring confLineString;
+		char configLine[256];
+
+		configLinesVector confLines;
+
+		while (configStream.getline(configLine, 256))
+		{
+			confLineString = StringToWString(configLine);
+			confLineString += L" ";
+			LineConfig lineConfig = {};
+
+			lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
+			lineConfig.source_addr = extractAddressFromConfigLine(confLineString);
+			lineConfig.policy = extractPolicyFromConfigLine(confLineString);
+
+			confLines.push_back(std::make_pair(confLineString, lineConfig));
+		}
+
+		createRPCFilterFromTextLines(confLines);
+	}
+}
+
+void cmdProtectRPCFLT()
+{
+	createRPCFiltersFromConfiguration();
+}
+
+void cmdUpdateRPCFLT()
+{
+	cmdUnprotectRPCFLT();
+	cmdProtectRPCFLT();
+}
+
+void cmdUpdate(std::wstring& param)
+{
+	std::wstring errMsg = _T("usage: /update <fw/flt/all>\n");
+	runCommandBasedOnParam(param, cmdUpdateRPCFLT, cmdUpdateRPCFW, errMsg);
+}
+
+void cmdPid(int argc, wchar_t* argv[])
+{
+	elevateCurrentProcessToSystem();
+	createAllGloblEvents();
+	readConfigAndMapToMemory();
+	DWORD procNum = 0;
+	if (argc > 2)
+	{
+		procNum = std::stoi((std::wstring)argv[2], nullptr, 10);
+		_tprintf(TEXT("Enabling RPCFW for process : %d\n"), procNum);
+		crawlProcesses(procNum, nullptr);
+	}
+	else
+	{
+		_tprintf(TEXT("Enabling RPCFW for ALL processes\n"));
+		crawlProcesses(0, nullptr);
+	}
+}
+
+void cmdUnprotect(std::wstring& param)
+{
+	_tprintf(TEXT("Dispatching unprotect request...\n"));
+	sendSignalToGlobalEvent((wchar_t*)GLOBAL_RPCFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
+}
+
+
+
+
+
+
 void cmdInstallRPCFLT()
 {
 	_tprintf(TEXT("installing RPCFLT Provider...\n"));
@@ -363,59 +571,16 @@ void cmdInstallRPCFW()
 	addEventSource();
 }
 
-void cmdUpdate()
+void cmdProtectRPCFFW()
 {
-	readConfigAndMapToMemory();
-}
-
-void cmdPid(int argc, wchar_t* argv[])
-{
-	elevateCurrentProcessToSystem();
-	createAllGloblEvents();
-	readConfigAndMapToMemory();
-	DWORD procNum = 0;
-	if (argc > 2)
-	{
-		procNum = std::stoi((std::wstring)argv[2], nullptr, 10);
-		_tprintf(TEXT("Enabling RPCFW for process : %d\n"), procNum);
-		crawlProcesses(procNum, nullptr);
-	}
-	else
-	{
-		_tprintf(TEXT("Enabling RPCFW for ALL processes\n"));
-		crawlProcesses(0, nullptr);
-	}
-}
-
-void cmdUnprotect()
-{
-	_tprintf(TEXT("Dispatching unprotect request...\n"));
-	sendSignalToGlobalEvent((wchar_t*)GLOBAL_RPCFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
+	_tprintf(TEXT("Enabling RPCFW for ALL processes\n"));
+	crawlProcesses(0, nullptr);
 }
 
 void cmdProtect(std::wstring &param)
 {
-	if (param.empty())
-	{
-		//do something...
-	}
-	else
-	{
-		if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("flt")) != std::string::npos))
-		{
-			std::string ipadrr("192.168.64.1");
-			createIPBlockRPCFilter(ipadrr);
-		}
-		else if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("fw")) != std::string::npos))
-		{
-			_tprintf(TEXT("Enabling RPCFW for ALL processes\n"));
-			crawlProcesses(0, nullptr);
-		}
-		else
-		{
-			_tprintf(TEXT("usage: /protect <fw/flt/all>\n"));
-		}
-	}
+	std::wstring errMsg = _T("usage: /protect <fw/flt/all>\n");
+	runCommandBasedOnParam(param, cmdProtectRPCFLT, cmdProtectRPCFFW, errMsg);
 }
 
 void cmdProcess(int argc, wchar_t* argv[])
@@ -437,7 +602,6 @@ void cmdProcess(int argc, wchar_t* argv[])
 
 void cmdUninstallRPCFW()
 {
-	cmdUnprotect();
 	_tprintf(TEXT("Uninstalling RPCFW ...\n"));
 
 	deleteFileFromSysfolder(RPC_FW_DLL_NAME);
@@ -455,64 +619,20 @@ void cmdUninstallRPCFW()
 
 void cmdUninstallRPCFLT()
 {
-	_tprintf(TEXT("disabling RPCFLT...\n"));
-	if (!setSecurityPrivilege(TEXT("SeSecurityPrivilege")))
-	{
-		_tprintf(TEXT("Error: could not obtain SeSecurityPrivilege.\n"));
-		return;
-	}
-	deleteAllRPCFilters();
+	cmdUnprotectRPCFLT();
 	disableAuditingForRPCFilters();
-	return;
 }
 
 void cmdUninstall(std::wstring &param)
 {
-	if (param.empty())
-	{
-		cmdUninstallRPCFLT();
-		cmdUninstallRPCFW();
-	}
-	else
-	{
-		if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("flt")) != std::string::npos))
-		{
-			cmdUninstallRPCFLT();
-		}
-		else if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("fw")) != std::string::npos))
-		{
-			cmdUninstallRPCFW();
-		}
-		else
-		{
-			_tprintf(TEXT("usage: /uninstall <fw/flt/all>\n"));
-		}
-	}
+	std::wstring errMsg = _T("usage: /uninstall <fw/flt/all>\n");
+	runCommandBasedOnParam(param, cmdUninstallRPCFLT, cmdUninstallRPCFW, errMsg);
 }
 
 void cmdInstall(std::wstring &param)
 {
-
-	if (param.empty())
-	{
-		cmdInstallRPCFLT();
-		cmdInstallRPCFW();
-	}
-	else
-	{
-		if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("flt")) != std::string::npos))
-		{
-			cmdInstallRPCFLT();
-		}
-		else if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("fw")) != std::string::npos))
-		{
-			cmdInstallRPCFW();
-		}
-		else
-		{
-			_tprintf(TEXT("usage: /install <fw/flt/all>\n"));
-		}
-	}
+	std::wstring errMsg = _T("usage: /install <fw/flt/all>\n");
+	runCommandBasedOnParam(param, cmdInstallRPCFLT, cmdInstallRPCFW, errMsg);
 }
 
 int _tmain(int argc, wchar_t* argv[])
@@ -534,7 +654,7 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 		else if (cmmd.find(_T("/unprotect")) != std::string::npos)
 		{
-			cmdUnprotect();
+			cmdUnprotect(param);
 		}
 		else if (cmmd.find(_T("/protect")) != std::string::npos)
 		{
@@ -542,8 +662,7 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 		else if (cmmd.find(_T("/update")) != std::string::npos) 
 		{
-			cmdUpdate();
-			WaitForSingleObject(globalUnprotectlEvent, 1000);
+			cmdUpdate(param);
 		}
 		else if (cmmd.find(_T("/install")) != std::string::npos)
 		{
