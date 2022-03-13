@@ -10,8 +10,11 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
+typedef std::vector<FWPM_FILTER_CONDITION0> conditionsVector;
+
 GUID RPCFWProviderGUID = { 0x17171717,0x1717,0x1717,{0x17,0x17,0x17,0x17,0x17,0x17,0x17,0x17} };
 std::wstring providerName = std::wstring(L"RPCFW");
+
 GUID RPCFWSublayerGUID = { 0x77777777,0x1717,0x1717,{0x17,0x17,0x17,0x17,0x17,0x17,0x17,0x17} };
 std::wstring sublayerName = std::wstring(L"RPCFWSublayer");
 
@@ -206,13 +209,43 @@ void addIPv4Filter(HANDLE eh, const char* remoteIP, GUID layerkey)
 	fwpFilter.rawContext = 1; 
 	fwpFilter.flags = FWPM_FILTER_FLAG_PERSISTENT;
 
-	printf("Adding filter\n");
+	_tprintf(_T("Adding filter\n"));
 	result = FwpmFilterAdd0(eh, &fwpFilter, NULL, NULL);
 
 	if (result != ERROR_SUCCESS)
-		printf("FwpmFilterAdd0 failed. Return value: %x.\n", result);
+		_tprintf(_T("FwpmFilterAdd0 failed. Return value: 0x%x.\n"), result);
 	else
-		printf("Filter added successfully.\n");
+		_tprintf(_T("Filter added successfully.\n"));
+}
+
+FWPM_FILTER_CONDITION0 createUUIDCondition(std::wstring& uuidString)
+{
+	FWPM_FILTER_CONDITION0 uuidCondition = {0};
+	UUID interfaceUUID;
+
+	UuidFromString((RPC_WSTR)uuidString.c_str(), &interfaceUUID);
+
+	uuidCondition.matchType = FWP_MATCH_EQUAL;
+	uuidCondition.fieldKey = FWPM_CONDITION_RPC_IF_UUID;
+	uuidCondition.conditionValue.type = FWP_BYTE_ARRAY16_TYPE;
+	uuidCondition.conditionValue.byteArray16 = (FWP_BYTE_ARRAY16*)&interfaceUUID;
+
+	return uuidCondition;
+}
+
+FWPM_FILTER_CONDITION0 createIPv4Condition(std::wstring &remoteIP)
+{
+	FWPM_FILTER_CONDITION0	ipv4Condition = {0};
+	UINT32 ipv4;
+
+	InetPton(AF_INET, remoteIP.c_str(), &ipv4);
+
+	ipv4Condition.matchType = FWP_MATCH_EQUAL;
+	ipv4Condition.fieldKey = FWPM_CONDITION_IP_REMOTE_ADDRESS_V4;
+	ipv4Condition.conditionValue.type = FWP_UINT32;
+	ipv4Condition.conditionValue.uint32 = ipv4;
+
+	return ipv4Condition;
 }
 
 HANDLE openFwEngineHandle()
@@ -235,14 +268,81 @@ HANDLE openFwEngineHandle()
 
 	if (result != ERROR_SUCCESS)
 	{
-		_tprintf(_T("Call to FwpmEngineOpen failed: %x"), result);
-	}
-	else
-	{
-		_tprintf(_T("Filter engine opened successfully.\n"));
+		_tprintf(_T("Call to FwpmEngineOpen failed: %x\n"), result);
 	}
 
 	return engineHandle;
+}
+
+void createRPCFilterFromConfigLine(HANDLE fwH, LineConfig confLine, std::wstring &filterName, std::wstring &filterDescription, unsigned long long weight)
+{
+	FwHandleWrapper fwhw; 
+	fwhw.h = openFwEngineHandle();
+	conditionsVector conditions;
+
+	if (confLine.source_addr.has_value())
+	{
+		conditions.push_back(createIPv4Condition(confLine.source_addr.value()));
+	}
+	if (confLine.uuid.has_value())
+	{
+		conditions.push_back(createUUIDCondition(confLine.uuid.value()));
+	}
+
+	if (conditions.size() > 0)
+	{
+		FWPM_FILTER0 fwpFilter = { 0 };
+
+		fwpFilter.layerKey = FWPM_LAYER_RPC_UM;
+		fwpFilter.action.type = (confLine.policy.allow) ? FWP_ACTION_PERMIT : FWP_ACTION_BLOCK;
+		fwpFilter.weight.type = FWP_UINT64;
+		fwpFilter.weight.uint64 = &weight;
+		fwpFilter.numFilterConditions = conditions.size();
+		fwpFilter.filterCondition = &conditions[0];
+		fwpFilter.displayData.name = (wchar_t*)filterName.c_str();
+		fwpFilter.displayData.description = (wchar_t*)filterDescription.c_str();
+		fwpFilter.providerKey = &RPCFWProviderGUID;
+
+		if (confLine.policy.audit)
+		{
+			fwpFilter.subLayerKey = FWPM_SUBLAYER_RPC_AUDIT;
+			fwpFilter.rawContext = 1;
+			fwpFilter.flags = FWPM_FILTER_FLAG_PERSISTENT;
+		}
+
+		_tprintf(_T("AAdding filter %s, %s\n"), filterName.c_str(), filterDescription.c_str());
+
+		DWORD result = FwpmFilterAdd0(fwhw.h, &fwpFilter, nullptr, nullptr);
+
+		if (result != ERROR_SUCCESS)
+			_tprintf(_T("FwpmFilterAdd0 failed. Return value: 0x%x.\n"), result);
+		else
+			_tprintf(_T("Filter added successfully.\n"));
+	}
+}
+
+void createRPCFilterFromTextLines(configLinesVector configsVector)
+{
+	if (configsVector.size() > 0)
+	{
+		FwHandleWrapper fwhw; 
+		fwhw.h = openFwEngineHandle();
+
+		unsigned int weight = 0x00FFFFFF;
+
+		if (fwhw.h != nullptr)
+		{
+			for (int i = 0; i < configsVector.size(); i++)
+			{
+				std::wstring confLineStr = configsVector[i].first;
+				LineConfig confLine = configsVector[i].second;
+
+				std::wstring filterName = L"RPCFW line " + std::to_wstring(i + 1);
+
+				createRPCFilterFromConfigLine(fwhw.h, confLine, filterName, confLineStr, weight--);
+			}
+		}
+	}
 }
 
 void createIPBlockRPCFilter(std::string &ipAddressStr)
@@ -297,14 +397,14 @@ void deleteAllRPCFilters()
 			FWPM_FILTER0** entries;
 			unsigned int numEntries;
 
-			DWORD ret = FwpmFilterEnum(ehw.engineH, ehw.enumH, 1, &entries, &numEntries);
+			DWORD ret = FwpmFilterEnum(ehw.engineH, ehw.enumH, 0xFFFF, &entries, &numEntries);
 			if (ret != ERROR_SUCCESS)
 			{
 				_tprintf(_T("Enum filters failed: 0x%x\n"), ret);
 				return;
 			}
 
-			for (int entryNum = 0; entryNum < numEntries; entryNum++)
+			for (unsigned int entryNum = 0; entryNum < numEntries; entryNum++)
 			{
 				ret = FwpmFilterDeleteById0(engineHandle, entries[entryNum]->filterId);
 				if (ret == ERROR_SUCCESS)

@@ -15,6 +15,7 @@
 #include <Tlhelp32.h>
 #include <vector>
 #include <comdef.h>
+#include <sstream>
 
 #include "Injections.h"
 #include "rpcMessages.h"
