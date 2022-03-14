@@ -114,7 +114,7 @@ void concatArguments(int argc, wchar_t* argv[], wchar_t command[])
 	_tcscat_s(command, MAX_PATH * 2, TEXT(" /elevated"));
 }
 
-ProcVector getRelevantProcVector(DWORD pid, wchar_t* pName)
+ProcVector getRelevantProcVector(DWORD pid, std::wstring &pName)
 {
 	ProcVector procVector;
 
@@ -127,7 +127,7 @@ ProcVector getRelevantProcVector(DWORD pid, wchar_t* pName)
 	if (bProcess == true) {
 		while ((Process32Next(hTool32, &pe32)) == TRUE) 
 		{
-			if (pName != nullptr && compareStringsCaseinsensitive(pe32.szExeFile, pName))
+			if (!pName.empty() && compareStringsCaseinsensitive(pe32.szExeFile,(wchar_t*)pName.c_str()))
 			{
 				procVector.push_back(std::make_pair(pe32.th32ProcessID, pe32.szExeFile));
 			}
@@ -146,7 +146,7 @@ ProcVector getRelevantProcVector(DWORD pid, wchar_t* pName)
 	return procVector;
 }
 
-void crawlProcesses(DWORD pid, wchar_t* pName) 
+void crawlProcesses(DWORD pid, std::wstring &pName) 
 {
 	ProcVector procToHook = getRelevantProcVector(pid, pName);
 
@@ -162,16 +162,29 @@ void crawlProcesses(DWORD pid, wchar_t* pName)
 	}
 }
 
+void crawlProcesses(DWORD pid)
+{
+	std::wstring noProcName;
+	crawlProcesses(pid, noProcName);
+}
+
 void getHelp()
 {
-	_tprintf(TEXT("Usage: rpcFwManager /[Command]\n\n"));
-	_tprintf(TEXT("The following commands are available:\n\n"));
-	_tprintf(TEXT("install\t\t - configure RPCFWP EventLog & put DLLs in the %%SystemRoot%%\\system32 folder\n"));
-	_tprintf(TEXT("uninstall\t - remove RPCFWP EventLog configuration & remove DLLs from the %%SystemRoot%%\\system32 folder\n"));
-	_tprintf(TEXT("pid\t\t - Protect specified process ID with RPCFWP <no pid protects ALL processes!> \n"));
-	_tprintf(TEXT("process\t\t - Protect specified process by name with RPCFWP <no name protects ALL processes!>\n"));
-	_tprintf(TEXT("unprotect\t - Remove RPCFirewall from any protected process \n"));
-	_tprintf(TEXT("update\t\t - notify the rpcFirewall.dll on configuration changes \n"));
+	_tprintf(TEXT("Usage: rpcFwManager /<Command> [options] \n\n"));
+	_tprintf(TEXT("command:\n"));
+	_tprintf(TEXT("----------\n"));
+	_tprintf(TEXT("install\t\t - configure EventLogs, auditing, put DLLs in the %%SystemRoot%%\\system32 folder.\n"));
+	_tprintf(TEXT("uninstall\t - undo installation changes.\n"));
+	_tprintf(TEXT("protect [options/pid/process]\t- Apply RPC protections according to the configuration file.\n"));
+	_tprintf(TEXT("\tpid <pid>\t- Protect specified process ID with RPCFWP (no pid protects ALL processes!).\n"));
+	_tprintf(TEXT("\tprocess <name>\t- Protect specified process by name with RPCFWP (no name protects ALL processes!).\n"));
+	_tprintf(TEXT("unprotect\t - Remove protections.\n"));
+	_tprintf(TEXT("update\t\t - Notify rpcFirewall.dll on configuration changes.\n"));
+	_tprintf(TEXT("\noptions:\n"));
+	_tprintf(TEXT("--------------\n"));
+	_tprintf(TEXT("fw: apply command for RPC Firewall only (excluding <process/pid>).\n"));
+	_tprintf(TEXT("flt: apply command for RPC Filters only (excluding <process/pid>).\n"));
+	_tprintf(TEXT("all: apply command for RPC Firewall & Filters (excluding <process/pid>).\n"));
 }
 
 void deleteFileFromSysfolder(std::wstring fileName)
@@ -517,22 +530,21 @@ void cmdUpdate(std::wstring& param)
 	runCommandBasedOnParam(param, cmdUpdateRPCFLT, cmdUpdateRPCFW, errMsg);
 }
 
-void cmdPid(int argc, wchar_t* argv[])
+void cmdPid(int procNum)
 {
 	elevateCurrentProcessToSystem();
 	createAllGloblEvents();
 	readConfigAndMapToMemory();
-	DWORD procNum = 0;
-	if (argc > 2)
+
+	if (procNum > 0)
 	{
-		procNum = std::stoi((std::wstring)argv[2], nullptr, 10);
 		_tprintf(TEXT("Enabling RPCFW for process : %d\n"), procNum);
-		crawlProcesses(procNum, nullptr);
+		crawlProcesses(procNum);
 	}
 	else
 	{
 		_tprintf(TEXT("Enabling RPCFW for ALL processes\n"));
-		crawlProcesses(0, nullptr);
+		crawlProcesses(0);
 	}
 }
 
@@ -571,32 +583,32 @@ void cmdInstallRPCFW()
 	addEventSource();
 }
 
-void cmdProtectRPCFFW()
+void cmdProtectRPCFW()
 {
 	_tprintf(TEXT("Enabling RPCFW for ALL processes\n"));
-	crawlProcesses(0, nullptr);
+	crawlProcesses(0);
 }
 
 void cmdProtect(std::wstring &param)
 {
 	std::wstring errMsg = _T("usage: /protect <fw/flt/all>\n");
-	runCommandBasedOnParam(param, cmdProtectRPCFLT, cmdProtectRPCFFW, errMsg);
+	runCommandBasedOnParam(param, cmdProtectRPCFLT, cmdProtectRPCFW, errMsg);
 }
 
-void cmdProcess(int argc, wchar_t* argv[])
+void cmdProcess(std::wstring &processName)
 {
 	createAllGloblEvents();
 	elevateCurrentProcessToSystem();
 	readConfigAndMapToMemory();
-	if (argc > 2)
+	if (!processName.empty())
 	{
-		_tprintf(TEXT("Enabling RPCFW for process : %s\n"), argv[2]);
-		crawlProcesses(17, (wchar_t*)argv[2]);
+		_tprintf(TEXT("Enabling RPCFW for process : %s\n"), processName.c_str());
+		crawlProcesses(17, processName);
 	}
 	else
 	{
 		_tprintf(TEXT("Enabling RPCFW for ALL processes\n"));
-		crawlProcesses(0, nullptr);
+		crawlProcesses(0, processName);
 	}
 }
 
@@ -658,7 +670,30 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 		else if (cmmd.find(_T("/protect")) != std::string::npos)
 		{
-			cmdProtect(param);
+			if (param.find(_T("pid")) != std::string::npos)
+			{
+				if (argc > 3) {
+					int procNum = std::stoi((std::wstring)argv[3], nullptr, 10);
+					cmdPid(procNum);
+				}
+				else
+				{
+					cmdPid(0);
+				}		
+				WaitForSingleObject(globalUnprotectlEvent, 1000);
+			}
+			else if (param.find(_T("process")) != std::string::npos)
+			{
+				std::wstring processName;
+				if (argc > 3) {
+					processName = argv[3];
+				}
+				cmdProcess(processName);
+			}
+			else
+			{
+				cmdProtect(param);
+			}
 		}
 		else if (cmmd.find(_T("/update")) != std::string::npos) 
 		{
@@ -667,16 +702,6 @@ int _tmain(int argc, wchar_t* argv[])
 		else if (cmmd.find(_T("/install")) != std::string::npos)
 		{
 			cmdInstall(param);
-		}
-		else if (cmmd.find(_T("/pid")) != std::string::npos)
-		{
-			cmdPid(argc,  argv);
-			WaitForSingleObject(globalUnprotectlEvent, 1000);
-		}
-		else if (cmmd.find(_T("/process")) != std::string::npos)
-		{
-			cmdProcess(argc, argv);
-			WaitForSingleObject(globalUnprotectlEvent, 1000);
 		}
 		else
 		{

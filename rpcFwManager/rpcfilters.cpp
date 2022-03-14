@@ -223,7 +223,11 @@ FWPM_FILTER_CONDITION0 createUUIDCondition(std::wstring& uuidString)
 	FWPM_FILTER_CONDITION0 uuidCondition = {0};
 	UUID interfaceUUID;
 
-	UuidFromString((RPC_WSTR)uuidString.c_str(), &interfaceUUID);
+	RPC_STATUS ret = UuidFromString((RPC_WSTR)uuidString.c_str(), &interfaceUUID);
+	if (ret != RPC_S_OK)
+	{
+		_tprintf(_T("Failed to convert UUID from string: %d"),ret);
+	}
 
 	uuidCondition.matchType = FWP_MATCH_EQUAL;
 	uuidCondition.fieldKey = FWPM_CONDITION_RPC_IF_UUID;
@@ -253,7 +257,6 @@ HANDLE openFwEngineHandle()
 	FWPM_SESSION0	session;
 	HANDLE engineHandle;
 	DWORD			result = ERROR_SUCCESS;
-	TCHAR			sessionKey[39];
 
 	ZeroMemory(&session, sizeof(session));
 	session.kernelMode = FALSE;
@@ -310,7 +313,7 @@ void createRPCFilterFromConfigLine(HANDLE fwH, LineConfig confLine, std::wstring
 			fwpFilter.flags = FWPM_FILTER_FLAG_PERSISTENT;
 		}
 
-		_tprintf(_T("AAdding filter %s, %s\n"), filterName.c_str(), filterDescription.c_str());
+		_tprintf(_T("Adding filter %s, %s\n"), filterName.c_str(), filterDescription.c_str());
 
 		DWORD result = FwpmFilterAdd0(fwhw.h, &fwpFilter, nullptr, nullptr);
 
