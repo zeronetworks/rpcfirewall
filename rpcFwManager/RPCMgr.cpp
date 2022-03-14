@@ -513,15 +513,20 @@ void createRPCFiltersFromConfiguration()
 	}
 }
 
+void recreateRPCFilters()
+{
+	cmdUnprotectRPCFLT();
+	createRPCFiltersFromConfiguration();
+}
+
 void cmdProtectRPCFLT()
 {
-	createRPCFiltersFromConfiguration();
+	recreateRPCFilters();
 }
 
 void cmdUpdateRPCFLT()
 {
-	cmdUnprotectRPCFLT();
-	cmdProtectRPCFLT();
+	recreateRPCFilters();
 }
 
 void cmdUpdate(std::wstring& param)
@@ -553,11 +558,6 @@ void cmdUnprotect(std::wstring& param)
 	_tprintf(TEXT("Dispatching unprotect request...\n"));
 	sendSignalToGlobalEvent((wchar_t*)GLOBAL_RPCFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
 }
-
-
-
-
-
 
 void cmdInstallRPCFLT()
 {
