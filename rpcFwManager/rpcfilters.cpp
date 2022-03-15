@@ -226,13 +226,32 @@ FWPM_FILTER_CONDITION0 createUUIDCondition(std::wstring& uuidString)
 	RPC_STATUS ret = UuidFromString((RPC_WSTR)uuidString.c_str(), &interfaceUUID);
 	if (ret != RPC_S_OK)
 	{
-		_tprintf(_T("Failed to convert UUID from string: %d"),ret);
+		_tprintf(_T("Failed to convert UUID from string: %d\n"),ret);
 	}
 
 	uuidCondition.matchType = FWP_MATCH_EQUAL;
 	uuidCondition.fieldKey = FWPM_CONDITION_RPC_IF_UUID;
 	uuidCondition.conditionValue.type = FWP_BYTE_ARRAY16_TYPE;
 	uuidCondition.conditionValue.byteArray16 = (FWP_BYTE_ARRAY16*)&interfaceUUID;
+
+	return uuidCondition;
+}
+
+FWPM_FILTER_CONDITION0 createEffectivelyAnyCondition()
+{
+	FWPM_FILTER_CONDITION0 uuidCondition = { 0 };
+	UUID interfaceUUID;
+
+	RPC_STATUS ret = UuidFromString((RPC_WSTR)L"00000000-0000-0000-0000-000000000000", &interfaceUUID);
+	if (ret != RPC_S_OK)
+	{
+		_tprintf(_T("Failed to convert UUID from string: %d\n"), ret);
+	}
+
+	uuidCondition.matchType = FWP_MATCH_GREATER_OR_EQUAL;
+	uuidCondition.fieldKey = FWPM_CONDITION_RPC_AUTH_LEVEL;
+	uuidCondition.conditionValue.type = FWP_UINT8;
+	uuidCondition.conditionValue.byteArray16 = 0;
 
 	return uuidCondition;
 }
@@ -291,6 +310,10 @@ void createRPCFilterFromConfigLine(HANDLE fwH, LineConfig confLine, std::wstring
 	{
 		conditions.push_back(createUUIDCondition(confLine.uuid.value()));
 	}
+	if (conditions.size() == 0 && !confLine.opnum.has_value())
+	{
+		conditions.push_back(createEffectivelyAnyCondition());
+	}
 
 	if (conditions.size() > 0)
 	{
@@ -305,12 +328,13 @@ void createRPCFilterFromConfigLine(HANDLE fwH, LineConfig confLine, std::wstring
 		fwpFilter.displayData.name = (wchar_t*)filterName.c_str();
 		fwpFilter.displayData.description = (wchar_t*)filterDescription.c_str();
 		fwpFilter.providerKey = &RPCFWProviderGUID;
+		fwpFilter.flags = FWPM_FILTER_FLAG_PERSISTENT;
 
 		if (confLine.policy.audit)
 		{
 			fwpFilter.subLayerKey = FWPM_SUBLAYER_RPC_AUDIT;
 			fwpFilter.rawContext = 1;
-			fwpFilter.flags = FWPM_FILTER_FLAG_PERSISTENT;
+			
 		}
 
 		_tprintf(_T("Adding filter %s, %s\n"), filterName.c_str(), filterDescription.c_str());
