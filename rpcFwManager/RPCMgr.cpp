@@ -57,6 +57,14 @@ std::wstring extractKeyValueFromConfigLine(const std::wstring& confLine, const s
 {
 	std::wstring fixedConfLine = confLine;
 
+	std::size_t newLinePos = fixedConfLine.rfind(_T("\n"));
+	std::size_t carrigeReturnPos = fixedConfLine.rfind(_T("\r"));
+
+
+	//std::basic_string<wchar_t>::replace(fixedConfLine.begin(), fixedConfLine.end(), _T("\r"), _T(" "));
+	if (newLinePos != std::wstring::npos) fixedConfLine.replace(fixedConfLine.rfind(_T("\n")), 1, _T(" "));
+	if (carrigeReturnPos != std::wstring::npos) fixedConfLine.replace(fixedConfLine.rfind(_T("\r")), 1, _T(" "));
+	
 	fixedConfLine.replace(fixedConfLine.size() - 1, 1, _T(" "));
 
 	return extractKeyValueFromConfigLineInner(fixedConfLine, key);
@@ -76,6 +84,23 @@ AddressFilter extractAddressFromConfigLine(const std::wstring& confLine)
 	const std::wstring address = extractKeyValueFromConfigLine(confLine, _T("addr:"));
 
 	return address.empty() ? AddressFilter{} : AddressFilter{ address };
+}
+
+OpNumFilter extractOpNumFilterFromConfigLine(const std::wstring& confLine)
+{
+	const std::wstring opnumString = extractKeyValueFromConfigLine(confLine, _T("opnum:"));
+
+	if (opnumString.empty())
+	{
+		return {};
+	}
+
+	try {
+		return std::stoi(opnumString);
+	}
+	catch (const std::invalid_argument&) {
+		return {};
+	}
 }
 
 bool extractActionFromConfigLine(const std::wstring& confLine)
@@ -502,6 +527,7 @@ void createRPCFiltersFromConfiguration()
 			confLineString += L" ";
 			LineConfig lineConfig = {};
 
+			lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
 			lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
 			lineConfig.source_addr = extractAddressFromConfigLine(confLineString);
 			lineConfig.policy = extractPolicyFromConfigLine(confLineString);
@@ -553,10 +579,16 @@ void cmdPid(int procNum)
 	}
 }
 
-void cmdUnprotect(std::wstring& param)
+void cmdUnprotectRPCFW()
 {
 	_tprintf(TEXT("Dispatching unprotect request...\n"));
 	sendSignalToGlobalEvent((wchar_t*)GLOBAL_RPCFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
+}
+
+void cmdUnprotect(std::wstring& param)
+{
+	std::wstring errMsg = _T("usage: /unprotect <fw/flt/all>\n");
+	runCommandBasedOnParam(param, cmdUnprotectRPCFLT , cmdUnprotectRPCFW, errMsg);
 }
 
 void cmdInstallRPCFLT()
