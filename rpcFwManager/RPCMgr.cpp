@@ -712,7 +712,6 @@ int _tmain(int argc, wchar_t* argv[])
 				{
 					cmdPid(0);
 				}		
-				WaitForSingleObject(globalUnprotectlEvent, 1000);
 			}
 			else if (param.find(_T("process")) != std::string::npos)
 			{
@@ -726,6 +725,7 @@ int _tmain(int argc, wchar_t* argv[])
 			{
 				cmdProtect(param);
 			}
+			WaitForSingleObject(globalUnprotectlEvent, 1000);
 		}
 		else if (cmmd.find(_T("/update")) != std::string::npos) 
 		{

@@ -188,7 +188,7 @@ void addIPv4Filter(HANDLE eh, const char* remoteIP, GUID layerkey)
 	UINT32					ipv4;
 
 	inet_pton(AF_INET, remoteIP, &ipv4);
-
+	
 	ZeroMemory(&fwpConditionIPv4, sizeof(fwpConditionIPv4));
 	fwpConditionIPv4.matchType = FWP_MATCH_EQUAL;
 	fwpConditionIPv4.fieldKey = FWPM_CONDITION_IP_REMOTE_ADDRESS_V4;
