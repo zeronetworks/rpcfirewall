@@ -18,6 +18,7 @@
 struct RpcEventParameters
 {
 	bool rpcAllowd;
+	std::wstring srcPort;
 	std::wstring functionName;
 	std::wstring processID;
 	std::wstring processName;

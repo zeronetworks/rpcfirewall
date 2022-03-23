@@ -68,7 +68,7 @@
 //
 // MessageText:
 //
-// An RPC server function was called.%n%nProcess Information:%n%tProcess ID:%t%2%n%tImage Path:%t%3%n%tRPCRT_Func:%t%1%n%nNetwork Information:%n%tProtocol:%t%4%n%tEndpoint:%t%5%n%tSource Network Address:%t%6%n%nRPC Information:%n%tInterfaceUuid:%t%7%n%tOpNum:%t%t%8%n%nSubject:%n%tSecurity ID:%t%9%n%nDetailed Authentication Information:%n%tAuthentication Level:%t%10%n%tAuthentication Service:%t%11
+// An RPC server function was called.%n%nProcess Information:%n%tProcess ID:%t%2%n%tImage Path:%t%3%n%tRPCRT_Func:%t%1%n%nNetwork Information:%n%tProtocol:%t%4%n%tEndpoint:%t%5%n%tSource Network Address:%t%6%n%tRemote Port:%t%12%n%nRPC Information:%n%tInterfaceUuid:%t%7%n%tOpNum:%t%t%8%n%nSubject:%n%tSecurity ID:%t%9%n%nDetailed Authentication Information:%n%tAuthentication Level:%t%10%n%tAuthentication Service:%t%11
 //
 #define RPC_SERVER_CALL                  ((DWORD)0x60020003L)
 
