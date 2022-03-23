@@ -298,7 +298,7 @@ bool rpcFunctionCalledEvent(bool callSuccessful, const RpcEventParameters& event
 {
     bool bSuccess = false;
     WORD eventType = EVENTLOG_AUDIT_SUCCESS;
-    LPCWSTR aInsertions[12] = {nullptr};
+    LPCWSTR aInsertions[14] = {nullptr};
    
     if (!callSuccessful) {
         eventType = EVENTLOG_AUDIT_FAILURE;
@@ -324,6 +324,8 @@ bool rpcFunctionCalledEvent(bool callSuccessful, const RpcEventParameters& event
     aInsertions[9] = (wchar_t*)eventParams.authnLevel.c_str();
     aInsertions[10] = (wchar_t*)eventParams.authnSvc.c_str();
     aInsertions[11] = (wchar_t*)eventParams.srcPort.c_str();
+    aInsertions[12] = (wchar_t*)eventParams.destAddress.c_str();
+    aInsertions[13] = (wchar_t*)eventParams.dstPort.c_str();
 
     if (hEventLog) {
         
@@ -333,7 +335,7 @@ bool rpcFunctionCalledEvent(bool callSuccessful, const RpcEventParameters& event
             0,               
             RPC_SERVER_CALL,           
             nullptr,                      
-            12,                        
+            14,                        
             0,                         
             aInsertions,               
             nullptr                       
