@@ -691,7 +691,6 @@ int _tmain(int argc, wchar_t* argv[])
 		{
 			param = std::wstring(argv[2]);
 		}
-
 		if (cmmd.find(_T("/uninstall")) != std::string::npos)
 		{
 			cmdUninstall(param);
