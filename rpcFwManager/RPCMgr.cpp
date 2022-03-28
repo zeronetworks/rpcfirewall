@@ -467,18 +467,18 @@ void sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
 
 void runCommandBasedOnParam(std::wstring &param, void funcFilter(void), void funcFireWall(void), std::wstring &errMsg)
 {
-	if (param.empty())
+	if (param.empty() || (param.find(_T("all")) != std::string::npos))
 	{
 		funcFilter();
 		funcFireWall();
 	}
 	else
 	{
-		if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("flt")) != std::string::npos))
+		if (param.find(_T("flt")) != std::string::npos)
 		{
 			funcFilter();
 		}
-		else if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("fw")) != std::string::npos))
+		else if (param.find(_T("fw")) != std::string::npos)
 		{
 			funcFireWall();
 		}
@@ -618,6 +618,7 @@ void cmdInstallRPCFW()
 void cmdProtectRPCFW()
 {
 	_tprintf(TEXT("Enabling RPCFW for ALL processes\n"));
+	elevateCurrentProcessToSystem();
 	crawlProcesses(0);
 }
 
