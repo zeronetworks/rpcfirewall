@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include "stdafx.h"
 #include "rpcfilters.h"
+#include <accctrl.h>
+#include <aclapi.h>
+#include <algorithm>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -148,26 +151,26 @@ void installGenericProvider(
 	subLayer.providerKey = (GUID*)providerKey;
 	subLayer.weight = 0x8000;
 
-	result = FwpmSubLayerAdd0(engine.h, &subLayer, NULL);
-	if ((result != FWP_E_ALREADY_EXISTS) && (result != ERROR_SUCCESS))
-	{
-		_tprintf(_T("Call to FwpmSubLayerAdd0 failed: 0x%x"), result);
-		return;
-	}
+result = FwpmSubLayerAdd0(engine.h, &subLayer, NULL);
+if ((result != FWP_E_ALREADY_EXISTS) && (result != ERROR_SUCCESS))
+{
+	_tprintf(_T("Call to FwpmSubLayerAdd0 failed: 0x%x"), result);
+	return;
+}
 
-	// Once all the adds have succeeded, we commit the transaction to persist
-	// the new objects.
-	result = FwpmTransactionCommit0(engine.h);
-	if ((result != FWP_E_ALREADY_EXISTS) && (result != ERROR_SUCCESS))
-	{
-		_tprintf(_T("Call to FwpmTransactionCommit0 failed: 0x%x"), result);
-		return;
-	}
+// Once all the adds have succeeded, we commit the transaction to persist
+// the new objects.
+result = FwpmTransactionCommit0(engine.h);
+if ((result != FWP_E_ALREADY_EXISTS) && (result != ERROR_SUCCESS))
+{
+	_tprintf(_T("Call to FwpmTransactionCommit0 failed: 0x%x"), result);
+	return;
+}
 }
 
 void installRPCFWProvider()
 {
-	installGenericProvider(&RPCFWProviderGUID, providerName.c_str(), &RPCFWSublayerGUID,sublayerName.c_str());
+	installGenericProvider(&RPCFWProviderGUID, providerName.c_str(), &RPCFWSublayerGUID, sublayerName.c_str());
 }
 
 void enableAuditingForRPCFilters()
@@ -198,7 +201,7 @@ void addIPv4Filter(HANDLE eh, const char* remoteIP, GUID layerkey)
 	ZeroMemory(&fwpFilter, sizeof(fwpFilter));
 	fwpFilter.layerKey = layerkey;
 	fwpFilter.action.type = FWP_ACTION_BLOCK;
-	fwpFilter.weight.type = FWP_EMPTY; 
+	fwpFilter.weight.type = FWP_EMPTY;
 	fwpFilter.numFilterConditions = 1;
 	fwpFilter.displayData.name = (wchar_t*)L"RPC filter block ip";
 	fwpFilter.displayData.description = (wchar_t*)L"Filter to block all inbound connections from an ip";
@@ -206,7 +209,7 @@ void addIPv4Filter(HANDLE eh, const char* remoteIP, GUID layerkey)
 	fwpFilter.providerKey = &RPCFWProviderGUID;
 
 	fwpFilter.subLayerKey = FWPM_SUBLAYER_RPC_AUDIT;
-	fwpFilter.rawContext = 1; 
+	fwpFilter.rawContext = 1;
 	fwpFilter.flags = FWPM_FILTER_FLAG_PERSISTENT;
 
 	_tprintf(_T("Adding filter\n"));
@@ -216,6 +219,38 @@ void addIPv4Filter(HANDLE eh, const char* remoteIP, GUID layerkey)
 		_tprintf(_T("FwpmFilterAdd0 failed. Return value: 0x%x.\n"), result);
 	else
 		_tprintf(_T("Filter added successfully.\n"));
+}
+
+FWPM_FILTER_CONDITION0 createSDCondition(const std::wstring& sidString)
+{
+	FWPM_FILTER_CONDITION0 sidCondition = { 0 };
+	FWP_BYTE_BLOB* blob;
+	PSECURITY_DESCRIPTOR psd;
+
+	unsigned long sdsize = 0;
+
+	if (!ConvertStringSecurityDescriptorToSecurityDescriptor(sidString.c_str(), SDDL_REVISION_1, &psd, &sdsize))
+	{
+		_tprintf(_T("Failed to convert SD from string: %d\n"), GetLastError());
+	}
+
+	blob = (FWP_BYTE_BLOB*)malloc(sizeof(FWP_BYTE_BLOB));
+	blob->size = sdsize;
+	blob->data = (UINT8*)psd;
+
+	sidCondition.matchType = FWP_MATCH_EQUAL;
+	sidCondition.fieldKey = FWPM_CONDITION_REMOTE_USER_TOKEN;
+	sidCondition.conditionValue.type = FWP_SECURITY_DESCRIPTOR_TYPE;
+	sidCondition.conditionValue.sd = blob;
+
+	return sidCondition;
+}
+
+FWPM_FILTER_CONDITION0 createSIDCondition(const std::wstring& sidString)
+{
+	std::wstring SDString = L"D:(A;;CC;;;" + sidString + L")";
+
+	return createSDCondition(SDString);
 }
 
 FWPM_FILTER_CONDITION0 createUUIDCondition(std::wstring& uuidString)
@@ -235,6 +270,40 @@ FWPM_FILTER_CONDITION0 createUUIDCondition(std::wstring& uuidString)
 	uuidCondition.conditionValue.byteArray16 = (FWP_BYTE_ARRAY16*)&interfaceUUID;
 
 	return uuidCondition;
+}
+
+FWPM_FILTER_CONDITION0 createProtocolCondition(std::wstring& protocol)
+{
+	std::transform(protocol.begin(), protocol.end(), protocol.begin(), ::toupper);
+	FWPM_FILTER_CONDITION0 protoclCondition = { 0 };
+	unsigned int uintProtocl = 0;
+
+	if (protocol.find(_T("TCP")) != std::string::npos)
+	{
+		uintProtocl = RPC_PROTSEQ_TCP;
+	}
+	else if ((protocol.find(_T("NP")) != std::string::npos))
+	{
+		uintProtocl = RPC_PROTSEQ_NMP;
+	}
+	else if (protocol.find(_T("HTTP")) != std::string::npos)
+	{
+		uintProtocl = RPC_PROTSEQ_HTTP;
+	}
+	else if (protocol.find(_T("LRPC")) != std::string::npos)
+	{
+		_tprintf(_T("Unknown protocl found in configutaion: %s\n"), protocol);
+		uintProtocl = RPC_PROTSEQ_LRPC;
+	}
+	else return protoclCondition;
+
+
+	protoclCondition.matchType = FWP_MATCH_EQUAL;
+	protoclCondition.fieldKey = FWPM_CONDITION_RPC_PROTOCOL;
+	protoclCondition.conditionValue.type = FWP_UINT8;
+	protoclCondition.conditionValue.uint8 = uintProtocl;
+
+	return protoclCondition;
 }
 
 FWPM_FILTER_CONDITION0 createEffectivelyAnyCondition()
@@ -310,11 +379,18 @@ void createRPCFilterFromConfigLine(HANDLE fwH, LineConfig confLine, std::wstring
 	{
 		conditions.push_back(createUUIDCondition(confLine.uuid.value()));
 	}
+	if (confLine.sid.has_value())
+	{
+		conditions.push_back(createSIDCondition(confLine.sid.value()));
+	}
+	if (confLine.protocol.has_value())
+	{
+		conditions.push_back(createProtocolCondition(confLine.protocol.value()));
+	}
 	if (conditions.size() == 0 && !confLine.opnum.has_value())
 	{
 		conditions.push_back(createEffectivelyAnyCondition());
 	}
-
 	if (conditions.size() > 0)
 	{
 		FWPM_FILTER0 fwpFilter = { 0 };
