@@ -4,6 +4,8 @@
 using OpNumFilter = std::optional<DWORD>;
 using UUIDFilter = std::optional<std::wstring>;
 using AddressFilter = std::optional<std::wstring>;
+using SIDFilter = std::optional<std::wstring>;
+using protocolFilter = std::optional<std::wstring>;
 
 struct RpcCallPolicy
 {
@@ -17,6 +19,8 @@ struct LineConfig
 	OpNumFilter opnum;
 	AddressFilter source_addr;
 	RpcCallPolicy policy;
+	SIDFilter sid;
+	protocolFilter protocol;
 	bool verbose;
 };
 

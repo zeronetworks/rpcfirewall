@@ -13,6 +13,7 @@
 #include <vector>
 #include <type_traits>
 #include <algorithm>
+#include <iomanip>
 #include "config.hpp"
 #include "rpcWrappers.hpp"
 
@@ -358,6 +359,16 @@ bool extractVerboseFromConfigLine(const std::wstring& confLine)
 	return loc_verbose.find(_T("true")) != std::string::npos;
 }
 
+protocolFilter extractProtocolFromConfigLine(const std::wstring& confLine)
+{
+	std::wstring protocol = extractKeyValueFromConfigLine(confLine, _T("prot:"));
+
+	std::transform(protocol.begin(), protocol.end(), protocol.begin(), ::tolower);
+
+	return protocol.empty() ? protocolFilter{} : protocolFilter{ protocol };
+}
+
+
 void loadPrivateBufferToPassiveVectorConfiguration()
 {
 	WRITE_DEBUG_MSG(StringToWString(privateConfigBuffer));
@@ -388,6 +399,7 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 			lineConfig.source_addr = extractAddressFromConfigLine(confLineString);
 			lineConfig.policy = extractPolicyFromConfigLine(confLineString);
 			lineConfig.verbose = extractVerboseFromConfigLine(confLineString);
+			lineConfig.protocol = extractProtocolFromConfigLine(confLineString);
 			passiveConfigVector.push_back(lineConfig);
 		}
 	}
@@ -451,6 +463,28 @@ bool checkAddress(const AddressFilter& addrFilter, const std::wstring& srcAddr)
 	return addrFilter == srcAddr;
 }
 
+
+bool checkProtocol(const protocolFilter& protFilter, const std::wstring& protocol)
+{
+	if (!protFilter.has_value())
+	{
+		return true;
+	}
+
+	std::wstring protFilterString = protFilter.value();
+	std::wstring protocolString = protocol;
+
+	std::transform(protocolString.begin(), protocolString.end(), protocolString.begin(), ::tolower);
+	std::transform(protFilterString.begin(), protFilterString.end(), protFilterString.begin(), ::tolower);
+
+	if (protocolString.find(protFilterString) != std::string::npos)
+	{
+		return true;
+	}
+	
+	return false;
+}
+
 RpcCallPolicy getMatchingPolicy(const RpcEventParameters& rpcEvent)
 {
 	const ConfigVector& configurationVector = config.getActiveConfigurationVector();
@@ -460,8 +494,9 @@ RpcCallPolicy getMatchingPolicy(const RpcEventParameters& rpcEvent)
 		const bool UUIDMatch = checkUUID(lc.uuid, rpcEvent.uuidString);
 		const bool AddressMatch = checkAddress(lc.source_addr, rpcEvent.sourceAddress);
 		const bool OpNumMatch = checkOpNum(lc.opnum, rpcEvent.OpNum);
+		const bool ProtocolMatch = checkProtocol(lc.protocol, rpcEvent.protocol);		
 
-		if (UUIDMatch && AddressMatch && OpNumMatch)
+		if (UUIDMatch && AddressMatch && OpNumMatch && ProtocolMatch)
 		{
 			WRITE_DEBUG_MSG(_T("Rule Matched for RPC call."));
 
