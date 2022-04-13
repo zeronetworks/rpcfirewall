@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "rpcfilters.h"
 
 HANDLE globalMappedMemory = nullptr;
 HANDLE globalUnprotectlEvent = nullptr;
@@ -338,9 +339,20 @@ void sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
 	}
 }
 
-void cmdInstall()
+void cmdInstallRPCFLT()
 {
-	_tprintf(TEXT("installing RPCFW ...\n"));
+	_tprintf(TEXT("enabling RPCFLT...\n"));
+	if (!setSecurityPrivilege(TEXT("SeSecurityPrivilege")))
+	{
+		_tprintf(TEXT("Error: could not obtain SeSecurityPrivilege.\n"));
+		return;
+	}
+	enableAuditingForRPCFilters();
+}
+
+void cmdInstallRPCFW()
+{
+	_tprintf(TEXT("installing RPCFW...\n"));
 	elevateCurrentProcessToSystem();
 	
 	writeFileToSysfolder(getFullPathOfFile(std::wstring(RPC_FW_DLL_NAME)), RPC_FW_DLL_NAME);
@@ -375,7 +387,6 @@ void cmdPid(int argc, wchar_t* argv[])
 
 void cmdUnprotect()
 {
-	elevateCurrentProcessToSystem();
 	_tprintf(TEXT("Dispatching unprotect request...\n"));
 	sendSignalToGlobalEvent((wchar_t*)GLOBAL_RPCFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
 }
@@ -397,7 +408,7 @@ void cmdProcess(int argc, wchar_t* argv[])
 	}
 }
 
-void cmdUninstall()
+void cmdUninstallRPCFW()
 {
 	cmdUnprotect();
 	_tprintf(TEXT("Uninstalling RPCFW ...\n"));
@@ -415,6 +426,67 @@ void cmdUninstall()
 	}
 }
 
+void cmdUninstallRPCFLT()
+{
+	_tprintf(TEXT("disabling RPCFLT...\n"));
+	if (!setSecurityPrivilege(TEXT("SeSecurityPrivilege")))
+	{
+		_tprintf(TEXT("Error: could not obtain SeSecurityPrivilege.\n"));
+		return;
+	}
+	disableAuditingForRPCFilters();
+	return;
+}
+
+void cmdUninstall(std::wstring &param)
+{
+	if (param.empty())
+	{
+		cmdUninstallRPCFLT();
+		cmdUninstallRPCFW();
+	}
+	else
+	{
+		if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("flt")) != std::string::npos))
+		{
+			cmdUninstallRPCFLT();
+		}
+		else if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("fw")) != std::string::npos))
+		{
+			cmdUninstallRPCFW();
+		}
+		else
+		{
+			_tprintf(TEXT("usage: /uninstall <fw/flt/all>\n"));
+		}
+	}
+}
+
+void cmdInstall(std::wstring &param)
+{
+
+	if (param.empty())
+	{
+		cmdInstallRPCFLT();
+		cmdInstallRPCFW();
+	}
+	else
+	{
+		if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("flt")) != std::string::npos))
+		{
+			cmdInstallRPCFLT();
+		}
+		else if ((param.find(_T("all")) != std::string::npos) || (param.find(_T("fw")) != std::string::npos))
+		{
+			cmdInstallRPCFW();
+		}
+		else
+		{
+			_tprintf(TEXT("usage: /install <fw/flt/all>\n"));
+		}
+	}
+}
+
 int _tmain(int argc, wchar_t* argv[])
 {
 	_tprintf(TEXT("rpcFwMannager started...\n"));
@@ -425,7 +497,12 @@ int _tmain(int argc, wchar_t* argv[])
 
 		if (cmmd.find(_T("/uninstall")) != std::string::npos)
 		{
-			cmdUninstall();
+			std::wstring param;
+			if (argc > 2)
+			{
+				param = std::wstring(argv[2]);
+			}
+			cmdUninstall(param);
 		}
 		else if (cmmd.find(_T("/unprotect")) != std::string::npos)
 		{
@@ -438,7 +515,12 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 		else if (cmmd.find(_T("/install")) != std::string::npos)
 		{
-			cmdInstall();
+			std::wstring param;
+			if (argc > 2)
+			{
+				param = std::wstring(argv[2]);
+			}
+			cmdInstall(param);
 		}
 		else if (cmmd.find(_T("/pid")) != std::string::npos)
 		{

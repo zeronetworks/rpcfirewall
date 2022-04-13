@@ -155,14 +155,19 @@ bool setPrivilege(
 	return true;
 }
 
+bool setSecurityPrivilege(const wchar_t* privName)
+{
+	return setPrivilege(getAccessToken(0, TOKEN_ADJUST_PRIVILEGES), privName, true);
+}
+
 void tryAndRunElevated(DWORD pid)
 {
 	// Enable core privileges  
-	if (!setPrivilege(getAccessToken(0, TOKEN_ADJUST_PRIVILEGES), TEXT("SeDebugPrivilege"), true))
+	if (!setSecurityPrivilege(TEXT("SeDebugPrivilege")))
 	{
 		return;
 	}
-	
+
 	if (!amISYSTEM())
 	{
 		// Retrieves the remote process token.
@@ -183,7 +188,7 @@ void tryAndRunElevated(DWORD pid)
 			GetUserName(Imp_usrename, &name_len);
 			_tprintf(TEXT("Running as: %s\n"), Imp_usrename);
 		}
-	}	
+	}
 }
 
 void elevateCurrentProcessToSystem()
