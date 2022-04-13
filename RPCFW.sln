@@ -15,11 +15,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Configuration_Templates", "Configuration_Templates", "{AA87E5E6-5651-46C1-A4D7-BAA82B4F1B44}"
-	ProjectSection(SolutionItems) = preProject
-		RpcFw.conf = RpcFw.conf
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
