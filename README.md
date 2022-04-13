@@ -1,5 +1,5 @@
 # I Need More Information
-Check out our [RPC Firewall](https://zeronetworks.com/blog/stopping_lateral_movement_via_the_rpc_firewall/) blog post to gain better understanding of RPC, RPC attacks and the solution: the RPC Firewall.
+Check out our [RPC Firewall](https://zeronetworks.com/blog/stopping_lateral_movement_via_the_rpc_firewall/) blog post or our [BlackHat talk](https://www.youtube.com/watch?v=hz_YPIMeBMI) to gain better understanding of RPC, RPC attacks and the solution: the RPC Firewall.
 For any questions, issues, or simlpy to shout out - we would love to hear from you! Contact us at [support@zeronetworks.com](mailto:support@zeronetworks.com)
 
 # Why should I care?
@@ -72,6 +72,15 @@ To disable the RPC Firewall, either uninstall it, or use the unprotect parameter
 RpcFwManager.exe /unprotect
 ```
 This will unload the rpcFirewall.dll from all processes.
+
+## Persistency
+RPC Firewall is not persistent on its own. 
+One method of making sure that processes are continuesly protected is to create a scheduled task that executes a protection command. 
+The following is a poweshell command which does just that, just replace <RPCFW_PATH> with the path actual path to the RPC Firewall release folder.
+
+```bash
+Register-ScheduledTask -TaskName "RPCFW" -Trigger (New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 60)) -User "NT AUTHORITY\SYSTEM" -Action (New-ScheduledTaskAction -Execute "rpcFwManager.exe" -Argument "/pid" -WorkingDirectory "<RPCFW_PATH>")
+```
 
 ## Configuration
 The rpcFwManager.exe looks for a **RpcFw.conf** file, in the same directory of the executable. 

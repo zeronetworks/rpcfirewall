@@ -1,6 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 #include <Windows.h>
+#include <ws2tcpip.h>
 #include <detours.h>
 #include <string>
 #include <sstream>
@@ -15,6 +16,8 @@
 #include <iomanip>
 #include "config.hpp"
 #include "rpcWrappers.hpp"
+
+#pragma comment(lib, "Ws2_32.lib")
 
 HMODULE myhModule;
 
@@ -795,21 +798,26 @@ bool APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpRese
     return true;
 }
 
-RpcEventParameters populateEventParameters(PRPC_MESSAGE pRpcMsg, wchar_t* szStringBindingServer, wchar_t* szStringBinding, wchar_t* functionName)
+RpcEventParameters populateEventParameters(PRPC_MESSAGE pRpcMsg, wchar_t* szStringBindingServer, wchar_t* szStringBinding, wchar_t* functionName, std::wstring &srcAddr, unsigned short srcPort, std::wstring& dstAddr, unsigned short dstPort)
 {
 	RpcEventParameters eventParams = {};
 	eventParams.functionName = std::wstring(functionName);
 	eventParams.processID = std::wstring(myProcessID);
 	eventParams.processName = std::wstring(myProcessName);
-
+	
+	std::wstring srcPrt = std::to_wstring(srcPort);
+	eventParams.srcPort  = srcPrt;
+	std::wstring dstPrt = std::to_wstring(dstPort);
+	eventParams.dstPort = dstPrt;
 
 	std::wstring szWstringBindingServer = std::wstring(szStringBindingServer);
 	std::wstring szWstringBinding = std::wstring(szStringBinding);
 
 	size_t pos = szWstringBinding.find(_T(":"), 0);
 	
-	eventParams.protocol = std::wstring(szWstringBinding.substr(0, pos));
-	eventParams.sourceAddress= szWstringBinding.substr(pos + 1, szWstringBinding.length() - pos);
+	eventParams.protocol = szWstringBinding.substr(0, pos);
+	srcAddr.empty() ? eventParams.sourceAddress = szWstringBinding.substr(pos + 1, szWstringBinding.length() - pos) : eventParams.sourceAddress = srcAddr;
+	dstAddr.empty() ? eventParams.destAddress = _T("0.0.0.0") : eventParams.destAddress = dstAddr;
 
 	if (pos != std::string::npos) {
 		szWstringBinding.replace(pos, 1, L",");
@@ -870,6 +878,41 @@ void rpcFunctionVerboseOutput(bool allowCall, const RpcEventParameters& eventPar
 	WRITE_DEBUG_MSG(wss.str());
 }
 
+unsigned short getAddressAndPortFromBuffer(std::wstring& srcAddr, byte* buff)
+{
+	sockaddr* sockAddr = (sockaddr*)(buff);
+	wchar_t outStr[0x80] = { 0 };
+
+	PCWSTR addrPtr = nullptr;
+	unsigned short port = 0;
+
+	wchar_t uareshort[20] = { 0 };
+	std::wstring msg = _T("address: ");
+
+	switch (sockAddr->sa_family)
+	{
+	case AF_INET:
+		addrPtr = InetNtop(sockAddr->sa_family, &(((struct sockaddr_in*)sockAddr)->sin_addr), outStr, 0x80);
+		port = _byteswap_ushort(((struct sockaddr_in*)sockAddr)->sin_port);
+		
+		msg += addrPtr;
+		msg += _T(" port: ");
+		msg += std::to_wstring(port);
+		WRITE_DEBUG_MSG(msg);
+		break;
+	case AF_INET6:
+		addrPtr = InetNtop(sockAddr->sa_family, &(((struct sockaddr_in6*)sockAddr)->sin6_addr), outStr, 0x80);
+		port = _byteswap_ushort(((struct sockaddr_in6*)sockAddr)->sin6_port);
+		break;
+	default:
+		WRITE_DEBUG_MSG_WITH_STATUS(_T("Unknown address family type"), sockAddr->sa_family);
+		break;
+	}
+
+	srcAddr = addrPtr;
+	return port;
+}
+
 bool processRPCCallInternal(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 {
 	RpcCallPolicy policy{};
@@ -905,7 +948,38 @@ bool processRPCCallInternal(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 			WRITE_DEBUG_MSG_WITH_STATUS(_T("Could not extract server endpoint via RpcBindingToStringBinding"), status);
 		}
 
-		const RpcEventParameters eventParams = populateEventParameters(pRpcMsg, szStringBindingServer.str, szStringBinding.str, functionName);
+		const wchar_t* procName = L"RPC-Server.exe";
+		byte buffSrc[0x80] = {0};
+		unsigned long buffersize = 0x80;
+
+		std::wstring srcAddrFromConnection;
+		unsigned short srcPort = 0;
+
+		status = I_RpcServerInqRemoteConnAddress(pRpcMsg->Handle, &buffSrc, &buffersize, (unsigned long*)&procName);
+		if (status != RPC_S_OK)
+		{
+			WRITE_DEBUG_MSG_WITH_STATUS(_T("Could not extract client address via I_RpcServerInqRemoteConnAddress"), status);
+		}
+		else
+		{
+			srcPort = getAddressAndPortFromBuffer(srcAddrFromConnection, buffSrc);
+		}
+
+		byte buffDst[0x80] = { 0 };
+		std::wstring dstAddrFromConnection;
+		unsigned short dstPort = 0;
+
+		status = I_RpcServerInqLocalConnAddress(pRpcMsg->Handle, &buffDst, &buffersize, (unsigned long*)&procName);
+		if (status != RPC_S_OK)
+		{
+			WRITE_DEBUG_MSG_WITH_STATUS(_T("Could not extract server address via I_RpcServerInqRemoteConnAddress"), status);
+		}
+		else
+		{
+			dstPort = getAddressAndPortFromBuffer(dstAddrFromConnection, buffDst);
+		}
+
+		const RpcEventParameters eventParams = populateEventParameters(pRpcMsg, szStringBindingServer.str, szStringBinding.str, functionName, srcAddrFromConnection, srcPort, dstAddrFromConnection, dstPort);
 		
 		policy = getMatchingPolicy(eventParams);
 

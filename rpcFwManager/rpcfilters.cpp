@@ -166,11 +166,13 @@ if ((result != FWP_E_ALREADY_EXISTS) && (result != ERROR_SUCCESS))
 	_tprintf(_T("Call to FwpmTransactionCommit0 failed: 0x%x"), result);
 	return;
 }
+
 }
 
 void installRPCFWProvider()
 {
 	installGenericProvider(&RPCFWProviderGUID, providerName.c_str(), &RPCFWSublayerGUID, sublayerName.c_str());
+
 }
 
 void enableAuditingForRPCFilters()

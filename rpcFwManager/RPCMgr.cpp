@@ -481,7 +481,7 @@ void sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
 
 void runCommandBasedOnParam(std::wstring &param, void funcFilter(void), void funcFireWall(void), std::wstring &errMsg)
 {
-	if (param.empty())
+	if (param.empty() || (param.find(_T("all")) != std::string::npos))
 	{
 		funcFilter();
 		funcFireWall();
@@ -709,7 +709,6 @@ int _tmain(int argc, wchar_t* argv[])
 		{
 			param = std::wstring(argv[2]);
 		}
-
 		if (cmmd.find(_T("/uninstall")) != std::string::npos)
 		{
 			cmdUninstall(param);
@@ -730,7 +729,6 @@ int _tmain(int argc, wchar_t* argv[])
 				{
 					cmdPid(0);
 				}		
-				WaitForSingleObject(globalUnprotectEvent, 1000);
 			}
 			else if (param.find(_T("process")) != std::string::npos)
 			{
@@ -744,6 +742,7 @@ int _tmain(int argc, wchar_t* argv[])
 			{
 				cmdProtect(param);
 			}
+			WaitForSingleObject(globalUnprotectlEvent, 1000);
 		}
 		else if (cmmd.find(_T("/update")) != std::string::npos) 
 		{
