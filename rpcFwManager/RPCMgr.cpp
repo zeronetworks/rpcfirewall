@@ -140,6 +140,15 @@ RpcCallPolicy extractPolicyFromConfigLine(const std::wstring& confLine)
 	};
 }
 
+bool checkIfFilterConfiguLine(const std::wstring& confLine)
+{
+	std::wstring flt = extractKeyValueFromConfigLine(confLine, _T("flt:"));
+
+	return !flt.empty();
+
+}
+
+
 void concatArguments(int argc, wchar_t* argv[], wchar_t command[])
 {
 	_tcscpy_s(command, MAX_PATH *2, argv[0]);
@@ -541,14 +550,17 @@ void createRPCFiltersFromConfiguration()
 			confLineString += L" ";
 			LineConfig lineConfig = {};
 
-			lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
-			lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
-			lineConfig.source_addr = extractAddressFromConfigLine(confLineString);
-			lineConfig.policy = extractPolicyFromConfigLine(confLineString);
-			lineConfig.sid = extractSIDFromConfigLine(confLineString);
-			lineConfig.protocol = extractProtoclFromConfigLine(confLineString);
+			if (checkIfFilterConfiguLine(confLineString))
+			{
+				lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
+				lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
+				lineConfig.source_addr = extractAddressFromConfigLine(confLineString);
+				lineConfig.policy = extractPolicyFromConfigLine(confLineString);
+				lineConfig.sid = extractSIDFromConfigLine(confLineString);
+				lineConfig.protocol = extractProtoclFromConfigLine(confLineString);
 
-			confLines.push_back(std::make_pair(confLineString, lineConfig));
+				confLines.push_back(std::make_pair(confLineString, lineConfig));
+			}
 		}
 
 		createRPCFilterFromTextLines(confLines);
@@ -742,7 +754,7 @@ int _tmain(int argc, wchar_t* argv[])
 			{
 				cmdProtect(param);
 			}
-			WaitForSingleObject(globalUnprotectlEvent, 1000);
+			WaitForSingleObject(globalUnprotectEvent, 1000);
 		}
 		else if (cmmd.find(_T("/update")) != std::string::npos) 
 		{
