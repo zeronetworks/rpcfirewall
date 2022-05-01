@@ -120,6 +120,11 @@ void writeDebugOutputWithPIDWithErrorMessage(const std::wstring& dbgMsg, wchar_t
 	}
 }
 
+bool checkFWConfig(const wchar_t* confLine)
+{
+	return _tcsstr(confLine, TEXT("fw:"));
+}
+
 void writeDebugOutputWithPIDGetLastError(const std::wstring& dbgMsg)
 {
 	if (verbose)
@@ -392,15 +397,20 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 		{
 			confLineString = configLine;
 			confLineString += _T(" ");
-			LineConfig lineConfig = {};
 
-			lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
-			lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
-			lineConfig.source_addr = extractAddressFromConfigLine(confLineString);
-			lineConfig.policy = extractPolicyFromConfigLine(confLineString);
-			lineConfig.verbose = extractVerboseFromConfigLine(confLineString);
-			lineConfig.protocol = extractProtocolFromConfigLine(confLineString);
-			passiveConfigVector.push_back(lineConfig);
+			if (checkFWConfig(confLineString.c_str()))
+			{
+				writeDebugOutputWithPID(_T("FW in config line!"));
+				LineConfig lineConfig = {};
+
+				lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
+				lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
+				lineConfig.source_addr = extractAddressFromConfigLine(confLineString);
+				lineConfig.policy = extractPolicyFromConfigLine(confLineString);
+				lineConfig.verbose = extractVerboseFromConfigLine(confLineString);
+				lineConfig.protocol = extractProtocolFromConfigLine(confLineString);
+				passiveConfigVector.push_back(lineConfig);
+			}
 		}
 	}
 
