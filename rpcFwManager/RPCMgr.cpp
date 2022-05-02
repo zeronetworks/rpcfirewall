@@ -6,6 +6,7 @@
 #include "stdafx.h"
 #include "rpcfilters.h"
 #include <algorithm>
+#include "EventSink.h"
 
 HANDLE globalMappedMemory = nullptr;
 HANDLE globalUnprotectEvent = nullptr;
@@ -763,6 +764,12 @@ int _tmain(int argc, wchar_t* argv[])
 		else if (cmmd.find(_T("/install")) != std::string::npos)
 		{
 			cmdInstall(param);
+		}
+		else if (cmmd.find(_T("/wait")) != std::string::npos)
+		{
+			wmiEventRegistrant wmiProcessRegistrant;
+			wmiProcessRegistrant.registerForProcessCreatedEvents();
+			Sleep(60000);
 		}
 		else
 		{
