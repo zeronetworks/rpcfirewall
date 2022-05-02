@@ -177,6 +177,8 @@ copy /Y "$(SolutionDir)easyhook\Deploy\NetFX3.5\EasyHook*.lib" $(TargetDir)</Com
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EventSink.cpp" />
+    <ClCompile Include="EventSink.h" />
     <ClCompile Include="elevation.cpp" />
     <ClCompile Include="Injections.cpp" />
     <ClCompile Include="rpcfilters.cpp" />
