@@ -1,6 +1,8 @@
 // EventSink.cpp
 #include "stdafx.h"
 #include "EventSink.h"
+#include "common.h"
+#include "Injections.h"
 
 ULONG EventSink::AddRef()
 {
@@ -49,7 +51,10 @@ HRESULT EventSink::Indicate(long lObjectCount,
                 if (!FAILED(hres))
                 {
                     if ((cn.vt != VT_NULL) || (cn.vt != VT_EMPTY))
-                        _tprintf(_T("Process ID: %d\n"), cn.uintVal);
+                    {
+                        outputMessage(L"New process detected", cn.uintVal);
+                        crawlProcesses(cn.uintVal);
+                    }
                 }
                 VariantClear(&cn);
             }

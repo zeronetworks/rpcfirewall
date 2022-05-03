@@ -400,7 +400,6 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 
 			if (checkFWConfig(confLineString.c_str()))
 			{
-				writeDebugOutputWithPID(_T("FW in config line!"));
 				LineConfig lineConfig = {};
 
 				lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
