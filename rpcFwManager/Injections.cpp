@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+typedef std::vector<std::pair<DWORD, std::wstring>> ProcVector;
+
 void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 
 	HANDLE hProcess = OpenProcess(MAXIMUM_ALLOWED, false, processID);
@@ -93,4 +95,58 @@ void classicHookRPCProcesses(DWORD processID, wchar_t* dllToInject)
 	{
 		hookProcessLoadLibrary(processID, dllToInject);
 	}
+}
+
+ProcVector getRelevantProcVector(DWORD pid, std::wstring& pName)
+{
+	ProcVector procVector;
+
+	PROCESSENTRY32W pe32;
+	pe32.dwSize = sizeof(PROCESSENTRY32W);
+
+	HANDLE hTool32 = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	bool bProcess = Process32FirstW(hTool32, &pe32);
+
+	if (bProcess == true) {
+		while ((Process32Next(hTool32, &pe32)) == TRUE)
+		{
+			if (!pName.empty() && compareStringsCaseinsensitive(pe32.szExeFile, (wchar_t*)pName.c_str()))
+			{
+				procVector.push_back(std::make_pair(pe32.th32ProcessID, pe32.szExeFile));
+			}
+			else if (pid == 0)
+			{
+				procVector.push_back(std::make_pair(pe32.th32ProcessID, pe32.szExeFile));
+			}
+			else if (pid == pe32.th32ProcessID)
+			{
+				procVector.push_back(std::make_pair(pe32.th32ProcessID, pe32.szExeFile));
+			}
+		}
+	}
+	CloseHandle(hTool32);
+
+	return procVector;
+}
+
+void crawlProcesses(DWORD pid, std::wstring& pName)
+{
+	ProcVector procToHook = getRelevantProcVector(pid, pName);
+
+	unsigned int i;
+	size_t vSize = procToHook.size();
+	for (i = 0; i < vSize; i++)
+	{
+		DWORD pid = procToHook[i].first;
+		std::wstring procName = procToHook[i].second;
+
+		_tprintf(TEXT("Protecting %d : %s\n"), pid, procName.c_str());
+		classicHookRPCProcesses(pid, (wchar_t*)RPC_FW_DLL_NAME);
+	}
+}
+
+void crawlProcesses(DWORD pid)
+{
+	std::wstring noProcName;
+	crawlProcesses(pid, noProcName);
 }
