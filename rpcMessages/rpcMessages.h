@@ -38,14 +38,16 @@ DllExport bool deleteEventSource();
 
 DllExport void addEventSource();
 
-DllExport bool processProtectedEvent(bool , wchar_t*, wchar_t* );
+DllExport bool processProtectedEvent(bool , const wchar_t*, const wchar_t* );
 
-DllExport bool processUnprotectedEvent(bool, wchar_t*, wchar_t* );
+DllExport bool processUnprotectedEvent(bool, const wchar_t*, const wchar_t* );
 
 DllExport bool rpcFunctionCalledEvent(bool , const RpcEventParameters& );
 
 DllExport bool compareCharCaseInsensitive(wchar_t , wchar_t );
 
-DllExport bool compareStringsCaseinsensitive(wchar_t*, wchar_t* );
+DllExport bool compareStringsCaseinsensitive(const wchar_t*, const wchar_t* );
 
-DllExport bool compareStringsCaseinsensitive(wchar_t* , wchar_t* , size_t);
+DllExport bool compareStringsCaseinsensitive(const wchar_t* , const wchar_t* , size_t);
+
+DllExport bool checkIfEventConfiguredInReg();

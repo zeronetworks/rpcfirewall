@@ -169,7 +169,7 @@ copy /Y "$(SolutionDir)easyhook\Deploy\NetFX3.5\EasyHook*.lib" $(TargetDir)</Com
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Fwpuclnt.lib;psapi.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <UACExecutionLevel>AsInvoker</UACExecutionLevel>
+      <UACExecutionLevel>HighestAvailable</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
       <Command>

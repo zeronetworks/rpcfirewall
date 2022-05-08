@@ -27,7 +27,7 @@ bool compareCharCaseInsensitive(wchar_t c1, wchar_t c2)
     return false;
 }
 
-bool compareStringsCaseinsensitive(wchar_t* str1, wchar_t* str2)
+bool compareStringsCaseinsensitive(const wchar_t* str1, const wchar_t* str2)
 {
     wchar_t tcharEnd = _T("\0")[0];
 
@@ -46,7 +46,7 @@ bool compareStringsCaseinsensitive(wchar_t* str1, wchar_t* str2)
     return true;
 }
 
-bool compareStringsCaseinsensitive(wchar_t* str1, wchar_t* str2, size_t maxLen)
+bool compareStringsCaseinsensitive(const wchar_t* str1, const wchar_t* str2, size_t maxLen)
 {
     wchar_t tcharEnd = _T("\0")[0];
 
@@ -149,6 +149,24 @@ bool deleteEventSource()
     return regDelNodeRecurse(HKEY_LOCAL_MACHINE, szRegPath);
 }
 
+bool checkIfEventConfiguredInReg()
+{
+    HKEY    hRegKey = nullptr;
+    HKEY    hRegKeyParent = nullptr;
+    HKEY  phkResult = nullptr;
+    wchar_t   szRegPathParent[MAX_PATH];
+
+    _stprintf_s(szRegPathParent, _T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s"), PROVIDER_NAME);
+
+    LSTATUS res = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szRegPathParent, 0, KEY_READ, &phkResult);
+
+    if (res != ERROR_SUCCESS)
+    {
+        return false;
+    }
+    return true;
+}
+
 void addEventSource()
 {
     HKEY    hRegKey = nullptr;
@@ -208,7 +226,7 @@ void addEventSource()
    
 }
 
-bool processProtectedEvent(bool successfulInjection, wchar_t* processName, wchar_t* processID)
+bool processProtectedEvent(bool successfulInjection, const wchar_t* processName, const wchar_t* processID)
 {
     bool bSuccess = false;
     WORD eventType = EVENTLOG_AUDIT_SUCCESS;
@@ -243,7 +261,7 @@ bool processProtectedEvent(bool successfulInjection, wchar_t* processName, wchar
     return bSuccess;
 }
 
-bool processUnprotectedEvent(bool successfulIUnloading, wchar_t* processName, wchar_t* processID) {
+bool processUnprotectedEvent(bool successfulIUnloading, const wchar_t* processName, const wchar_t* processID) {
 
     bool bSuccess = false;
     WORD eventType = EVENTLOG_AUDIT_SUCCESS;

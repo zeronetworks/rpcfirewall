@@ -37,3 +37,9 @@ void deleteAllRPCFilters();
 void installRPCFWProvider();
 
 void createRPCFilterFromTextLines(configLinesVector);
+
+void printAllRPCFilters();
+
+bool isProviderInstalled();
+
+bool isAuditingEnabledForRPCFilters();
