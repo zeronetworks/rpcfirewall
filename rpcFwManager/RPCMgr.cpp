@@ -2,6 +2,8 @@
 //
 
 #include <optional>
+#include <fstream>
+
 
 #include "stdafx.h"
 #include "rpcfilters.h"
@@ -10,28 +12,6 @@
 #include "service.h"
 
 enum class eventSignal {signalSetEvent, signalResetEvent};
-
-std::tuple<size_t, size_t, bool> getConfigOffsets(std::string confStr)
-{
-	size_t start_pos = confStr.find("!start!");
-	size_t end_pos = confStr.find("!end!");
-
-	if (start_pos == std::string::npos || end_pos == std::string::npos)
-	{
-		_tprintf(_T("Error reading start or end markers"));
-		return std::make_tuple(0, 0, false);
-	}
-	start_pos += 7;
-
-	return std::make_tuple(start_pos, end_pos, true);
-}
-
-std::wstring StringToWString(const std::string& s)
-{
-	std::wstring temp(s.length(), L' ');
-	std::copy(s.begin(), s.end(), temp.begin());
-	return temp;
-}
 
 std::wstring extractKeyValueFromConfigLineInner(const std::wstring& confLine, const std::wstring& key)
 {
@@ -222,6 +202,34 @@ void writeFileToSysfolder(const std::wstring& sourcePath, const std::wstring& so
 		_tprintf(TEXT("ERROR: %s copy to system folder failed [%d].\n"), sourcePath.c_str(), GetLastError());
 		return;
 	}
+}
+
+bool checkIfFileInSysFolder(const std::wstring& sourceFileName)
+{
+	wchar_t  destPath[INFO_BUFFER_SIZE];
+	DWORD  bufCharCount = INFO_BUFFER_SIZE;
+
+	if (!GetSystemDirectory(destPath, INFO_BUFFER_SIZE))
+	{
+		_tprintf(TEXT("ERROR: Couldn't get the system directory [%d].\n"), GetLastError());
+		return false;
+	}
+
+	std::wstring destPathStr = destPath;
+	destPathStr += TEXT("\\");
+	destPathStr += sourceFileName;
+
+	std::ifstream ifile; 
+	ifile.open(destPathStr.c_str());
+	
+	if (ifile)
+	{
+		ifile.close();
+		return true;
+	}
+	ifile.close();
+	return false;
+
 }
 
 void sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
@@ -419,6 +427,55 @@ void cmdProtect(std::wstring &param)
 	runCommandBasedOnParam(param, cmdProtectRPCFLT, cmdProtectRPCFW, errMsg);
 }
 
+void cmdStatusRPCFLT()
+{
+	outputMessage(L"\n----------------------");
+	outputMessage(L"RPC Filter status:");
+	outputMessage(L"----------------------");
+	
+	/*bool isInstalled = isProviderInstalled();
+	std::wstring providerStat = isInstalled  ? L"Provider installed" : L"Provider not installed";
+	outputMessage(providerStat.c_str());*/
+	
+	std::wstring auditing = isAuditingEnabledForRPCFilters() ? L"Auditing enabled" : L"Auditing not enabled";
+	outputMessage(auditing.c_str());
+	
+	printAllRPCFilters();
+		
+}
+
+void cmdStatusRPCFW()
+{
+	elevateCurrentProcessToSystem();
+	outputMessage(L"\n----------------------");
+	outputMessage(L"RPC Firewall status:");
+	outputMessage(L"----------------------");
+	
+	std::wstring RPCFWFileState = checkIfFileInSysFolder(RPC_FW_DLL_NAME) ? L" installed" : L" not installed";
+	std::wstring RPCMSGFileState = checkIfFileInSysFolder(RPC_MESSAGES_DLL_NAME) ? L" installed" : L" not installed";
+	std::wstring serviceInstalledState = isServiceInstalled() ? L" installed" : L" not installed";
+	std::wstring eventState = checkIfEventConfiguredInReg() ? L" configured" : L" not configured";
+
+	outputMessage((RPC_FW_DLL_NAME + RPCFWFileState).c_str());
+	outputMessage((RPC_MESSAGES_DLL_NAME + RPCMSGFileState).c_str());
+	outputMessage((L"RPC Firewall Service" + serviceInstalledState).c_str());
+	outputMessage((L"RPC Firewall Event" + eventState).c_str());
+
+	outputMessage(L"\n");
+	printProcessesWithRPCFW();
+
+	outputMessage(L"\nconfiguration:");
+	outputMessage(L"----------------------");
+	printMappedMeomryConfiguration();
+
+}
+
+void cmdStatus(std::wstring& param)
+{
+	std::wstring errMsg = _T("usage: /status <fw/flt/all>\n");
+	runCommandBasedOnParam(param, cmdStatusRPCFLT, cmdStatusRPCFW, errMsg);
+}
+
 void cmdProcess(std::wstring &processName)
 {
 	createAllGloblEvents();
@@ -484,7 +541,7 @@ int _tmain(int argc, wchar_t* argv[])
 
 	if (interactive)
 	{
-		_tprintf(TEXT("rpcFwMannager started manually...\n"));
+		_tprintf(TEXT("RPCFW Manager started manually...\n"));
 	}
 
 	if (argc > 1)
@@ -537,6 +594,10 @@ int _tmain(int argc, wchar_t* argv[])
 		else if (cmmd.find(_T("/install")) != std::string::npos)
 		{
 			cmdInstall(param);
+		}
+		else if (cmmd.find(_T("/status")) != std::string::npos)
+		{
+			cmdStatus(param);
 		}
 		else
 		{

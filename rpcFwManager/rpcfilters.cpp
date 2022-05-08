@@ -88,6 +88,43 @@ void updateAuditingForRPCFilters(unsigned long auditingInformation)
 	}
 }
 
+bool isAuditingEnabledForRPCFilters()
+{
+	// Audit_DetailedTracking
+	std::wstring categoryGUIDString(L"{6997984C-797A-11D9-BED3-505054503030}");
+
+	GUID catagoryGUID;
+
+	HRESULT res = CLSIDFromString(categoryGUIDString.c_str(), &catagoryGUID);
+	if (res != S_OK)
+	{
+		_tprintf(_T("Could not convert audit category from string: %d\n"), res);
+		return false;
+	}
+
+	// Audit_DetailedTracking_RpcCall
+	std::wstring subcategoryGUIDString(L"{0CCE922E-69AE-11D9-BED3-505054503030}");
+	GUID subCategoryGUID;
+
+	res = CLSIDFromString(subcategoryGUIDString.c_str(), &subCategoryGUID);
+	if (res != S_OK)
+	{
+		_tprintf(_T("Could not convert audit sub-category from string: %d\n"), res);
+		return false;
+	}
+
+	PAUDIT_POLICY_INFORMATION api = nullptr;
+	if (!AuditQuerySystemPolicy(&subCategoryGUID, 1, &api))
+	{
+		_tprintf(_T("Error calling AuditQuerySystemPolicy: %d\n"), GetLastError());
+		return false;
+	}
+
+	if (api->AuditingInformation == 0) return false;
+
+	return true;
+}
+
 void installGenericProvider(
 	__in const GUID* providerKey,
 	__in PCWSTR providerName,
@@ -151,22 +188,75 @@ void installGenericProvider(
 	subLayer.providerKey = (GUID*)providerKey;
 	subLayer.weight = 0x8000;
 
-result = FwpmSubLayerAdd0(engine.h, &subLayer, NULL);
-if ((result != FWP_E_ALREADY_EXISTS) && (result != ERROR_SUCCESS))
-{
-	_tprintf(_T("Call to FwpmSubLayerAdd0 failed: 0x%x"), result);
-	return;
+	result = FwpmSubLayerAdd0(engine.h, &subLayer, NULL);
+	if ((result != FWP_E_ALREADY_EXISTS) && (result != ERROR_SUCCESS))
+	{
+		_tprintf(_T("Call to FwpmSubLayerAdd0 failed: 0x%x"), result);
+		return;
+	}
+
+	// Once all the adds have succeeded, we commit the transaction to persist
+	// the new objects.
+	result = FwpmTransactionCommit0(engine.h);
+	if ((result != FWP_E_ALREADY_EXISTS) && (result != ERROR_SUCCESS))
+	{
+		_tprintf(_T("Call to FwpmTransactionCommit0 failed: 0x%x"), result);
+		return;
+	}
+
 }
 
-// Once all the adds have succeeded, we commit the transaction to persist
-// the new objects.
-result = FwpmTransactionCommit0(engine.h);
-if ((result != FWP_E_ALREADY_EXISTS) && (result != ERROR_SUCCESS))
+
+bool isProviderInstalled(__in const GUID* providerKey)
 {
-	_tprintf(_T("Call to FwpmTransactionCommit0 failed: 0x%x"), result);
-	return;
+	DWORD result = ERROR_SUCCESS;
+	FwHandleWrapper engine;
+	FWPM_SESSION0 session;
+	FWPM_PROVIDER_CONTEXT3** providerContext = nullptr;
+	FWPM_SUBLAYER0 subLayer;
+
+	memset(&session, 0, sizeof(session));
+	// The session name isn't required but may be useful for diagnostics.
+	std::wstring sName = std::wstring(L"RPCFW_Checker_Session");
+	session.displayData.name = (wchar_t*)sName.c_str();
+	// Set an infinite wait timeout, so we don't have to handle FWP_E_TIMEOUT
+	// errors while waiting to acquire the transaction lock.
+	session.txnWaitTimeoutInMSec = INFINITE;
+
+	// The authentication service should always be RPC_C_AUTHN_DEFAULT.
+	result = FwpmEngineOpen0(
+		NULL,
+		RPC_C_AUTHN_DEFAULT,
+		NULL,
+		&session,
+		&engine.h
+	);
+	if (result != ERROR_SUCCESS)
+	{
+		_tprintf(_T("Call to FwpmEngineOpen failed: 0x%x"), result);
+		return false;
+	}
+
+	/*result = FwpmTransactionBegin0(engine.h, 0);
+	if (result != ERROR_SUCCESS)
+	{
+		_tprintf(_T("Call to FwpmTransactionBegin0 failed: 0x%x"), result);
+		return false;
+	}*/
+
+	result = FwpmProviderContextGetByKey(engine.h, providerKey, providerContext);
+	if (result != ERROR_SUCCESS)
+	{
+		return false;
+	}
+	FwpmFreeMemory0((void**)providerContext);
+	return true;
+
 }
 
+bool isProviderInstalled()
+{
+	return isProviderInstalled(&RPCFWProviderGUID);
 }
 
 void installRPCFWProvider()
@@ -415,14 +505,14 @@ void createRPCFilterFromConfigLine(HANDLE fwH, LineConfig confLine, std::wstring
 			
 		}
 
-		_tprintf(_T("Adding filter %s, %s\n"), filterName.c_str(), filterDescription.c_str());
+		//_tprintf(_T("Adding filter %s, %s\n"), filterName.c_str(), filterDescription.c_str());
 
 		DWORD result = FwpmFilterAdd0(fwhw.h, &fwpFilter, nullptr, nullptr);
 
 		if (result != ERROR_SUCCESS)
 			_tprintf(_T("FwpmFilterAdd0 failed. Return value: 0x%x.\n"), result);
-		else
-			_tprintf(_T("Filter added successfully.\n"));
+		//else
+		//	_tprintf(_T("Filter added successfully.\n"));
 	}
 }
 
@@ -442,7 +532,7 @@ void createRPCFilterFromTextLines(configLinesVector configsVector)
 				std::wstring confLineStr = configsVector[i].first;
 				LineConfig confLine = configsVector[i].second;
 
-				std::wstring filterName = L"RPCFW line " + std::to_wstring(i + 1);
+				std::wstring filterName = L"RPC Filter " + std::to_wstring(i + 1);
 
 				createRPCFilterFromConfigLine(fwhw.h, confLine, filterName, confLineStr, weight--);
 			}
@@ -512,14 +602,48 @@ void deleteAllRPCFilters()
 			for (unsigned int entryNum = 0; entryNum < numEntries; entryNum++)
 			{
 				ret = FwpmFilterDeleteById0(engineHandle, entries[entryNum]->filterId);
-				if (ret == ERROR_SUCCESS)
-				{
-					_tprintf(_T("Removed filter: %s\n"), entries[entryNum]->displayData.description);
-				}
-				else
+				if (ret != ERROR_SUCCESS)
 				{
 					_tprintf(_T("Falied to remove filter: %s : 0x%x\n"), entries[entryNum]->displayData.description, ret);
 				}
+			}
+		}
+	}
+}
+
+void printAllRPCFilters()
+{
+	HANDLE engineHandle = openFwEngineHandle();
+
+	if (engineHandle != nullptr)
+	{
+		EnumHandleWrapper ehw = { 0 };
+		ehw.engineH = engineHandle;
+		ehw.enumH = returnEnumHandleToAllRPCFilters(engineHandle);
+
+		if (ehw.enumH != nullptr)
+		{
+			FWPM_FILTER0** entries;
+			unsigned int numEntries;
+
+			DWORD ret = FwpmFilterEnum(ehw.engineH, ehw.enumH, 0xFFFF, &entries, &numEntries);
+			if (ret != ERROR_SUCCESS)
+			{
+				_tprintf(_T("Enum filters failed: 0x%x\n"), ret);
+				return;
+			}
+
+			if (numEntries == 0)
+			{
+				_tprintf(L"No relevant RPC Filters found!\n");
+			}
+
+			for (unsigned int entryNum = 0; entryNum < numEntries; entryNum++)
+			{
+				std::wstring entry = entries[entryNum]->displayData.description;
+				std::replace(entry.begin(), entry.end(), L'\r', L'\0');
+				_tprintf(entry.c_str());
+				_tprintf(L"\n");
 			}
 		}
 	}

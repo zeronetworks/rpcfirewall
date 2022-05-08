@@ -23,3 +23,9 @@ void createAllGloblEvents();
 void readConfigAndMapToMemory();
 
 CHAR* readConfigFile(DWORD*);
+
+void printMappedMeomryConfiguration();
+
+std::wstring StringToWString(const std::string&);
+
+std::tuple<size_t, size_t, bool> getConfigOffsets(std::string);

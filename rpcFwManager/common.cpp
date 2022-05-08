@@ -27,6 +27,70 @@ HANDLE mapNamedMemory()
 	return hMapFile;
 }
 
+std::wstring StringToWString(const std::string& s)
+{
+	std::wstring temp(s.length(), L' ');
+	std::copy(s.begin(), s.end(), temp.begin());
+	return temp;
+}
+
+std::tuple<size_t, size_t, bool> getConfigOffsets(std::string confStr)
+{
+	size_t start_pos = confStr.find("!start!");
+	size_t end_pos = confStr.find("!end!");
+
+	if (start_pos == std::string::npos || end_pos == std::string::npos)
+	{
+		outputMessage(_T("Error reading start or end markers"));
+		return std::make_tuple(0, 0, false);
+	}
+	start_pos += 7;
+
+	return std::make_tuple(start_pos, end_pos, true);
+}
+
+void printMappedMeomryConfiguration()
+{
+	HANDLE hConfigurationMapFile = OpenFileMapping(FILE_MAP_READ, false, GLOBAL_SHARED_MEMORY);
+
+	if (hConfigurationMapFile == nullptr)
+	{
+		outputMessage(L"No RPC Firewall configuration loaded.");
+		return;
+	}
+
+	char* mappedBuf;
+	mappedBuf = (char*)MapViewOfFile(hConfigurationMapFile, FILE_MAP_READ, 0, 0, MEM_BUF_SIZE);
+	if (mappedBuf == nullptr)
+	{
+		outputMessage(TEXT("Error: Could not map view of configuration file."),GetLastError());
+		CloseHandle(hConfigurationMapFile);
+		return;
+	}
+
+	std::string privateConfigBuffer = mappedBuf;
+	auto markers = getConfigOffsets(privateConfigBuffer);
+	size_t start_pos = std::get<0>(markers);
+	size_t end_pos = std::get<1>(markers);
+
+	std::string configurationOnly = privateConfigBuffer.substr(start_pos, end_pos - start_pos);
+
+	std::basic_istringstream<wchar_t> configStream(StringToWString(configurationOnly));
+	std::wstring confLineString;
+	wchar_t configLine[256];
+
+	while (configStream.getline(configLine, 256))
+	{
+		confLineString = configLine;
+		confLineString += _T(" ");
+
+		if (_tcsstr(configLine, TEXT("fw:")))
+		{
+			outputMessage(configLine);
+		}
+	}
+}
+
 std::wstring getProcessBinaryPath()
 {
 	std::wstring binPath;
@@ -53,8 +117,6 @@ CHAR* readConfigFile(DWORD* bufLen)
 		cfgFwPath = cfgFwPath.substr(0, offset);
 		cfgFwPath = cfgFwPath + L"\\" + CONF_FILE_NAME;
 
-		outputMessage(cfgFwPath.c_str());
-
 		//std::wstring cfgFwPath = getFullPathOfFile(std::wstring(CONF_FILE_NAME));
 		HANDLE hFile = CreateFile(cfgFwPath.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 
@@ -67,6 +129,8 @@ CHAR* readConfigFile(DWORD* bufLen)
 			outputMessage(TEXT("ERROR: ReadFile %d.\n"), GetLastError());
 
 		}
+
+		CloseHandle(hFile);
 	}
 
 	return configBuf;

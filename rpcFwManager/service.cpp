@@ -55,12 +55,20 @@ serviceHandleWrapper getServiceHandle(serviceHandleWrapper schSCManager, const w
 		serviceName,            
 		SERVICE_ALL_ACCESS);
 
-	if (schService.h == nullptr)
+	/*if (schService.h == nullptr)
 	{
 		outputMessage(L"OpenService failed", GetLastError());
-	}
+	}*/
 	
 	return schService;
+}
+
+bool isServiceInstalled()
+{
+	serviceHandleWrapper serviceManagerWrapper = getSCManagerHandle();
+	serviceHandleWrapper schService = getServiceHandle(std::move(serviceManagerWrapper), SERVICE_NAME);
+
+	return schService.h == nullptr ? false : true;
 }
 
 void serviceStop()
@@ -530,7 +538,7 @@ void WINAPI serviceMain(DWORD argc, LPTSTR* argv)
 	createAllGloblEvents();
 	readConfigAndMapToMemory();
 	
-	//crawlProcesses(0);
+	crawlProcesses(0);
 
 	// Start a thread that will perform the main task of the service
 	HANDLE hThread = CreateThread(NULL, 0, serviceWorkerThread, NULL, 0, NULL);

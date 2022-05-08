@@ -20,3 +20,5 @@ void serviceUninstall();
 void serviceStart();
 
 void serviceMakeAutostart();
+
+bool isServiceInstalled();
