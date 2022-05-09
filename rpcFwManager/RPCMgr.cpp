@@ -458,18 +458,19 @@ void cmdStatusRPCFW()
 	outputMessage(L"----------------------");
 	
 	std::wstringstream RPCFWFileState;
-	RPCFWFileState << L"\t" << RPC_FW_DLL_NAME << (checkIfFileInSysFolder(RPC_FW_DLL_NAME) ? L" installed" : L" not installed") << L"\n";
+	RPCFWFileState << L"\t" << RPC_FW_DLL_NAME << (checkIfFileInSysFolder(RPC_FW_DLL_NAME) ? L" installed" : L" not installed");
 	std::wstringstream RPCMSGFileState;
-	RPCMSGFileState << L"\t"  << RPC_MESSAGES_DLL_NAME  << (checkIfFileInSysFolder(RPC_MESSAGES_DLL_NAME) ? L" installed" : L" not installed") << L"\n";
+	RPCMSGFileState << L"\t"  << RPC_MESSAGES_DLL_NAME  << (checkIfFileInSysFolder(RPC_MESSAGES_DLL_NAME) ? L" installed" : L" not installed");
 	std::wstringstream serviceInstalledState;
-	serviceInstalledState << L"\t" << L"RPC Firewall Service" << (isServiceInstalled() ? L" installed" : L" not installed") << L"\n";
+	serviceInstalledState << L"\t" << L"RPC Firewall Service" << (isServiceInstalled() ? L" installed" : L" not installed");
 	std::wstringstream eventState;
-	eventState << L"\t" <<  L"RPC Firewall Event" << (checkIfEventConfiguredInReg() ? L" configured" : L" not configured") << L"\n";
+	eventState << L"\t" <<  L"RPC Firewall Event" << (checkIfEventConfiguredInReg() ? L" configured" : L" not configured");
 
 	outputMessage(RPCFWFileState.str().c_str());
 	outputMessage(RPCMSGFileState.str().c_str());
 	outputMessage(serviceInstalledState.str().c_str());
 	outputMessage(eventState.str().c_str());
+	if (isServiceInstalled()) printServiceState();
 
 	outputMessage(L"\n");
 	printProcessesWithRPCFW();
@@ -512,6 +513,8 @@ void cmdUninstallRPCFW()
 	outputMessage(TEXT("Uninstalling RPCFW ..."));
 	elevateCurrentProcessToSystem();
 	serviceStop();
+	serviceMakeManual();
+
 	serviceUninstall();
 
 	deleteFileFromSysfolder(RPC_FW_DLL_NAME);

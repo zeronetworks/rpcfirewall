@@ -220,8 +220,12 @@ void crawlProcesses(DWORD pid, std::wstring& pName)
 		DWORD pid = procToHook[i].first;
 		std::wstring procName = procToHook[i].second;
 
-		_tprintf(TEXT("Protecting %d : %s\n"), pid, procName.c_str());
-		classicHookRPCProcesses(pid, (wchar_t*)RPC_FW_DLL_NAME);
+		if (pid != GetProcessId(nullptr))
+		{
+			_tprintf(TEXT("Protecting %d : %s\n"), pid, procName.c_str());
+			classicHookRPCProcesses(pid, (wchar_t*)RPC_FW_DLL_NAME);
+		}
+		else _tprintf(TEXT("Skipping self %d : %s\n"), pid, procName.c_str());
 	}
 }
 
