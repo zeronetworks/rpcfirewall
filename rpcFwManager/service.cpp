@@ -71,6 +71,67 @@ bool isServiceInstalled()
 	return schService.h == nullptr ? false : true;
 }
 
+DWORD getServiceState()
+{
+	serviceHandleWrapper serviceManagerWrapper = getSCManagerHandle();
+	serviceHandleWrapper schService = getServiceHandle(std::move(serviceManagerWrapper), SERVICE_NAME);
+
+	if (schService.h != nullptr)
+	{
+		SERVICE_STATUS_PROCESS ssp;
+		DWORD dwBytesNeeded;
+		DWORD dwWaitTime;
+		DWORD dwTimeout = 30000;
+		DWORD dwStartTime = GetTickCount();
+
+		if (!QueryServiceStatusEx(
+			schService.h,
+			SC_STATUS_PROCESS_INFO,
+			(LPBYTE)&ssp,
+			sizeof(SERVICE_STATUS_PROCESS),
+			&dwBytesNeeded))
+		{
+			outputMessage(L"QueryServiceStatusEx failed", GetLastError());
+		}
+		else
+		{
+			return ssp.dwCurrentState;
+		}	
+	}
+	return 0;
+}
+
+void printServiceState()
+{
+	switch (getServiceState())
+	{
+	case SERVICE_STOPPED:
+		outputMessage(L"\tRPC Firewall Service stopped.");
+		break;
+	case SERVICE_START_PENDING:
+		outputMessage(L"\tRPC Firewall Service start pending.");
+		break;
+	case SERVICE_STOP_PENDING:
+		outputMessage(L"\tRPC Firewall Service stop pending.");
+		break;
+	case SERVICE_RUNNING:
+		outputMessage(L"\tRPC Firewall Service running.");
+		break;
+	case SERVICE_CONTINUE_PENDING:
+		outputMessage(L"\tRPC Firewall Service continue pending.");
+		break;
+	case SERVICE_PAUSE_PENDING:
+		outputMessage(L"\tRPC Firewall Service pause pending.");
+		break;
+	case SERVICE_PAUSED:
+		outputMessage(L"\tRPC Firewall Service paused.");
+		break;
+	default:
+		outputMessage(L"\tRPC Firewall Service status check failed!");
+		break;
+	}
+}
+
 void serviceStop()
 {
 	serviceHandleWrapper serviceManagerWrapper = getSCManagerHandle();
@@ -396,6 +457,13 @@ void serviceInstall(DWORD startType)
 		return;
 	}
 	else outputMessage(L"Service installed successfully");
+
+	SERVICE_DELAYED_AUTO_START_INFO asi = {0};
+	asi.fDelayedAutostart = true;
+	if (!ChangeServiceConfig2(schService.h, SERVICE_CONFIG_DELAYED_AUTO_START_INFO, &asi))
+	{
+		outputMessage(L"Error: could not change service to delayed auto start",GetLastError());
+	}
 }
 
 void serviceUninstall()
@@ -434,6 +502,11 @@ void serviceUpdateStartType(DWORD startType)
 void serviceMakeAutostart()
 {
 	serviceUpdateStartType(SERVICE_AUTO_START);
+}
+
+void serviceMakeManual()
+{
+	serviceUpdateStartType(SERVICE_DEMAND_START);
 }
 
 void WINAPI serviceCtrlHandler(DWORD CtrlCode)
@@ -538,11 +611,11 @@ void WINAPI serviceMain(DWORD argc, LPTSTR* argv)
 
 	createAllGloblEvents();
 	readConfigAndMapToMemory();
-	
-	crawlProcesses(0);
 
 	// Start a thread that will perform the main task of the service
 	HANDLE hThread = CreateThread(NULL, 0, serviceWorkerThread, NULL, 0, NULL);
+
+	crawlProcesses(0);
 
 	// Wait until our worker thread exits signaling that the service needs to stop
 	WaitForSingleObject(hThread, INFINITE);

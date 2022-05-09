@@ -22,3 +22,7 @@ void serviceStart();
 void serviceMakeAutostart();
 
 bool isServiceInstalled();
+
+void serviceMakeManual();
+
+void printServiceState();
