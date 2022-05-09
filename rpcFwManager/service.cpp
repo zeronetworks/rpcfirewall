@@ -489,6 +489,7 @@ void WINAPI serviceMain(DWORD argc, LPTSTR* argv)
 
 	if (globalServcieStatusHandle == nullptr)
 	{
+		outputMessage(_T("Service handle is null, stopping..."));
 		return;
 	}
 
@@ -570,7 +571,7 @@ bool setupService()
 
 	if (StartServiceCtrlDispatcher(ServiceTable) == FALSE)
 	{
-		writeDebugMessage(_T("Error starting service"));
+		writeDebugMessage(_T("Error dispatching control to service."));
 		return false;
 	}
 	return true;

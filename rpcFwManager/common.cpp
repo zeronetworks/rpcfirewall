@@ -55,7 +55,7 @@ void printMappedMeomryConfiguration()
 
 	if (hConfigurationMapFile == nullptr)
 	{
-		outputMessage(L"No RPC Firewall configuration loaded.");
+		outputMessage(L"\tNo RPC Firewall configuration loaded.");
 		return;
 	}
 
@@ -81,12 +81,13 @@ void printMappedMeomryConfiguration()
 
 	while (configStream.getline(configLine, 256))
 	{
-		confLineString = configLine;
+		confLineString = L"\t";
+		confLineString += configLine;
 		confLineString += _T(" ");
 
 		if (_tcsstr(configLine, TEXT("fw:")))
 		{
-			outputMessage(configLine);
+			outputMessage(confLineString.c_str());
 		}
 	}
 }
@@ -169,16 +170,16 @@ std::string addHeaderToBuffer(DWORD verNumber, CHAR* confBuf, DWORD bufSize)
 	strToHash.resize(bufSize);
 	size_t hashValue = std::hash<std::string>{}(strToHash);
 
-	std::string resultBuf = "ver:" + std::to_string(verNumber) + " hash:" + std::to_string(hashValue) + "\r\n" + "!start!" + strToHash + "!end!";
-
-	return resultBuf;
+	return std::string("ver:" + std::to_string(verNumber) + " hash:" + std::to_string(hashValue) + "\r\n" + "!start!" + strToHash + "!end!");
 }
 
 void readConfigAndMapToMemory()
 {
+	outputMessage(L"About to read me some configurations...");
 	CHAR* pBuf;
 	DWORD bytesRead = 0;
 	CHAR* confBuf = readConfigFile(&bytesRead);
+	std::string confBufHashed;
 
 	if (bytesRead > 0)
 	{
@@ -186,22 +187,42 @@ void readConfigAndMapToMemory()
 
 		if (globalMappedMemory == nullptr)
 		{
+			outputMessage(L"No mapped memory! quitting...");
 			std::quick_exit(-1);
 		}
 
 		pBuf = (CHAR*)MapViewOfFile(globalMappedMemory, FILE_MAP_ALL_ACCESS, 0, 0, MEM_BUF_SIZE);
 		if (pBuf == nullptr)
 		{
-			_tprintf(TEXT("Error calling MapViewOfFile %d.\n"), GetLastError());
+			outputMessage(L"Error calling MapViewOfFile", GetLastError());
 			CloseHandle(globalMappedMemory);
 			std::quick_exit(-1);
 		}
 
 		DWORD verNumber = getConfigVersionNumber(pBuf);
-		std::string confBufHashed = addHeaderToBuffer(verNumber + 1, confBuf, bytesRead);
+		confBufHashed = addHeaderToBuffer(verNumber + 1, confBuf, bytesRead);
 
 		memset(pBuf, '\0', MEM_BUF_SIZE);
-		CopyMemory((PVOID)pBuf, confBufHashed.c_str(), bytesRead + confBufHashed.length());
+		const char* source = confBufHashed.c_str();
+		try
+		{
+			errno_t err = memcpy_s(pBuf, MEM_BUF_SIZE, source, confBufHashed.length());
+			if (err)
+			{
+				outputMessage(L"memcpy_s Error: failed to copy configuration to mapped memory.");
+			}
+		}
+		catch (const std::exception& ex)
+		{
+			std::string what = ex.what();
+			std::wstring Wwhat = StringToWString(what);
+			outputMessage(Wwhat.c_str());
+		}
+		catch (...)
+		{
+			outputMessage(L"Unexpected exception!");
+		}
+		outputMessage(L"Configuration mapped to memory.");
 	}
 }
 

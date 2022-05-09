@@ -158,8 +158,8 @@ ProcVector getProtectedProcesses()
 
 void printProcessesWithRPCFW()
 {
-	outputMessage(L"Protected processes:");
-	outputMessage(L"-------------------");
+	outputMessage(L"\tProtected processes:");
+	outputMessage(L"\t-------------------");
 
 	ProcVector procVec = getProtectedProcesses();
 	size_t vSize = procVec.size();
@@ -171,9 +171,9 @@ void printProcessesWithRPCFW()
 		std::wstring procName = procVec[i].second;
 
 
-		outputMessage((pid + L" : " + procName).c_str());
+		outputMessage((L"\t" + pid + L" : " + procName).c_str());
 	}
-	if (i == 0) outputMessage(L"RPC Firewall not installed on any process.");
+	if (i == 0) outputMessage(L"\tRPC Firewall not installed on any process.");
 
 }
 
