@@ -635,13 +635,14 @@ void printAllRPCFilters()
 
 			if (numEntries == 0)
 			{
-				_tprintf(L"No relevant RPC Filters found!\n");
+				_tprintf(L"\tNo relevant RPC Filters found!\n");
 			}
 
 			for (unsigned int entryNum = 0; entryNum < numEntries; entryNum++)
 			{
 				std::wstring entry = entries[entryNum]->displayData.description;
 				std::replace(entry.begin(), entry.end(), L'\r', L'\0');
+				_tprintf(L"\t");
 				_tprintf(entry.c_str());
 				_tprintf(L"\n");
 			}

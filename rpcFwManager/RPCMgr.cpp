@@ -344,6 +344,7 @@ void recreateRPCFilters()
 
 void cmdProtectRPCFLT()
 {
+	_tprintf(_T("enabling RPCFLT...\n"));
 	recreateRPCFilters();
 }
 
@@ -437,9 +438,14 @@ void cmdStatusRPCFLT()
 	std::wstring providerStat = isInstalled  ? L"Provider installed" : L"Provider not installed";
 	outputMessage(providerStat.c_str());*/
 	
-	std::wstring auditing = isAuditingEnabledForRPCFilters() ? L"Auditing enabled" : L"Auditing not enabled";
+	outputMessage(L"\n\tinstallation:");
+	outputMessage(L"\t----------------------");
+
+	std::wstring auditing = isAuditingEnabledForRPCFilters() ? L"\tAuditing enabled" : L"\tAuditing not enabled";
 	outputMessage(auditing.c_str());
 	
+	outputMessage(L"\n\tFilters:");
+	outputMessage(L"\t----------------------");
 	printAllRPCFilters();
 		
 }
@@ -451,21 +457,25 @@ void cmdStatusRPCFW()
 	outputMessage(L"RPC Firewall status:");
 	outputMessage(L"----------------------");
 	
-	std::wstring RPCFWFileState = checkIfFileInSysFolder(RPC_FW_DLL_NAME) ? L" installed" : L" not installed";
-	std::wstring RPCMSGFileState = checkIfFileInSysFolder(RPC_MESSAGES_DLL_NAME) ? L" installed" : L" not installed";
-	std::wstring serviceInstalledState = isServiceInstalled() ? L" installed" : L" not installed";
-	std::wstring eventState = checkIfEventConfiguredInReg() ? L" configured" : L" not configured";
+	std::wstringstream RPCFWFileState;
+	RPCFWFileState << L"\t" << RPC_FW_DLL_NAME << (checkIfFileInSysFolder(RPC_FW_DLL_NAME) ? L" installed" : L" not installed") << L"\n";
+	std::wstringstream RPCMSGFileState;
+	RPCMSGFileState << L"\t"  << RPC_MESSAGES_DLL_NAME  << (checkIfFileInSysFolder(RPC_MESSAGES_DLL_NAME) ? L" installed" : L" not installed") << L"\n";
+	std::wstringstream serviceInstalledState;
+	serviceInstalledState << L"\t" << L"RPC Firewall Service" << (isServiceInstalled() ? L" installed" : L" not installed") << L"\n";
+	std::wstringstream eventState;
+	eventState << L"\t" <<  L"RPC Firewall Event" << (checkIfEventConfiguredInReg() ? L" configured" : L" not configured") << L"\n";
 
-	outputMessage((RPC_FW_DLL_NAME + RPCFWFileState).c_str());
-	outputMessage((RPC_MESSAGES_DLL_NAME + RPCMSGFileState).c_str());
-	outputMessage((L"RPC Firewall Service" + serviceInstalledState).c_str());
-	outputMessage((L"RPC Firewall Event" + eventState).c_str());
+	outputMessage(RPCFWFileState.str().c_str());
+	outputMessage(RPCMSGFileState.str().c_str());
+	outputMessage(serviceInstalledState.str().c_str());
+	outputMessage(eventState.str().c_str());
 
 	outputMessage(L"\n");
 	printProcessesWithRPCFW();
 
-	outputMessage(L"\nconfiguration:");
-	outputMessage(L"----------------------");
+	outputMessage(L"\n\tconfiguration:");
+	outputMessage(L"\t----------------------");
 	printMappedMeomryConfiguration();
 
 }
