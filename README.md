@@ -19,14 +19,13 @@ Throughout this document, we will use the following terms:
 Can be used to to **audit** all remote RPC calls. 
 Once executing any remote attack tools, you will see which RPC UUIDs and Opnums were called remotely.
 
-See an example configuration ![here](./Configuration_templates/RpcFw.conf.AuditAll).
+See an example configuration [here](./Configuration_templates/RpcFw.conf.AuditAll).
 
 ## Remote RPC Attacks Detection
 When the *RPCFW Configuration* is configured to audit, events are written to the Windows Event Log. 
 *RPC Filter* events are written to the security log, with event ID 5712. *RPC Firewall* logs are written at *Application/RPCFW*.
 
 Users can forward these logs to their SIEM, and use it to create baselines of remote RPC traffic for various servers.
-
 Once an abnormal RPC call is audited, use it to trigger an alert for your SOC team. 
 
 We integrated several [Sigma rules](https://github.com/SigmaHQ/sigma/tree/master/rules/application/rpc_firewall) which can be used to detect unusual RPC activities and attacks.
@@ -38,7 +37,7 @@ Once a potentially malicious RPC call is detected, it is blocked and audited. Th
 
 To supplement protection, you can use the RPC Filtering capabilities, which are also supported via the RpcFwManager.exe.
 
-An example of such configuration can be found ![here](./Configuration_templates/RpcFw.conf.BlockList).
+An example of such configuration can be found [here](./Configuration_templates/RpcFw.conf.BlockList).
 
 # What are the RPC Firewall Components?
 It is made up from 3 components:
@@ -54,7 +53,7 @@ While there are pros and cons for using each method, there are a couple of major
 On the other hand, *RPC Filters* are greate for bulk allow or deny of entire UUIDs, as they do so without any issues. 
 
 # How to use?
-## The 'fw' / 'flt' suffix
+## The 'fw' / 'flt' suffixes
 Almost every command can be suffixed with *fw* or *flt* at the end. This tells the *RPCFW Manager* wether the command applied to the *RPC Firewall* ('fw'), *RPC Filters* ('flt') or both when not using any suffix.
 
 ## Installing / Uninstalling 
@@ -117,7 +116,7 @@ This file uses the following configuration options:
 *Important*: Each each configuration line should be prefixed with either *'fw:'* or *'flt:'* to indicate whether the line is applied for the *RPC Firewall* or *RPC Filter*.
 
 |param name | explanation | supported by |
-------------------------------------------
+|---------- | ----------- | ------------- |
 |opnum:| Match a RPC opnum | RPC Firewall|
 |prot:| Matches the used protocol to any of the (protocol sequence constants)[https://docs.microsoft.com/en-us/windows/win32/rpc/protocol-sequence-constants]| both RPC Firewall and Filters|
 |uuid:| Match a specific uuid | both RPC Firewall and Filters|
