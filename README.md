@@ -116,21 +116,22 @@ This file uses the following configuration options:
 *Important*: Each each configuration line should be prefixed with either *'fw:'* or *'flt:'* to indicate whether the line is applied for the *RPC Firewall* or *RPC Filter*.
 
 |param name | explanation | supported by |
-|---------- | ----------- | ------------- |
+|---------- | ----------- | ------------ |
 |opnum:| Match a RPC opnum | RPC Firewall|
-|prot:| Matches the used protocol to any of the (protocol sequence constants)[https://docs.microsoft.com/en-us/windows/win32/rpc/protocol-sequence-constants]| both RPC Firewall and Filters|
+|verbose:| Can be either **true** or *false*. When true, outputs debug informaiton for specific RPC calls (default false)| RPC Firewall|
+|prot:| Matches the used protocol to any of the [protocol sequence constants](https://docs.microsoft.com/en-us/windows/win32/rpc/protocol-sequence-constants)| both RPC Firewall and Filters|
+|addr:| Match a remote IP address | RPC Firewall and partially by RPC Filters, [read more here](#using-rpc-firewall-or-rpc-filters)|
 |uuid:| Match a specific uuid | both RPC Firewall and Filters|
-|addr:| Match a remote IP address | RPC Firewall and partially by RPC Filters, [read more here](#using-rpc-firewall-or-rpc-filters?)|
 |action:| Can be either **allow** or **block** (default allow)| both RPC Firewall and Filters|
 |audit:| Can be either **true** or *false*. Controls whether events are written to the *RPCFW* log (default false)| both RPC Firewall and Filters|
-|sid:| matches an authenticated user to a (security identifier)[https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers]. Could be specific user or group.  | RPC Filters only
-|verbose:| Can be either **true** or *false*. When true, outputs debug informaiton for specific RPC calls (default false)
+|sid:| matches an authenticated user to a [security identifier](https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers). Could be specific user or group.  | RPC Filters only
+
 
 
 The configuration order is important, as the first match determines the outcome of the RPC call.
 
 For example, the following configuration snippet will protect a DC from a DCSync using the *RPC Firewall*. 
-It does so by enabling the "dangerous" opnum 3 (DRSGetNCChanges)[https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/b63730ac-614c-431c-9501-28d6aca91894] of the MS-DRSR UUID only from other domain controllers. 
+It does so by enabling the "dangerous" opnum 3 [DRSGetNCChanges](https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/b63730ac-614c-431c-9501-28d6aca91894) of the MS-DRSR UUID only from other domain controllers. 
 ```bash
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 addr:<dc_addr1> opnum:3 action:allow
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 addr:<dc_addr2> opnum:3 action:allow
