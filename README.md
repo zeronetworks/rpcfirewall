@@ -53,6 +53,14 @@ While there are pros and cons for using each method, there are a couple of major
 On the other hand, *RPC Filters* are greate for bulk allow or deny of entire UUIDs, as they do so without any issues. 
 
 # How to use?
+## What's the status?
+Prior to running any command, it is recommended to check the status of the deployment. This could be acheived by issuing the '/status' command: 
+```bash
+RpcFwManager.exe /status
+```
+
+This will show the status of both the *RPC Firewall* and the *RPC Filters*. This will output detailed information about the installation status, and also the running status of the deployment.
+
 ## The 'fw' / 'flt' suffixes
 Almost every command can be suffixed with *fw* or *flt* at the end. This tells the *RPCFW Manager* wether the command applied to the *RPC Firewall* ('fw'), *RPC Filters* ('flt') or both when not using any suffix.
 
