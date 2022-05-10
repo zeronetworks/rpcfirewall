@@ -82,7 +82,7 @@ RpcFwManager.exe /stop
 RpcFwManager.exe /uninstall
 ```
 
-## Protecting RPC Servers
+## Starting / Stopping 
 *RPC Filters*, by their nature, are applied systemwide, to any RPC server. Applying such filters is also persistent across reboots. 
 Any new or old process, will be protected by *RPC Filters*, according to the *RPCFW Configuration*.
 
@@ -106,7 +106,6 @@ To protect a single process by name:
 RpcFwManager.exe /start process <process name>
 ```
 
-## Unprotecting Processes
 To stop the protection, simply issue the *'/stop'* command with the appropriate suffix (it is not possible to stop protection for a specific process).
 ```bash
 RpcFwManager.exe /stop
@@ -123,7 +122,7 @@ This file uses the following configuration options:
 
 *Important*: Each each configuration line should be prefixed with either *'fw:'* or *'flt:'* to indicate whether the line is applied for the *RPC Firewall* or *RPC Filter*.
 
-|param name | explanation | supported by |
+|Parameter Name | Explanation | Supported by ...|
 |---------- | ----------- | ------------ |
 |opnum:| Match a RPC opnum | RPC Firewall|
 |verbose:| Can be either **true** or *false*. When true, outputs debug informaiton for specific RPC calls (default false)| RPC Firewall|
