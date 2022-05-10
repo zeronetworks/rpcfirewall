@@ -9,7 +9,7 @@ DCSync attack? over RPC. Remote DCOM? over RPC. WMIC? over RPC. SharpHound? over
 
 # Terminology?
 Throughout this document, we will use the following terms: 
-* **RPC Firewall**: Refers to the actuall RpcFirewall.dll, which is loaded into various RPC servers in order to protect them.
+* **RPC Firewall**: Refers to the actual RpcFirewall.dll, which is loaded into various RPC servers in order to protect them.
 * **RPC Filters**: Refers to the native Windows RPC filtering mechanism.
 * **RPCFW Configuration**: Refers to the RpcFw.conf file, which is used to control how the *RPC Firewall* and *RPC Filters* behave.
 * **RPCFW Manager**: The command line interface, which gives users access to both *RPC Firewall* and *RPC Filters*
