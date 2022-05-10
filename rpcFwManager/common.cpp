@@ -59,7 +59,7 @@ void printMappedMeomryConfiguration()
 		return;
 	}
 
-	char* mappedBuf;
+	char* mappedBuf = nullptr;
 	mappedBuf = (char*)MapViewOfFile(hConfigurationMapFile, FILE_MAP_READ, 0, 0, MEM_BUF_SIZE);
 	if (mappedBuf == nullptr)
 	{
@@ -69,6 +69,7 @@ void printMappedMeomryConfiguration()
 	}
 
 	std::string privateConfigBuffer = mappedBuf;
+
 	auto markers = getConfigOffsets(privateConfigBuffer);
 	size_t start_pos = std::get<0>(markers);
 	size_t end_pos = std::get<1>(markers);
