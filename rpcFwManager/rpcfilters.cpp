@@ -273,14 +273,36 @@ void installRPCFWProvider()
 
 }
 
+void setLocalRPCSecurityPolicyInReg(unsigned long auditInformation)
+{
+	unsigned long auditInfo = auditInformation;
+	HKEY    hRegKey = nullptr;
+	// Create RPC policy registry key
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Policies\\Microsoft\\Windows NT\\Rpc", 0, nullptr, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY | KEY_READ | KEY_WRITE | KEY_SET_VALUE, nullptr, &hRegKey, nullptr) != ERROR_SUCCESS)
+	{
+		_tprintf(TEXT("ERROR: Couldn't create RPC policy registry key: [%d].\n"), GetLastError());
+		return;
+	}
+
+	// Set RPC audit information
+	if (RegSetValueEx(hRegKey, _T("StateInformation"), 0, REG_DWORD, (LPBYTE)&auditInfo, sizeof(auditInfo)) != ERROR_SUCCESS)
+	{
+		_tprintf(TEXT("ERROR: setting value to StateInformation failed: [%d].\n"), GetLastError());
+	}
+
+	RegCloseKey(hRegKey);
+}
+
 void enableAuditingForRPCFilters()
 {
 	updateAuditingForRPCFilters(3);
+	setLocalRPCSecurityPolicyInReg(3);
 }
 
 void disableAuditingForRPCFilters()
 {
 	updateAuditingForRPCFilters(4);
+	setLocalRPCSecurityPolicyInReg(4);
 }
 
 FWPM_FILTER_CONDITION0 createSDCondition(const std::wstring& sidString)
