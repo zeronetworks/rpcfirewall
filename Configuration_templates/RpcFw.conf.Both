@@ -1,0 +1,88 @@
+Blocked to Any - RRP, DCOM, EVEN(6), DNSP, PAN, PAR, TSTS, SCMR,TSCH, EFSRPC:
+---------------------------------------------------------------------------------------------
+flt:action:block audit:true uuid:338cd001-2244-31f1-aaaa-900038001003
+flt:action:block audit:true uuid:99fcfec4-5260-101b-bbcb-00aa0021347a
+flt:action:block audit:true uuid:000001A0-0000-0000-C000-000000000046
+flt:action:block audit:true uuid:00000131-0000-0000-C000-000000000046
+flt:action:block audit:true uuid:00000143-0000-0000-C000-000000000046
+flt:action:block audit:true uuid:1FF70682-0A51-30E8-076D-740BE8CEE98B
+flt:action:block audit:true uuid:378E52B0-C0A9-11CF-822D-00AA0051E40F
+flt:action:block audit:true uuid:86D35949-83C9-4044-B424-DB363231FD0C
+flt:action:block audit:true uuid:f6beaff7-1e19-4fbb-9f8f-b89e2018337c
+flt:action:block audit:true uuid:82273FDC-E32A-18C3-3F78-827929DC23EA
+flt:action:block audit:true uuid:50abc2a4-574d-40b3-9d66-ee4fd5fba076
+flt:action:block audit:true uuid:76f03f96-cdfd-44fc-a22c-64950a001209
+flt:action:block audit:true uuid:12345678-1234-abcd-ef00-0123456789ab
+flt:action:block audit:true uuid:0b6edbfa-4a24-4fc6-8a23-942b1eca65d1
+flt:action:block audit:true uuid:ae33069b-a2a8-46ee-a235-ddfd339be281
+flt:action:block audit:true uuid:88143fd0-c28d-4b2b-8fef-8d882f6a9390
+flt:action:block audit:true uuid:5ca4a760-ebb1-11cf-8611-00a0245420ed
+flt:action:block audit:true uuid:484809d6-4239-471b-b5bc-61df8c23ac48
+flt:action:block audit:true uuid:bde95fdf-eee0-45de-9e12-e5a61cd0d4fe
+flt:action:block audit:true uuid:497d95a6-2d27-4bf5-9bbd-a6046957133c
+flt:action:block audit:true uuid:367ABB81-9844-35F1-AD32-98F038001003
+flt:action:block audit:true uuid:8f09f000-b7ed-11ce-bbd2-00001a181cad
+flt:action:block audit:true uuid:20610036-fa22-11cf-9823-00a0c911e5df
+flt:action:block audit:true uuid:66a2db1b-d706-11d0-a37b-00c04fc9da04
+flt:action:block audit:true uuid:66a2db20-d706-11d0-a37b-00c04fc9da04
+flt:action:block audit:true uuid:66a2db21-d706-11d0-a37b-00c04fc9da04
+flt:action:block audit:true uuid:66a2db22-d706-11d0-a37b-00c04fc9da04
+flt:action:block audit:true uuid:67e08fc2-2984-4b62-b92e-fc1aae64bbbb
+flt:action:block audit:true uuid:6139d8a4-e508-4ebb-bac7-d7f275145897
+flt:action:block audit:true uuid:5ff9bdf6-bd91-4d8b-a614-d6317acc8dd8
+flt:action:block audit:true uuid:df1941c5-fe89-4e79-bf10-463657acf44d
+flt:action:block audit:true uuid:c681d488-d850-11d0-8c52-00c04fd90f7e
+flt:action:block audit:true uuid:11899a43-2b68-4a76-92e3-a3d6ad8c26ce
+flt:action:block audit:true uuid:53b46b02-c73b-4a3e-8dee-b16b80672fc0
+flt:action:block audit:true uuid:1257B580-CE2F-4109-82D6-A9459D0BF6BC
+
+Block to BA - LSAD, SAMR, NPSO, SRVS, WKST,FRS,DFSNM,BRWSA:
+----------------------------------------------------------------------------------------
+flt:action:block audit:true sid:BA uuid:12345778-1234-abcd-ef00-0123456789ab
+flt:action:block audit:true sid:BA uuid:12345778-1234-abcd-ef00-0123456789ac
+flt:action:block audit:true sid:BA uuid:f5cc5a18-4264-101a-8c59-08002b2f8426
+flt:action:block audit:true sid:BA uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188
+flt:action:block audit:true sid:BA uuid:6bffd098-a112-3610-9833-46c3f87e345a
+flt:action:block audit:true sid:BA uuid:f5cc59b4-4264-101a-8c59-08002b2f8426
+flt:action:block audit:true sid:BA uuid:5b821720-f63b-11d0-aad2-00c04fc324db
+flt:action:block audit:true sid:BA uuid:6BFFD098-A112-3610-9833-46C3F874532D
+flt:action:block audit:true sid:BA uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
+flt:action:block audit:true sid:BA uuid:51b836e8-484d-4d03-b0fc-22e265cb3f7b
+flt:action:block audit:true sid:BA uuid:6bffd098-a112-3610-9833-012892020162 
+
+DCSync Protecion: <edit the DC addresses to match your environemt!!>:
+-----------------------------------------------
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 addr:<dc_addr1> action:allow audit:true 
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 addr:<dc_addr2> action:allow audit:true 
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:0 action:allow audit:true 
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:1 action:allow audit:true 
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:12 action:allow audit:true 
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 action:block audit:true 
+
+Open to Any - NRPC,EPM, BKRP, DRSR, DSSP,LSAD, 
+SAMR, NPSO, SRVS, WKST,FRS,DFSNM,BRWSA,NRPC:
+-------------------------------------------------------------------
+fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ab
+fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ac
+fw:action:allow audit:true uuid:f5cc5a18-4264-101a-8c59-08002b2f8426
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:16
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:21
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:28
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:45
+fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-46c3f87e345a opnum:0
+fw:action:allow audit:true uuid:f5cc59b4-4264-101a-8c59-08002b2f8426
+fw:action:allow audit:true uuid:5b821720-f63b-11d0-aad2-00c04fc324db
+fw:action:allow audit:true uuid:6BFFD098-A112-3610-9833-46C3F874532D
+fw:action:allow audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
+fw:action:allow audit:true uuid:51b836e8-484d-4d03-b0fc-22e265cb3f7b
+fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-012892020162
+fw:action:allow audit:true uuid:e1af8308-5d1f-11c9-91a4-08002b14a0fa
+fw:action:allow audit:true uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2
+fw:action:allow audit:true uuid:51b836e8-484d-4d03-b0fc-22e265cb3f7b
+fw:action:allow audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
+fw:action:allow audit:true uuid:3919286a-b10c-11d0-9ba8-00c04fd92ef5
+fw:action:allow audit:true uuid:12345678-1234-abcd-ef00-01234567cffb
+
+Default block:
+-----------------------------------------------
+fw:action:block audit:true
