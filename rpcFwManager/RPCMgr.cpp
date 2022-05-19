@@ -289,7 +289,7 @@ void cmdUpdateRPCFW()
 
 void cmdUnprotectRPCFLT()
 {
-	_tprintf(_T("disabling RPCFLT...\n"));
+	_tprintf(_T("Removing RPC Filters...\n"));
 	if (!setSecurityPrivilege(_T("SeSecurityPrivilege")))
 	{
 		_tprintf(_T("Error: could not obtain SeSecurityPrivilege.\n"));
@@ -300,6 +300,7 @@ void cmdUnprotectRPCFLT()
 
 void createRPCFiltersFromConfiguration()
 {
+	_tprintf(_T("Creating RPC Filters...\n"));
 	DWORD bytesRead = 0;
 	std::string confBuf(readConfigFile(&bytesRead));
 
@@ -344,7 +345,6 @@ void recreateRPCFilters()
 
 void cmdProtectRPCFLT()
 {
-	_tprintf(_T("enabling RPCFLT...\n"));
 	recreateRPCFilters();
 }
 

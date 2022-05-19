@@ -214,7 +214,7 @@ bool wmiEventRegistrant::registerForProcessCreatedEvents()
 
     // The ExecNotificationQueryAsync method will call
     // The EventQuery::Indicate method when an event occurs
-    hres = pSvc->ExecNotificationQueryAsync(_bstr_t("WQL"), _bstr_t("SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process'"),
+    hres = pSvc->ExecNotificationQueryAsync(_bstr_t("WQL"), _bstr_t("SELECT * FROM __InstanceCreationEvent WITHIN 2 WHERE TargetInstance ISA 'Win32_Process'"),
         WBEM_FLAG_SEND_STATUS,
         NULL,
         pStubSink);
