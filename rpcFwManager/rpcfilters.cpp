@@ -448,12 +448,18 @@ void createRPCFilterFromConfigLine( LineConfig confLine, std::wstring &filterNam
 	fwhw.h = openFwEngineHandle();
 	conditionsVector conditions;
 
+	bool existsSourceAddr = false;
+	bool existsUUID = false;
+	bool anyFilter = false;
+
 	if (confLine.source_addr.has_value())
 	{
+		existsSourceAddr = true;
 		conditions.push_back(createIPv4Condition(confLine.source_addr.value()));
 	}
 	if (confLine.uuid.has_value())
 	{
+		existsUUID = true;
 		conditions.push_back(createUUIDCondition(confLine.uuid.value()));
 	}
 	if (confLine.sid.has_value())
@@ -466,6 +472,7 @@ void createRPCFilterFromConfigLine( LineConfig confLine, std::wstring &filterNam
 	}
 	if (conditions.size() == 0)
 	{
+		anyFilter = true;
 		// An "ANY" condition may cause faults with certain RPC services.
 		//conditions.push_back(createEffectivelyAnyCondition());
 	}
@@ -498,7 +505,20 @@ void createRPCFilterFromConfigLine( LineConfig confLine, std::wstring &filterNam
 	DWORD result = FwpmFilterAdd0(fwhw.h, &fwpFilter, nullptr, nullptr);
 
 	if (result != ERROR_SUCCESS)
+	{
 		_tprintf(_T("FwpmFilterAdd0 failed. Return value: 0x%x.\n"), result);
+		return;
+	}
+
+	if (!anyFilter && !existsUUID)
+	{
+		_tprintf(_T("WARNING: Filters without explicit UUIDs may cause faults: %s.\n"), filterDescription.c_str());
+	}
+
+	if (existsSourceAddr)
+	{
+		_tprintf(_T("WARNING: source address filters do not protect RPC traffic over named pipes: %s.\n"), filterDescription.c_str());
+	}
 }
 
 void createRPCFilterFromTextLines(configLinesVector configsVector)
