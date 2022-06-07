@@ -4,6 +4,7 @@ For any questions, issues, or simlpy to shout out - we would love to hear from y
 
 # Get Started 
 The following tutorial shows basic installation and setup of the RPC Firewall, as well as a demo of how it protects against various RPC based attacks.
+
 [![RPC Firewall 2.0 Tutorial](https://img.youtube.com/vi/BNzfmYwkioY/0.jpg)](https://www.youtube.com/watch?v=BNzfmYwkioY)
 
 
