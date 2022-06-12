@@ -115,7 +115,7 @@ CHAR* readConfigFile(DWORD* bufLen)
 
 	if (!cfgFwPath.empty())
 	{
-		size_t offset = cfgFwPath.rfind(L"\\", cfgFwPath.length());
+		size_t offset = cfgFwPath.rfind(L'\\', cfgFwPath.length());
 		cfgFwPath = cfgFwPath.substr(0, offset);
 		cfgFwPath = cfgFwPath + L"\\" + CONF_FILE_NAME;
 
@@ -145,7 +145,7 @@ std::string extractKeyValueFromConfig(std::string confLine, std::string key)
 
 	if (keyOffset == std::string::npos) return "\0";
 
-	size_t nextKeyOffset = confLine.find(" ", keyOffset + 1);
+	size_t nextKeyOffset = confLine.find(' ', keyOffset + 1);
 
 	if (nextKeyOffset == std::string::npos) return "\0";
 

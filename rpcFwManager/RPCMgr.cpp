@@ -19,7 +19,7 @@ std::wstring extractKeyValueFromConfigLineInner(const std::wstring& confLine, co
 
 	if (keyOffset == std::string::npos) return _T("\0");
 
-	const size_t nextKeyOffset = confLine.find(_T(" "), keyOffset + 1);
+	const size_t nextKeyOffset = confLine.find(L' ', keyOffset + 1);
 
 	if (nextKeyOffset == std::string::npos) return _T("\0");
 
@@ -32,14 +32,13 @@ std::wstring extractKeyValueFromConfigLine(const std::wstring& confLine, const s
 {
 	std::wstring fixedConfLine = confLine;
 
-	std::size_t newLinePos = fixedConfLine.rfind(_T("\n"));
-	std::size_t carrigeReturnPos = fixedConfLine.rfind(_T("\r"));
-
+	std::size_t newLinePos = fixedConfLine.rfind(L'\n');
+	std::size_t carriageReturnPos = fixedConfLine.rfind(L'\r');
 
 	//std::basic_string<wchar_t>::replace(fixedConfLine.begin(), fixedConfLine.end(), _T("\r"), _T(" "));
-	if (newLinePos != std::wstring::npos) fixedConfLine.replace(fixedConfLine.rfind(_T("\n")), 1, _T(" "));
-	if (carrigeReturnPos != std::wstring::npos) fixedConfLine.replace(fixedConfLine.rfind(_T("\r")), 1, _T(" "));
-	
+	if (newLinePos != std::wstring::npos) fixedConfLine.replace(fixedConfLine.rfind(L'\n'), 1, _T(" "));
+	if (carriageReturnPos != std::wstring::npos) fixedConfLine.replace(fixedConfLine.rfind(L'\r'), 1, _T(" "));
+
 	fixedConfLine.replace(fixedConfLine.size() - 1, 1, _T(" "));
 
 	return extractKeyValueFromConfigLineInner(fixedConfLine, key);
@@ -495,7 +494,7 @@ void cmdProcess(std::wstring &processName)
 	if (!processName.empty())
 	{
 		std::wstring msg = L"Enabling RPCFW for process :";
-		msg += processName.c_str();
+		msg += processName;
 		outputMessage(msg.c_str());
 		crawlProcesses(17, processName);
 	}
