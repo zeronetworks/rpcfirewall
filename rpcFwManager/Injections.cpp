@@ -80,10 +80,10 @@ std::pair<bool, bool> containsRPCModules(DWORD dwPID)
 			//_tprintf(TEXT("Process %d contains RPCFW module!\n"), dwPID);
 			containsRpcFirewallModule = true;
 		}
-    }
+	}
 
 	CloseHandle(hModuleSnap);
-    return std::make_pair(containsRpcRuntimeModule, containsRpcFirewallModule);
+	return std::make_pair(containsRpcRuntimeModule, containsRpcFirewallModule);
 }
 
 bool containsRPCFWModule(DWORD dwPID)
@@ -114,7 +114,7 @@ bool containsRPCFWModule(DWORD dwPID)
 			CloseHandle(hModuleSnap);
 			return true;
 		}
-    }
+	}
 
 	CloseHandle(hModuleSnap);
 	return false;
@@ -122,11 +122,11 @@ bool containsRPCFWModule(DWORD dwPID)
 
 void classicHookRPCProcesses(DWORD processID, wchar_t* dllToInject)
 {
-    std::pair<bool, bool> containsModules = containsRPCModules(processID);
+	std::pair<bool, bool> containsModules = containsRPCModules(processID);
 	bool containsRPC = containsModules.first;
 	bool containsRPCFW = containsModules.second;
 
-    if (containsRPC && !containsRPCFW)
+	if (containsRPC && !containsRPCFW)
 	{
 		hookProcessLoadLibrary(processID, dllToInject);
 	}

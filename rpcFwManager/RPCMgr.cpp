@@ -95,7 +95,7 @@ protocolFilter extractProtoclFromConfigLine(const std::wstring& confLine)
 {
 	const std::wstring protocol = extractKeyValueFromConfigLine(confLine, _T("prot"));
 
-    return protocol.empty() ? protocolFilter{} : protocolFilter{protocol};
+	return protocol.empty() ? protocolFilter{} : protocolFilter{protocol};
 }
 
 bool extractAuditFromConfigLine(const std::wstring& confLine)
@@ -124,7 +124,7 @@ bool checkIfFilterConfigLine(const std::wstring& confLine)
 
 void concatArguments(int argc, wchar_t* argv[], wchar_t command[])
 {
-    _tcscpy_s(command, MAX_PATH * 2, argv[0]);
+	_tcscpy_s(command, MAX_PATH * 2, argv[0]);
 
 	for (int i = 1; i < argc; i++)
 	{
@@ -459,7 +459,7 @@ void cmdStatusRPCFW()
 	std::wstringstream RPCFWFileState;
 	RPCFWFileState << L"\t" << RPC_FW_DLL_NAME << (checkIfFileInSysFolder(RPC_FW_DLL_NAME) ? L" installed" : L" not installed");
 	std::wstringstream RPCMSGFileState;
-    RPCMSGFileState << L"\t" << RPC_MESSAGES_DLL_NAME << (checkIfFileInSysFolder(RPC_MESSAGES_DLL_NAME) ? L" installed" : L" not installed");
+	RPCMSGFileState << L"\t" << RPC_MESSAGES_DLL_NAME << (checkIfFileInSysFolder(RPC_MESSAGES_DLL_NAME) ? L" installed" : L" not installed");
 	std::wstringstream serviceInstalledState;
 	serviceInstalledState << L"\t" << L"RPC Firewall Service" << (isServiceInstalled() ? L" installed" : L" not installed");
 	std::wstringstream eventState;

@@ -392,7 +392,7 @@ FWPM_FILTER_CONDITION0 createProtocolCondition(std::wstring& protocol)
 
 FWPM_FILTER_CONDITION0 createIPv4Condition(std::wstring &remoteIP)
 {
-    FWPM_FILTER_CONDITION0 ipv4Condition = {0};
+	FWPM_FILTER_CONDITION0 ipv4Condition = {0};
 	UINT32 ipv4;
 
 	InetPton(AF_INET, remoteIP.c_str(), &ipv4);

@@ -63,7 +63,7 @@ void printMappedMemoryConfiguration()
 	mappedBuf = (char*)MapViewOfFile(hConfigurationMapFile, FILE_MAP_READ, 0, 0, MEM_BUF_SIZE);
 	if (mappedBuf == nullptr)
 	{
-        outputMessage(TEXT("Error: Could not map view of configuration file."), GetLastError());
+		outputMessage(TEXT("Error: Could not map view of configuration file."), GetLastError());
 		CloseHandle(hConfigurationMapFile);
 		return;
 	}
