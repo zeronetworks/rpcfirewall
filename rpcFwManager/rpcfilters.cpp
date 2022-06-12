@@ -276,7 +276,7 @@ void installRPCFWProvider()
 void setLocalRPCSecurityPolicyInReg(unsigned long auditInformation)
 {
 	unsigned long auditInfo = auditInformation;
-	HKEY    hRegKey = nullptr;
+    HKEY hRegKey = nullptr;
 	// Create RPC policy registry key
 	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Policies\\Microsoft\\Windows NT\\Rpc", 0, nullptr, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY | KEY_READ | KEY_WRITE | KEY_SET_VALUE, nullptr, &hRegKey, nullptr) != ERROR_SUCCESS)
 	{
@@ -392,7 +392,7 @@ FWPM_FILTER_CONDITION0 createProtocolCondition(std::wstring& protocol)
 
 FWPM_FILTER_CONDITION0 createIPv4Condition(std::wstring &remoteIP)
 {
-	FWPM_FILTER_CONDITION0	ipv4Condition = {0};
+    FWPM_FILTER_CONDITION0 ipv4Condition = {0};
 	UINT32 ipv4;
 
 	InetPton(AF_INET, remoteIP.c_str(), &ipv4);

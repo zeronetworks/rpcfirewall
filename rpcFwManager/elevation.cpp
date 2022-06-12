@@ -162,7 +162,7 @@ bool setSecurityPrivilege(const wchar_t* privName)
 
 void tryAndRunElevated(DWORD pid)
 {
-	// Enable core privileges  
+	// Enable core privileges
 	if (!setSecurityPrivilege(TEXT("SeDebugPrivilege")))
 	{
 		_tprintf(TEXT("Could not get debug privileges!\n"));

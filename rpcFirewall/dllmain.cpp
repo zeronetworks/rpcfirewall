@@ -276,7 +276,7 @@ std::wstring StringToWString(const std::string& s)
 	return temp;
 }
 
-std::wstring extractKeyValueFromConfigLineInner(const std::wstring& confLine, const std::wstring & key)
+std::wstring extractKeyValueFromConfigLineInner(const std::wstring& confLine, const std::wstring& key)
 {
 	const size_t keyOffset = confLine.find(key);
 
@@ -416,7 +416,7 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 	config.setPassiveConfigurationVector(passiveConfigVector);
 }
 
-bool checkKeyValueInConfigLine(wchar_t* confLine, wchar_t* key,DWORD keySize, const std::wstring& value)
+bool checkKeyValueInConfigLine(wchar_t* confLine, wchar_t* key, DWORD keySize, const std::wstring& value)
 {
 	std::wstring confString = confLine;
 	confString += _T("");
@@ -568,7 +568,7 @@ bool isHashValid()
 	size_t start_pos = std::get<0>(markers);
 	size_t end_pos = std::get<1>(markers);
 
-	size_t calculatedHashValue = std::hash<std::string>{}(privateConfigBuffer.substr(start_pos,end_pos - start_pos));
+	size_t calculatedHashValue = std::hash<std::string>{}(privateConfigBuffer.substr(start_pos, end_pos - start_pos));
 
 	if (calculatedHashValue == declaredHashVal)
 	{
@@ -790,7 +790,7 @@ void dllDetached()
 
 }
 
-bool APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
+bool APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
 	GetModuleFileName(nullptr, myProcessName, MAX_PATH);
 	_stprintf_s(myProcessID, TEXT("%d"), GetCurrentProcessId());

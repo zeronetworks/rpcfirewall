@@ -8,7 +8,7 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 	HANDLE hProcess = OpenProcess(MAXIMUM_ALLOWED, false, processID);
 	if (hProcess == nullptr)
 	{
-		_tprintf(TEXT("OpenProcess failed for pid %u: [%d]\n"), processID,GetLastError());
+		_tprintf(TEXT("OpenProcess failed for pid %u: [%d]\n"), processID, GetLastError());
 		return;
 	}
 
@@ -26,14 +26,14 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 		_tprintf(TEXT("Error when calling WriteProcessMemory %d \n"), GetLastError());
 		return;
 	}
-	
+
 	FARPROC pLoadLib = GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "LoadLibraryA");
 	if (pLoadLib == nullptr)
 	{
 		_tprintf(TEXT("Error when calling GetProcAddress %d \n"), GetLastError());
 		return;
 	}
-	
+
 	HANDLE hRemoteThread = CreateRemoteThread(hProcess, nullptr, 0, (LPTHREAD_START_ROUTINE)pLoadLib, LLParam, 0, 0);
 	if (hRemoteThread == nullptr)
 	{
@@ -44,7 +44,7 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 	CloseHandle(hRemoteThread);
 }
 
-std::pair<bool,bool> containsRPCModules(DWORD dwPID)
+std::pair<bool, bool> containsRPCModules(DWORD dwPID)
 {
 	bool containsRpcRuntimeModule = false;
 	bool containsRpcFirewallModule = false;
@@ -62,8 +62,8 @@ std::pair<bool,bool> containsRPCModules(DWORD dwPID)
 
 	if (!Module32First(hModuleSnap, &me32))
 	{
-		_tprintf(TEXT("Error when calling Module32First: %d"),GetLastError()); 
-		CloseHandle(hModuleSnap);     
+		_tprintf(TEXT("Error when calling Module32First: %d"),GetLastError());
+		CloseHandle(hModuleSnap);
 		return std::make_pair(containsRpcRuntimeModule, containsRpcFirewallModule);;
 	}
 
@@ -80,10 +80,10 @@ std::pair<bool,bool> containsRPCModules(DWORD dwPID)
 			//_tprintf(TEXT("Process %d contains RPCFW module!\n"), dwPID);
 			containsRpcFirewallModule = true;
 		}
-	};
+    }
 
 	CloseHandle(hModuleSnap);
-	return std::make_pair(containsRpcRuntimeModule, containsRpcFirewallModule);;
+    return std::make_pair(containsRpcRuntimeModule, containsRpcFirewallModule);
 }
 
 bool containsRPCFWModule(DWORD dwPID)
@@ -114,7 +114,7 @@ bool containsRPCFWModule(DWORD dwPID)
 			CloseHandle(hModuleSnap);
 			return true;
 		}
-	};
+    }
 
 	CloseHandle(hModuleSnap);
 	return false;
@@ -122,11 +122,11 @@ bool containsRPCFWModule(DWORD dwPID)
 
 void classicHookRPCProcesses(DWORD processID, wchar_t* dllToInject)
 {
-	std::pair<bool,bool> containsModules = containsRPCModules(processID);
+    std::pair<bool, bool> containsModules = containsRPCModules(processID);
 	bool containsRPC = containsModules.first;
 	bool containsRPCFW = containsModules.second;
 
-	if ( containsRPC && !containsRPCFW) 
+    if (containsRPC && !containsRPCFW)
 	{
 		hookProcessLoadLibrary(processID, dllToInject);
 	}
