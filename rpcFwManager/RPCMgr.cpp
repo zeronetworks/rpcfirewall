@@ -185,7 +185,7 @@ void deleteFileFromSysfolder(std::wstring fileName)
 void writeFileToSysfolder(const std::wstring& sourcePath, const std::wstring& sourceFileName)
 {
 	wchar_t  destPath[INFO_BUFFER_SIZE];
-	DWORD  bufCharCount = INFO_BUFFER_SIZE;
+	// DWORD  bufCharCount = INFO_BUFFER_SIZE;
 
 	if (!GetSystemDirectory(destPath, INFO_BUFFER_SIZE))
 	{
@@ -207,7 +207,7 @@ void writeFileToSysfolder(const std::wstring& sourcePath, const std::wstring& so
 bool checkIfFileInSysFolder(const std::wstring& sourceFileName)
 {
 	wchar_t  destPath[INFO_BUFFER_SIZE];
-	DWORD  bufCharCount = INFO_BUFFER_SIZE;
+	// DWORD  bufCharCount = INFO_BUFFER_SIZE;
 
 	if (!GetSystemDirectory(destPath, INFO_BUFFER_SIZE))
 	{

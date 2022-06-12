@@ -655,9 +655,9 @@ void waitForFurtherInstructions()
 
 	if (uninstallEvent != nullptr)
 	{
-		HANDLE allEvents[2];
-		allEvents[0] = uninstallEvent;
-		allEvents[1] = configurationUpdatedEvent;
+		// HANDLE allEvents[2];
+		// allEvents[0] = uninstallEvent;
+		// allEvents[1] = configurationUpdatedEvent;
 		bool keepOnSpinning = true;
 
 		while (keepOnSpinning)
@@ -895,7 +895,7 @@ unsigned short getAddressAndPortFromBuffer(std::wstring& srcAddr, byte* buff)
 	PCWSTR addrPtr = nullptr;
 	unsigned short port = 0;
 
-	wchar_t uareshort[20] = { 0 };
+	// wchar_t uareshort[20] = { 0 };
 	std::wstring msg = _T("address: ");
 
 	switch (sockAddr->sa_family)
