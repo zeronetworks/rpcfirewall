@@ -115,7 +115,7 @@ RpcCallPolicy extractPolicyFromConfigLine(const std::wstring& confLine)
 	};
 }
 
-bool checkIfFilterConfiguLine(const std::wstring& confLine)
+bool checkIfFilterConfigLine(const std::wstring& confLine)
 {
 	std::wstring flt = extractKeyValueFromConfigLine(confLine, _T("flt:"));
 
@@ -320,7 +320,7 @@ void createRPCFiltersFromConfiguration()
 			confLineString += L" ";
 			LineConfig lineConfig = {};
 
-			if (checkIfFilterConfiguLine(confLineString))
+			if (checkIfFilterConfigLine(confLineString))
 			{
 				lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
 				lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
@@ -362,7 +362,7 @@ void cmdUpdate(std::wstring& param)
 void cmdPid(int procNum)
 {
 	elevateCurrentProcessToSystem();
-	createAllGloblEvents();
+	createAllGlobalEvents();
 	readConfigAndMapToMemory();
 
 	if (procNum > 0)
@@ -477,7 +477,7 @@ void cmdStatusRPCFW()
 
 	outputMessage(L"\n\tconfiguration:");
 	outputMessage(L"\t----------------------");
-	printMappedMeomryConfiguration();
+	printMappedMemoryConfiguration();
 
 }
 
@@ -489,7 +489,7 @@ void cmdStatus(std::wstring& param)
 
 void cmdProcess(std::wstring &processName)
 {
-	createAllGloblEvents();
+	createAllGlobalEvents();
 	elevateCurrentProcessToSystem();
 	readConfigAndMapToMemory();
 	if (!processName.empty())

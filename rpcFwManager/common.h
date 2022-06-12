@@ -18,13 +18,13 @@ bool createSecurityAttributes(SECURITY_ATTRIBUTES*, PSECURITY_DESCRIPTOR);
 
 HANDLE createGlobalEvent(bool, bool, wchar_t*);
 
-void createAllGloblEvents();
+void createAllGlobalEvents();
 
 void readConfigAndMapToMemory();
 
 CHAR* readConfigFile(DWORD*);
 
-void printMappedMeomryConfiguration();
+void printMappedMemoryConfiguration();
 
 std::wstring StringToWString(const std::string&);
 

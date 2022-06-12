@@ -49,7 +49,7 @@ std::tuple<size_t, size_t, bool> getConfigOffsets(std::string confStr)
 	return std::make_tuple(start_pos, end_pos, true);
 }
 
-void printMappedMeomryConfiguration()
+void printMappedMemoryConfiguration()
 {
 	HANDLE hConfigurationMapFile = OpenFileMapping(FILE_MAP_READ, false, GLOBAL_SHARED_MEMORY);
 
@@ -285,7 +285,7 @@ HANDLE createGlobalEvent(bool manualReset, bool initialState, wchar_t* eventName
 	return gEvent;
 }
 
-void createAllGloblEvents()
+void createAllGlobalEvents()
 {
 	globalUnprotectEvent = createGlobalEvent(true, false, (wchar_t*)GLOBAL_RPCFW_EVENT_UNPROTECT);
 }

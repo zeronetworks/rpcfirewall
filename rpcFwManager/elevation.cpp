@@ -184,10 +184,10 @@ void tryAndRunElevated(DWORD pid)
 				return;
 			}
 
-			wchar_t Imp_usrename[200];
+			wchar_t Imp_username[200];
 			DWORD name_len = 200;
-			GetUserName(Imp_usrename, &name_len);
-			//_tprintf(TEXT("Running as: %s\n"), Imp_usrename);
+			GetUserName(Imp_username, &name_len);
+			//_tprintf(TEXT("Running as: %s\n"), Imp_username);
 		}
 	}
 }

@@ -4,7 +4,7 @@
 #include "Injections.h"
 
 SERVICE_STATUS globalServiceStatus = { 0 };
-SERVICE_STATUS_HANDLE globalServcieStatusHandle = nullptr;
+SERVICE_STATUS_HANDLE globalServiceStatusHandle = nullptr;
 HANDLE globalServiceStopEvent = INVALID_HANDLE_VALUE;
 bool alreadyStarted = false;
 
@@ -525,7 +525,7 @@ void WINAPI serviceCtrlHandler(DWORD CtrlCode)
 		globalServiceStatus.dwWin32ExitCode = 0;
 		globalServiceStatus.dwCheckPoint = 4;
 
-		if (SetServiceStatus(globalServcieStatusHandle, &globalServiceStatus) == false)
+		if (SetServiceStatus(globalServiceStatusHandle, &globalServiceStatus) == false)
 		{
 			writeDebugMessage(L"ServiceCtrlHandler: SetServiceStatus returned error");
 		}
@@ -558,9 +558,9 @@ void WINAPI serviceMain(DWORD argc, LPTSTR* argv)
 	DWORD Status = E_FAIL;
 
 	// Register our service control handler with the SCM
-	globalServcieStatusHandle = RegisterServiceCtrlHandler(SERVICE_NAME, serviceCtrlHandler);
+	globalServiceStatusHandle = RegisterServiceCtrlHandler(SERVICE_NAME, serviceCtrlHandler);
 
-	if (globalServcieStatusHandle == nullptr)
+	if (globalServiceStatusHandle == nullptr)
 	{
 		outputMessage(_T("Service handle is null, stopping..."));
 		return;
@@ -575,7 +575,7 @@ void WINAPI serviceMain(DWORD argc, LPTSTR* argv)
 	globalServiceStatus.dwServiceSpecificExitCode = 0;
 	globalServiceStatus.dwCheckPoint = 0;
 
-	if (SetServiceStatus(globalServcieStatusHandle, &globalServiceStatus) == false)
+	if (SetServiceStatus(globalServiceStatusHandle, &globalServiceStatus) == false)
 	{
 		outputMessage(_T("ServiceMain: SetServiceStatus returned error"));
 	}
@@ -591,7 +591,7 @@ void WINAPI serviceMain(DWORD argc, LPTSTR* argv)
 		globalServiceStatus.dwWin32ExitCode = GetLastError();
 		globalServiceStatus.dwCheckPoint = 1;
 
-		if (SetServiceStatus(globalServcieStatusHandle, &globalServiceStatus) == false)
+		if (SetServiceStatus(globalServiceStatusHandle, &globalServiceStatus) == false)
 		{
 			outputMessage(_T("ServiceMain: SetServiceStatus returned error"));
 		}
@@ -604,12 +604,12 @@ void WINAPI serviceMain(DWORD argc, LPTSTR* argv)
 	globalServiceStatus.dwWin32ExitCode = 0;
 	globalServiceStatus.dwCheckPoint = 0;
 
-	if (SetServiceStatus(globalServcieStatusHandle, &globalServiceStatus) == false)
+	if (SetServiceStatus(globalServiceStatusHandle, &globalServiceStatus) == false)
 	{
 		outputMessage(_T("ServiceMain: SetServiceStatus returned error"));
 	}
 
-	createAllGloblEvents();
+	createAllGlobalEvents();
 	readConfigAndMapToMemory();
 
 	// Start a thread that will perform the main task of the service
@@ -628,7 +628,7 @@ void WINAPI serviceMain(DWORD argc, LPTSTR* argv)
 	globalServiceStatus.dwWin32ExitCode = 0;
 	globalServiceStatus.dwCheckPoint = 3;
 
-	if (SetServiceStatus(globalServcieStatusHandle, &globalServiceStatus) == false)
+	if (SetServiceStatus(globalServiceStatusHandle, &globalServiceStatus) == false)
 	{
 		outputMessage(_T("SetServiceStatus returned error"));
 	}
