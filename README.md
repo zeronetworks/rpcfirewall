@@ -2,6 +2,12 @@
 Check out our [RPC Firewall](https://zeronetworks.com/blog/stopping_lateral_movement_via_the_rpc_firewall/) blog post or our [BlackHat talk](https://www.youtube.com/watch?v=hz_YPIMeBMI) to gain better understanding of RPC, RPC attacks and the solution: the RPC Firewall.
 For any questions, issues, or simlpy to shout out - we would love to hear from you! Contact us at [support@zeronetworks.com](mailto:support@zeronetworks.com)
 
+# Get Started 
+The following tutorial shows basic installation and setup of the RPC Firewall, as well as a demo of how it protects against various RPC based attacks.
+
+[![RPC Firewall 2.0 Tutorial](https://img.youtube.com/vi/BNzfmYwkioY/0.jpg)](https://www.youtube.com/watch?v=BNzfmYwkioY)
+
+
 # Why should I care?
 RPC is the underlying mechanism which is used for numerous **lateral movement** techniques, **reconnaissance**, **relay** attacks, or simply to **exploit vulnerable RPC services**.
 
