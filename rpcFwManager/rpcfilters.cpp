@@ -11,6 +11,7 @@
 #include <aclapi.h>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -293,10 +294,34 @@ void setLocalRPCSecurityPolicyInReg(unsigned long auditInformation)
 	RegCloseKey(hRegKey);
 }
 
+void writeAuditFile()
+{
+	wchar_t  destPath[INFO_BUFFER_SIZE];
+	if (!GetSystemDirectory(destPath, INFO_BUFFER_SIZE))
+	{
+		_tprintf(TEXT("ERROR: Couldn't get the system directory [%d].\n"), GetLastError());
+		return;
+	}
+
+	std::wstring destPathStr = destPath;
+	destPathStr += TEXT("\\GroupPolicy\\Machine\\Microsoft\\Windows NT\\Audit\\audit.csv");
+
+	std::ofstream auditFileStream(destPathStr);
+	if (auditFileStream.bad())
+	{
+		_tprintf(TEXT("ERROR: Couldn't open audit file for writing [%s].\n"), destPathStr);
+		return;
+	}
+
+	auditFileStream << "Machine Name,Policy Target,Subcategory,Subcategory GUID,Inclusion Setting,Exclusion Setting,Setting Value\n, System, Audit RPC Events, {0cce922e-69ae-11d9-bed3-505054503030 },Success and Failure, ,3" << std::endl;
+	auditFileStream.close();
+}
+
 void enableAuditingForRPCFilters()
 {
 	updateAuditingForRPCFilters(3);
 	setLocalRPCSecurityPolicyInReg(3);
+	writeAuditFile();
 }
 
 void disableAuditingForRPCFilters()
