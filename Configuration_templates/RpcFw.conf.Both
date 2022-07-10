@@ -1,4 +1,4 @@
-Blocked to Any - RRP, DCOM, EVEN(6), DNSP, PAN, PAR, TSTS, SCMR,TSCH, EFSRPC:
+Blocked to Any - RRP, DCOM, EVEN(6), DNSP, PAN, PAR, TSTS, SCMR,TSCH, EFSRPC,FSRVP:
 ---------------------------------------------------------------------------------------------
 flt:action:block audit:true uuid:338cd001-2244-31f1-aaaa-900038001003
 flt:action:block audit:true uuid:99fcfec4-5260-101b-bbcb-00aa0021347a
@@ -35,6 +35,9 @@ flt:action:block audit:true uuid:c681d488-d850-11d0-8c52-00c04fd90f7e
 flt:action:block audit:true uuid:11899a43-2b68-4a76-92e3-a3d6ad8c26ce
 flt:action:block audit:true uuid:53b46b02-c73b-4a3e-8dee-b16b80672fc0
 flt:action:block audit:true uuid:1257B580-CE2F-4109-82D6-A9459D0BF6BC
+flt:action:block audit:true uuid:a8e0653c-2744-4389-a61d-7373df8b2292
+flt:action:block audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
+flt:action:block audit:true uuid:51b836e8-484d-4d03-b0fc-22e265cb3f7b
 
 Block to BA - LSAD, SAMR, NPSO, SRVS, WKST,FRS,DFSNM,BRWSA:
 ----------------------------------------------------------------------------------------
@@ -46,8 +49,6 @@ flt:action:block audit:true sid:BA uuid:6bffd098-a112-3610-9833-46c3f87e345a
 flt:action:block audit:true sid:BA uuid:f5cc59b4-4264-101a-8c59-08002b2f8426
 flt:action:block audit:true sid:BA uuid:5b821720-f63b-11d0-aad2-00c04fc324db
 flt:action:block audit:true sid:BA uuid:6BFFD098-A112-3610-9833-46C3F874532D
-flt:action:block audit:true sid:BA uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
-flt:action:block audit:true sid:BA uuid:51b836e8-484d-4d03-b0fc-22e265cb3f7b
 flt:action:block audit:true sid:BA uuid:6bffd098-a112-3610-9833-012892020162 
 
 DCSync Protecion: <edit the DC addresses to match your environemt!!>:
