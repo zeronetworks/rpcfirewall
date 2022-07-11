@@ -38,7 +38,6 @@ flt:action:block audit:true uuid:1257B580-CE2F-4109-82D6-A9459D0BF6BC
 
 Block to BA - LSAD, SAMR, NPSO, SRVS, WKST,FRS,DFSNM,BRWSA:
 ----------------------------------------------------------------------------------------
-flt:action:block audit:true sid:BA uuid:12345778-1234-abcd-ef00-0123456789ab
 flt:action:block audit:true sid:BA uuid:12345778-1234-abcd-ef00-0123456789ac
 flt:action:block audit:true sid:BA uuid:f5cc5a18-4264-101a-8c59-08002b2f8426
 flt:action:block audit:true sid:BA uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188
