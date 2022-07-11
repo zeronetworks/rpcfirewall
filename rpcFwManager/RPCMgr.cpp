@@ -19,7 +19,7 @@ std::wstring extractKeyValueFromConfigLineInner(const std::wstring& confLine, co
 
 	if (keyOffset == std::string::npos) return _T("\0");
 
-	const size_t nextKeyOffset = confLine.find(_T(" "), keyOffset + 1);
+	const size_t nextKeyOffset = confLine.find(L' ', keyOffset + 1);
 
 	if (nextKeyOffset == std::string::npos) return _T("\0");
 
@@ -32,14 +32,13 @@ std::wstring extractKeyValueFromConfigLine(const std::wstring& confLine, const s
 {
 	std::wstring fixedConfLine = confLine;
 
-	std::size_t newLinePos = fixedConfLine.rfind(_T("\n"));
-	std::size_t carrigeReturnPos = fixedConfLine.rfind(_T("\r"));
-
+	std::size_t newLinePos = fixedConfLine.rfind(L'\n');
+	std::size_t carriageReturnPos = fixedConfLine.rfind(L'\r');
 
 	//std::basic_string<wchar_t>::replace(fixedConfLine.begin(), fixedConfLine.end(), _T("\r"), _T(" "));
-	if (newLinePos != std::wstring::npos) fixedConfLine.replace(fixedConfLine.rfind(_T("\n")), 1, _T(" "));
-	if (carrigeReturnPos != std::wstring::npos) fixedConfLine.replace(fixedConfLine.rfind(_T("\r")), 1, _T(" "));
-	
+	if (newLinePos != std::wstring::npos) fixedConfLine.replace(fixedConfLine.rfind(L'\n'), 1, _T(" "));
+	if (carriageReturnPos != std::wstring::npos) fixedConfLine.replace(fixedConfLine.rfind(L'\r'), 1, _T(" "));
+
 	fixedConfLine.replace(fixedConfLine.size() - 1, 1, _T(" "));
 
 	return extractKeyValueFromConfigLineInner(fixedConfLine, key);
@@ -96,7 +95,7 @@ protocolFilter extractProtoclFromConfigLine(const std::wstring& confLine)
 {
 	const std::wstring protocol = extractKeyValueFromConfigLine(confLine, _T("prot"));
 
-	return protocol.empty() ? protocolFilter{} : protocolFilter{ protocol};
+	return protocol.empty() ? protocolFilter{} : protocolFilter{protocol};
 }
 
 bool extractAuditFromConfigLine(const std::wstring& confLine)
@@ -115,7 +114,7 @@ RpcCallPolicy extractPolicyFromConfigLine(const std::wstring& confLine)
 	};
 }
 
-bool checkIfFilterConfiguLine(const std::wstring& confLine)
+bool checkIfFilterConfigLine(const std::wstring& confLine)
 {
 	std::wstring flt = extractKeyValueFromConfigLine(confLine, _T("flt:"));
 
@@ -125,8 +124,8 @@ bool checkIfFilterConfiguLine(const std::wstring& confLine)
 
 void concatArguments(int argc, wchar_t* argv[], wchar_t command[])
 {
-	_tcscpy_s(command, MAX_PATH *2, argv[0]);
-	
+	_tcscpy_s(command, MAX_PATH * 2, argv[0]);
+
 	for (int i = 1; i < argc; i++)
 	{
 		_tcscat_s(command, MAX_PATH * 2, TEXT(" "));
@@ -185,7 +184,7 @@ void deleteFileFromSysfolder(std::wstring fileName)
 void writeFileToSysfolder(const std::wstring& sourcePath, const std::wstring& sourceFileName)
 {
 	wchar_t  destPath[INFO_BUFFER_SIZE];
-	DWORD  bufCharCount = INFO_BUFFER_SIZE;
+	// DWORD  bufCharCount = INFO_BUFFER_SIZE;
 
 	if (!GetSystemDirectory(destPath, INFO_BUFFER_SIZE))
 	{
@@ -208,7 +207,7 @@ void writeFileToSysfolder(const std::wstring& sourcePath, const std::wstring& so
 bool checkIfFileInSysFolder(const std::wstring& sourceFileName)
 {
 	wchar_t  destPath[INFO_BUFFER_SIZE];
-	DWORD  bufCharCount = INFO_BUFFER_SIZE;
+	// DWORD  bufCharCount = INFO_BUFFER_SIZE;
 
 	if (!GetSystemDirectory(destPath, INFO_BUFFER_SIZE))
 	{
@@ -220,7 +219,7 @@ bool checkIfFileInSysFolder(const std::wstring& sourceFileName)
 	destPathStr += TEXT("\\");
 	destPathStr += sourceFileName;
 
-	std::ifstream ifile; 
+	std::ifstream ifile;
 	ifile.open(destPathStr.c_str());
 	
 	if (ifile)
@@ -321,7 +320,7 @@ void createRPCFiltersFromConfiguration()
 			confLineString += L" ";
 			LineConfig lineConfig = {};
 
-			if (checkIfFilterConfiguLine(confLineString))
+			if (checkIfFilterConfigLine(confLineString))
 			{
 				lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
 				lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
@@ -363,7 +362,7 @@ void cmdUpdate(std::wstring& param)
 void cmdPid(int procNum)
 {
 	elevateCurrentProcessToSystem();
-	createAllGloblEvents();
+	createAllGlobalEvents();
 	readConfigAndMapToMemory();
 
 	if (procNum > 0)
@@ -461,11 +460,11 @@ void cmdStatusRPCFW()
 	std::wstringstream RPCFWFileState;
 	RPCFWFileState << L"\t" << RPC_FW_DLL_NAME << (checkIfFileInSysFolder(RPC_FW_DLL_NAME) ? L" installed" : L" not installed");
 	std::wstringstream RPCMSGFileState;
-	RPCMSGFileState << L"\t"  << RPC_MESSAGES_DLL_NAME  << (checkIfFileInSysFolder(RPC_MESSAGES_DLL_NAME) ? L" installed" : L" not installed");
+	RPCMSGFileState << L"\t" << RPC_MESSAGES_DLL_NAME << (checkIfFileInSysFolder(RPC_MESSAGES_DLL_NAME) ? L" installed" : L" not installed");
 	std::wstringstream serviceInstalledState;
 	serviceInstalledState << L"\t" << L"RPC Firewall Service" << (isServiceInstalled() ? L" installed" : L" not installed");
 	std::wstringstream eventState;
-	eventState << L"\t" <<  L"RPC Firewall Event" << (checkIfEventConfiguredInReg() ? L" configured" : L" not configured");
+	eventState << L"\t" << L"RPC Firewall Event" << (checkIfEventConfiguredInReg() ? L" configured" : L" not configured");
 
 	outputMessage(RPCFWFileState.str().c_str());
 	outputMessage(RPCMSGFileState.str().c_str());
@@ -478,7 +477,7 @@ void cmdStatusRPCFW()
 
 	outputMessage(L"\n\tconfiguration:");
 	outputMessage(L"\t----------------------");
-	printMappedMeomryConfiguration();
+	printMappedMemoryConfiguration();
 
 }
 
@@ -490,13 +489,13 @@ void cmdStatus(std::wstring& param)
 
 void cmdProcess(std::wstring &processName)
 {
-	createAllGloblEvents();
+	createAllGlobalEvents();
 	elevateCurrentProcessToSystem();
 	readConfigAndMapToMemory();
 	if (!processName.empty())
 	{
 		std::wstring msg = L"Enabling RPCFW for process :";
-		msg += processName.c_str();
+		msg += processName;
 		outputMessage(msg.c_str());
 		crawlProcesses(17, processName);
 	}

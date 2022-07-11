@@ -210,7 +210,7 @@ void addEventSource()
 
     if (RegOpenKeyW(HKEY_LOCAL_MACHINE, szRegPathParent, &hRegKeyParent) != ERROR_SUCCESS)
     {
-        _tprintf(TEXT("ERROR: getting parent key %s : [%d].\n"), szRegPathParent,GetLastError());
+        _tprintf(TEXT("ERROR: getting parent key %s : [%d].\n"), szRegPathParent, GetLastError());
         return;
     }
 

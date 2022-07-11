@@ -116,7 +116,7 @@ void writeDebugOutputWithPIDWithErrorMessage(const std::wstring& dbgMsg, wchar_t
 		finalMessage += TEXT(" : ");
 		finalMessage += errMsg;
 
-		writeDebugOutputWithPID(finalMessage.c_str());
+		writeDebugOutputWithPID(finalMessage);
 	}
 }
 
@@ -133,13 +133,13 @@ void writeDebugOutputWithPIDGetLastError(const std::wstring& dbgMsg)
 		wchar_t errBuf[32];
 		_stprintf_s(errBuf, _T("%d"), GetLastError());
 
-		std::wstring finalMessage = _T("");
+		std::wstring finalMessage;
 		std::wstring errMsg = errBuf;
 
 		finalMessage += dbgMsg;
 		finalMessage += TEXT(" : ");
 		finalMessage += errMsg;
-		writeDebugOutputWithPID(finalMessage.c_str());
+		writeDebugOutputWithPID(finalMessage);
 	}
 }
 
@@ -276,13 +276,13 @@ std::wstring StringToWString(const std::string& s)
 	return temp;
 }
 
-std::wstring extractKeyValueFromConfigLineInner(const std::wstring& confLine, const std::wstring & key)
+std::wstring extractKeyValueFromConfigLineInner(const std::wstring& confLine, const std::wstring& key)
 {
 	const size_t keyOffset = confLine.find(key);
 
 	if (keyOffset == std::string::npos) return _T("\0");
 
-	const size_t nextKeyOffset = confLine.find(_T(" "), keyOffset + 1);
+	const size_t nextKeyOffset = confLine.find(L' ', keyOffset + 1);
 
 	if (nextKeyOffset == std::string::npos) return _T("\0");
 
@@ -386,13 +386,13 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 
 	std::basic_istringstream<wchar_t> configStream(StringToWString(configurationOnly));
 	std::wstring confLineString;
-	wchar_t configLine[256];
 
 	size_t size = privateConfigBuffer.size() + 1;
 	ConfigVector passiveConfigVector = {};
 
 	if (size > 1)
 	{
+		wchar_t configLine[256];
 		while (configStream.getline(configLine, 256))
 		{
 			confLineString = configLine;
@@ -416,7 +416,7 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 	config.setPassiveConfigurationVector(passiveConfigVector);
 }
 
-bool checkKeyValueInConfigLine(wchar_t* confLine, wchar_t* key,DWORD keySize, const std::wstring& value)
+bool checkKeyValueInConfigLine(wchar_t* confLine, wchar_t* key, DWORD keySize, const std::wstring& value)
 {
 	std::wstring confString = confLine;
 	confString += _T("");
@@ -424,7 +424,7 @@ bool checkKeyValueInConfigLine(wchar_t* confLine, wchar_t* key,DWORD keySize, co
 	size_t keyOffset = confString.find(key);
 	if (keyOffset == std::string::npos) return true;
 
-	size_t keyEndOffset = confString.find(_T(" "), keyOffset);
+	size_t keyEndOffset = confString.find(L' ', keyOffset);
 	size_t configValueSize = keyEndOffset - keyOffset - keySize;
 	
 	if (configValueSize != value.size())
@@ -529,7 +529,7 @@ bool isNewVersion()
 		WRITE_DEBUG_MSG(_T("No version keyword found"));
 		return false;
 	}
-	size_t verEndPos = privateConfigBuffer.find(" ") + 1;
+	size_t verEndPos = privateConfigBuffer.find(' ') + 1;
 	DWORD newVersion = std::stoi(privateConfigBuffer.substr(verLoc + 4, verEndPos - 5));
 	
 	if (newVersion > configurationVersion)
@@ -568,7 +568,7 @@ bool isHashValid()
 	size_t start_pos = std::get<0>(markers);
 	size_t end_pos = std::get<1>(markers);
 
-	size_t calculatedHashValue = std::hash<std::string>{}(privateConfigBuffer.substr(start_pos,end_pos - start_pos));
+	size_t calculatedHashValue = std::hash<std::string>{}(privateConfigBuffer.substr(start_pos, end_pos - start_pos));
 
 	if (calculatedHashValue == declaredHashVal)
 	{
@@ -634,7 +634,7 @@ void loadConfigurationFromMappedMemory()
 
 void writeEventToDebugOutput(RpcEventParameters eventParams, bool allowCall)
 {
-	std::wstring dbgMsg = _T("");
+	std::wstring dbgMsg;
 	dbgMsg += TEXT("RPC Function ");
 	if (allowCall)
 	{
@@ -655,9 +655,9 @@ void waitForFurtherInstructions()
 
 	if (uninstallEvent != nullptr)
 	{
-		HANDLE allEvents[2];
-		allEvents[0] = uninstallEvent;
-		allEvents[1] = configurationUpdatedEvent;
+		// HANDLE allEvents[2];
+		// allEvents[0] = uninstallEvent;
+		// allEvents[1] = configurationUpdatedEvent;
 		bool keepOnSpinning = true;
 
 		while (keepOnSpinning)
@@ -790,7 +790,7 @@ void dllDetached()
 
 }
 
-bool APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
+bool APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
 	GetModuleFileName(nullptr, myProcessName, MAX_PATH);
 	_stprintf_s(myProcessID, TEXT("%d"), GetCurrentProcessId());
@@ -832,8 +832,8 @@ RpcEventParameters populateEventParameters(PRPC_MESSAGE pRpcMsg, wchar_t* szStri
 		szWstringBinding.replace(pos, 1, L",");
 	}
 
-	pos = szWstringBindingServer.find(_T("["));
-	size_t endpos = szWstringBindingServer.find(_T("]"), pos + 1);
+	pos = szWstringBindingServer.find(L'[');
+	size_t endpos = szWstringBindingServer.find(L']', pos + 1);
 	eventParams.endpoint = szWstringBindingServer.substr(pos + 1, endpos - pos - 1);
 
 	byte* byteUuidPointer = (byte*)pRpcMsg->RpcInterfaceInformation;
@@ -895,7 +895,7 @@ unsigned short getAddressAndPortFromBuffer(std::wstring& srcAddr, byte* buff)
 	PCWSTR addrPtr = nullptr;
 	unsigned short port = 0;
 
-	wchar_t uareshort[20] = { 0 };
+	// wchar_t uareshort[20] = { 0 };
 	std::wstring msg = _T("address: ");
 
 	switch (sockAddr->sa_family)
