@@ -26,8 +26,10 @@ DCSync Protecion: <edit the DC addresses to match your environemt!!>:
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 addr:<dc_addr1> action:allow audit:true 
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 addr:<dc_addr2> action:allow audit:true 
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:0 action:allow audit:true 
-fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:1 action:allow audit:true 
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:1 action:allow audit:true
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:16 action:allow audit:true
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:12 action:allow audit:true 
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:19 action:allow audit:true 
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 action:block audit:true 
 
 Default block:
