@@ -49,7 +49,7 @@ std::tuple<size_t, size_t, bool> getConfigOffsets(std::string confStr)
 	return std::make_tuple(start_pos, end_pos, true);
 }
 
-void printMappedMeomryConfiguration()
+void printMappedMemoryConfiguration()
 {
 	HANDLE hConfigurationMapFile = OpenFileMapping(FILE_MAP_READ, false, GLOBAL_SHARED_MEMORY);
 
@@ -63,7 +63,7 @@ void printMappedMeomryConfiguration()
 	mappedBuf = (char*)MapViewOfFile(hConfigurationMapFile, FILE_MAP_READ, 0, 0, MEM_BUF_SIZE);
 	if (mappedBuf == nullptr)
 	{
-		outputMessage(TEXT("Error: Could not map view of configuration file."),GetLastError());
+		outputMessage(TEXT("Error: Could not map view of configuration file."), GetLastError());
 		CloseHandle(hConfigurationMapFile);
 		return;
 	}
@@ -115,7 +115,7 @@ CHAR* readConfigFile(DWORD* bufLen)
 
 	if (!cfgFwPath.empty())
 	{
-		size_t offset = cfgFwPath.rfind(L"\\", cfgFwPath.length());
+		size_t offset = cfgFwPath.rfind(L'\\', cfgFwPath.length());
 		cfgFwPath = cfgFwPath.substr(0, offset);
 		cfgFwPath = cfgFwPath + L"\\" + CONF_FILE_NAME;
 
@@ -145,7 +145,7 @@ std::string extractKeyValueFromConfig(std::string confLine, std::string key)
 
 	if (keyOffset == std::string::npos) return "\0";
 
-	size_t nextKeyOffset = confLine.find(" ", keyOffset + 1);
+	size_t nextKeyOffset = confLine.find(' ', keyOffset + 1);
 
 	if (nextKeyOffset == std::string::npos) return "\0";
 
@@ -285,7 +285,7 @@ HANDLE createGlobalEvent(bool manualReset, bool initialState, wchar_t* eventName
 	return gEvent;
 }
 
-void createAllGloblEvents()
+void createAllGlobalEvents()
 {
 	globalUnprotectEvent = createGlobalEvent(true, false, (wchar_t*)GLOBAL_RPCFW_EVENT_UNPROTECT);
 }
