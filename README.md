@@ -28,7 +28,7 @@ Throughout this document, we will use the following terms:
 Can be used to to **audit** all remote RPC calls. 
 Once executing any remote attack tools, you will see which RPC UUIDs and Opnums were called remotely.
 
-See an example configuration [here](./Configuration_templates/RpcFw.conf.AuditAll).
+See an example configuration [here](./Configuration_templates/RpcFw.conf.AuditOnly).
 
 ## Remote RPC Attacks Detection
 When the *RPCFW Configuration* is configured to audit, events are written to the Windows Event Log. 
