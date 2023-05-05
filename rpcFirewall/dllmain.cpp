@@ -42,6 +42,7 @@ DWORD configurationVersion = 0;
 template<typename T, typename U>
 std::basic_string<T> to_tstring(U arg)
 {
+	constexpr bool statAssert = true;
 	if constexpr (std::is_same_v<T, char>)
 	{
 		return std::to_string(arg);
@@ -52,7 +53,8 @@ std::basic_string<T> to_tstring(U arg)
 	}
 	else
 	{
-		static_assert(false);
+		statAssert = false;
+		static_assert(statAssert);
 	}
 }
 
@@ -1027,6 +1029,7 @@ void processRPCCall(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 
 long WINAPI detouredNdrStubCall2(void* pThis, void* pChannel, PRPC_MESSAGE pRpcMsg, unsigned long* pdwStubPhase)
 {
+	WRITE_DEBUG_MSG(L"NdrStubCall2 Called!....");
 	processRPCCall((wchar_t*)_T("NdrStubCall2"), pRpcMsg);
 
 	return realNdrStubCall2(pThis, pChannel, pRpcMsg, pdwStubPhase);

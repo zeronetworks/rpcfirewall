@@ -18,12 +18,14 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 	if (LLParam == nullptr)
 	{
 		_tprintf(TEXT("Error when calling VirtualAllocEx %d \n"), GetLastError());
+		CloseHandle(hProcess);
 		return;
 	}
 
 	if (WriteProcessMemory(hProcess, LLParam, szInjectionDLLName, strlen(szInjectionDLLName), 0) == 0)
 	{
 		_tprintf(TEXT("Error when calling WriteProcessMemory %d \n"), GetLastError());
+		CloseHandle(hProcess);
 		return;
 	}
 	
@@ -31,6 +33,7 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 	if (pLoadLib == nullptr)
 	{
 		_tprintf(TEXT("Error when calling GetProcAddress %d \n"), GetLastError());
+		CloseHandle(hProcess);
 		return;
 	}
 	
@@ -38,9 +41,11 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 	if (hRemoteThread == nullptr)
 	{
 		_tprintf(TEXT("Error when calling CreateRemoteThread %d \n"), GetLastError());
+		CloseHandle(hProcess);
 		return;
 	}
 
+	CloseHandle(hProcess);
 	CloseHandle(hRemoteThread);
 }
 
@@ -54,6 +59,7 @@ std::pair<bool,bool> containsRPCModules(DWORD dwPID)
 	if (hModuleSnap == INVALID_HANDLE_VALUE)
 	{
 		//_tprintf(TEXT("Error when calling CreateToolhelp32Snapshot for pid %u: %d\n"), dwPID,GetLastError());
+		CloseHandle(hModuleSnap);
 		return std::make_pair(containsRpcRuntimeModule, containsRpcFirewallModule);;
 	}
 

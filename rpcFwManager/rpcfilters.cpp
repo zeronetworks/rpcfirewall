@@ -387,6 +387,8 @@ FWPM_FILTER_CONDITION0 createProtocolCondition(std::wstring& protocol)
 	FWPM_FILTER_CONDITION0 protoclCondition = { 0 };
 	unsigned int uintProtocl = 0;
 
+	protoclCondition.matchType = FWP_MATCH_EQUAL;
+
 	if (protocol.find(_T("ncacn_ip_tcp")) != std::string::npos)
 	{
 		uintProtocl = RPC_PROTSEQ_TCP;
@@ -399,15 +401,18 @@ FWPM_FILTER_CONDITION0 createProtocolCondition(std::wstring& protocol)
 	{
 		uintProtocl = RPC_PROTSEQ_HTTP;
 	}
+	else if (protocol.find(_T("remote")) != std::string::npos)
+	{
+		uintProtocl = RPC_PROTSEQ_LRPC;
+		protoclCondition.matchType = FWP_MATCH_NOT_EQUAL;
+	}
 	else if (protocol.find(_T("ncalrpc")) != std::string::npos)
 	{
 		_tprintf(_T("Unknown protocl found in configutaion: %s\n"), protocol);
 		uintProtocl = RPC_PROTSEQ_LRPC;
 	}
 	else return protoclCondition;
-
-
-	protoclCondition.matchType = FWP_MATCH_EQUAL;
+		
 	protoclCondition.fieldKey = FWPM_CONDITION_RPC_PROTOCOL;
 	protoclCondition.conditionValue.type = FWP_UINT8;
 	protoclCondition.conditionValue.uint8 = uintProtocl;

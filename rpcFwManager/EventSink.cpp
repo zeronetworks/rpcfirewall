@@ -58,8 +58,16 @@ HRESULT EventSink::Indicate(long lObjectCount,
                 }
                 VariantClear(&cn);
             }
-            VariantClear(&vtProp);
+            str->Release();
         }
+        VariantClear(&var_val);
+    }
+    VariantClear(&vtProp);
+
+
+    for (int i = 0; i < lObjectCount; i++)
+    {
+        apObjArray[i]->Release();
     }
 
     return WBEM_S_NO_ERROR;
