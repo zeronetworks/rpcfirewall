@@ -68,6 +68,7 @@ HRESULT EventSink::Indicate(long lObjectCount,
     for (int i = 0; i < lObjectCount; i++)
     {
         apObjArray[i]->Release();
+
     }
 
     return WBEM_S_NO_ERROR;
