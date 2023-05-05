@@ -1,3 +1,6 @@
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/zeronetworks/rpcfirewall)](https://github.com/zeronetworks/rpcfirewall/releases/latest)
+![GitHub all releases](https://img.shields.io/github/downloads/zeronetworks/rpcfirewall/total)
+
 # I Need More Information
 Check out our [RPC Firewall](https://zeronetworks.com/blog/stopping_lateral_movement_via_the_rpc_firewall/) blog post or our [BlackHat talk](https://www.youtube.com/watch?v=hz_YPIMeBMI) to gain better understanding of RPC, RPC attacks and the solution: the RPC Firewall.
 For any questions, issues, or simlpy to shout out - we would love to hear from you! Contact us at [support@zeronetworks.com](mailto:support@zeronetworks.com)
@@ -25,7 +28,7 @@ Throughout this document, we will use the following terms:
 Can be used to to **audit** all remote RPC calls. 
 Once executing any remote attack tools, you will see which RPC UUIDs and Opnums were called remotely.
 
-See an example configuration [here](./Configuration_templates/RpcFw.conf.AuditAll).
+See an example configuration [here](./Configuration_templates/RpcFw.conf.AuditOnly).
 
 ## Remote RPC Attacks Detection
 When the *RPCFW Configuration* is configured to audit, events are written to the Windows Event Log. 
