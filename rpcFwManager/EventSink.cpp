@@ -6,11 +6,13 @@
 
 ULONG EventSink::AddRef()
 {
+    outputMessage(L"Called EventSink::AddRef()");
     return InterlockedIncrement(&m_lRef);
 }
 
 ULONG EventSink::Release()
 {
+    outputMessage(L"Called EventSink::Release()");
     LONG lRef = InterlockedDecrement(&m_lRef);
     if (lRef == 0)
         delete this;
@@ -19,6 +21,8 @@ ULONG EventSink::Release()
 
 HRESULT EventSink::QueryInterface(REFIID riid, void** ppv)
 {
+    outputMessage(L"Called EventSink::QueryInterface");
+
     if (riid == IID_IUnknown || riid == IID_IWbemObjectSink)
     {
         *ppv = (IWbemObjectSink*)this;
@@ -33,21 +37,26 @@ HRESULT EventSink::Indicate(long lObjectCount,
     IWbemClassObject** apObjArray)
 {
     HRESULT hres = S_OK;
-    _variant_t vtProp;
+
+    outputMessage(L"Indicate method called!");
 
     for (int i = 0; i < lObjectCount; i++)
     {
         //VARIANT v;
-        _variant_t var_val;
+        _variant_t vtProp;
         hres = apObjArray[i]->Get(L"TargetInstance", 0, &vtProp, 0, 0);
         if (!FAILED(hres))
         {
-            IUnknown* str = vtProp;
-            hres = str->QueryInterface(IID_IWbemClassObject, reinterpret_cast<void**>(&apObjArray[i]));
+            IWbemClassObject* pClassObj = nullptr;
+            IUnknown* pIUnknown = (IUnknown*)vtProp;
+
+            hres = pIUnknown->QueryInterface(IID_IWbemClassObject, reinterpret_cast<void**>(&pClassObj));
             if (!FAILED(hres))
             {
+                outputMessage(L"QueryInterface worked!");
                 _variant_t cn;
-                hres = apObjArray[i]->Get(L"ProcessId", 0, &cn, NULL, NULL);
+         
+                hres = pClassObj->Get(L"ProcessId", 0, &cn, NULL, NULL);
                 if (!FAILED(hres))
                 {
                     if ((cn.vt != VT_NULL) || (cn.vt != VT_EMPTY))
@@ -57,18 +66,11 @@ HRESULT EventSink::Indicate(long lObjectCount,
                     }
                 }
                 VariantClear(&cn);
+                pClassObj->Release();
             }
-            str->Release();
+            pIUnknown->Release();
         }
-        VariantClear(&var_val);
-    }
-    VariantClear(&vtProp);
-
-
-    for (int i = 0; i < lObjectCount; i++)
-    {
-        apObjArray[i]->Release();
-
+        VariantClear(&vtProp);
     }
 
     return WBEM_S_NO_ERROR;
@@ -81,6 +83,7 @@ HRESULT EventSink::SetStatus(
     /* [in] */ IWbemClassObject __RPC_FAR* pObjParam
 )
 {
+    outputMessage(L"Called EventSink::SetStatus()");
     if (lFlags == WBEM_STATUS_COMPLETE)
     {
         _tprintf(_T("Call complete. hResult = 0x%X\n"), hResult);
@@ -95,11 +98,13 @@ HRESULT EventSink::SetStatus(
 
 wmiEventRegistrant::wmiEventRegistrant() 
 {
+    outputMessage(L"Called wmiEventRegistrant::wmiEventRegistrant()");
     this->pSink = new EventSink; 
 }
 
 wmiEventRegistrant::~wmiEventRegistrant()
 {
+    outputMessage(L"Called wmiEventRegistrant::~wmiEventRegistrant()");
     HRESULT hres;
     hres = pSvc->CancelAsyncCall(pStubSink);
 
@@ -115,6 +120,8 @@ wmiEventRegistrant::~wmiEventRegistrant()
 
 bool wmiEventRegistrant::registerForProcessCreatedEvents()
 {
+
+    outputMessage(L"Called wmiEventRegistrant::registerForProcessCreatedEvents()");
     HRESULT hres;
 
     // Initialize COM
