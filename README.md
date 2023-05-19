@@ -140,7 +140,7 @@ This file uses the following configuration options:
 |uuid:| Match a specific uuid | both RPC Firewall and Filters|
 |action:| Can be either **allow** or **block** (default allow)| both RPC Firewall and Filters|
 |audit:| Can be either **true** or *false*. Controls whether events are written to the *RPCFW* log (default false)| both RPC Firewall and Filters|
-|sid:| matches an authenticated user to a [security identifier](https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers). Could be specific user or group.  | RPC Filters only
+|sid:| matches an authenticated user to a [security identifier](https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers). Could be specific user or group. For a list of accepted values please see the [SID overview](https://learn.microsoft.com/en-us/windows/win32/secauthz/sid-strings). | RPC Filters only
 
 
 
