@@ -3,7 +3,8 @@
 
 # I Need More Information
 Check out our [RPC Firewall](https://zeronetworks.com/blog/stopping_lateral_movement_via_the_rpc_firewall/) blog post or our [BlackHat talk](https://www.youtube.com/watch?v=hz_YPIMeBMI) to gain better understanding of RPC, RPC attacks and the solution: the RPC Firewall.
-For any questions, issues, or simlpy to shout out - we would love to hear from you! Contact us at [support@zeronetworks.com](mailto:support@zeronetworks.com)
+Join our [|Zero| Labs](https://join.slack.com/t/minus273celsius/shared_invite/zt-1ulg46s8x-N0P9sEzmv3SbYTlDXVSf2g) Slack Community workspace for any questions, issues, or simlpy to shout out.
+We would love to hear from you also via email (if you are that type of person). Contact us at [support@zeronetworks.com](mailto:support@zeronetworks.com)
 
 # Get Started 
 The following tutorial shows basic installation and setup of the RPC Firewall, as well as a demo of how it protects against various RPC based attacks.
@@ -136,7 +137,7 @@ This file uses the following configuration options:
 |opnum:| Match a RPC opnum | RPC Firewall|
 |verbose:| Can be either **true** or *false*. When true, outputs debug informaiton for specific RPC calls (default false)| RPC Firewall|
 |prot:| Matches the used protocol to any of the [protocol sequence constants](https://docs.microsoft.com/en-us/windows/win32/rpc/protocol-sequence-constants)| both RPC Firewall and Filters|
-|addr:| Match a remote IP address | RPC Firewall and partially by RPC Filters, [read more here](#using-rpc-firewall-or-rpc-filters)|
+|addr:| Match a remote IP address (IPv4 or IPv6)| RPC Firewall and partially by RPC Filters, [read more here](#using-rpc-firewall-or-rpc-filters)|
 |uuid:| Match a specific uuid | both RPC Firewall and Filters|
 |action:| Can be either **allow** or **block** (default allow)| both RPC Firewall and Filters|
 |audit:| Can be either **true** or *false*. Controls whether events are written to the *RPCFW* log (default false)| both RPC Firewall and Filters|
