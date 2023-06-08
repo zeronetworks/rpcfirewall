@@ -16,6 +16,7 @@
 #include <iomanip>
 #include "config.hpp"
 #include "rpcWrappers.hpp"
+#include <sddl.h>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -375,6 +376,15 @@ protocolFilter extractProtocolFromConfigLine(const std::wstring& confLine)
 	return protocol.empty() ? protocolFilter{} : protocolFilter{ protocol };
 }
 
+SIDFilter extraceSIDFromConfigLine(const std::wstring& confLine)
+{
+	std::wstring sid = extractKeyValueFromConfigLine(confLine, _T("sid:"));
+
+	std::transform(sid.begin(), sid.end(), sid.begin(), ::toupper);
+
+	return sid.empty() ? SIDFilter{} : SIDFilter{ sid };
+
+}
 
 void loadPrivateBufferToPassiveVectorConfiguration()
 {
@@ -410,6 +420,8 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 				lineConfig.policy = extractPolicyFromConfigLine(confLineString);
 				lineConfig.verbose = extractVerboseFromConfigLine(confLineString);
 				lineConfig.protocol = extractProtocolFromConfigLine(confLineString);
+				lineConfig.sid = extraceSIDFromConfigLine(confLineString);
+
 				passiveConfigVector.push_back(lineConfig);
 			}
 		}
@@ -496,6 +508,77 @@ bool checkProtocol(const protocolFilter& protFilter, const std::wstring& protoco
 	return false;
 }
 
+// Function to check if the RPC caller has access based on the security descriptor
+bool checkIfSIDBelongstoSD(SIDFilter sidFilter)
+{
+	WRITE_DEBUG_MSG(_T("Entering checkIfSIDBelongstoSD ..."));
+	if (!sidFilter.has_value())
+	{
+		return true;
+	}
+
+	std::wstring securityDescriptorString = L"O:BAG:BAD:(A;;FA;;;" + sidFilter.value() + L")";
+
+	PSECURITY_DESCRIPTOR pSecurityDescriptor = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+
+
+	if (!ConvertStringSecurityDescriptorToSecurityDescriptorW(securityDescriptorString.c_str(),
+		SDDL_REVISION_1, &pSecurityDescriptor, nullptr))
+	{
+		WRITE_DEBUG_MSG(_T("ConvertStringSecurityDescriptorToSecurityDescriptorW failed..."));
+		return false;
+	}
+
+	WRITE_DEBUG_MSG(_T("Calling RpcImpersonateClient"));
+
+	RPC_STATUS status = RpcImpersonateClient(nullptr);
+	if (status != RPC_S_OK)
+	{
+		WRITE_DEBUG_MSG_WITH_STATUS(_T("RpcImpersonateClient failed"), status);
+		LocalFree(pSecurityDescriptor);
+		return false;
+	}
+
+	HANDLE hToken = nullptr;
+	if (!OpenThreadToken(GetCurrentThread(), TOKEN_ALL_ACCESS, true, &hToken))
+	{
+		WRITE_DEBUG_MSG_WITH_GETLASTERROR(_T("OpenThreadToken failed"));
+		RpcRevertToSelf();
+		LocalFree(pSecurityDescriptor);
+		return false;
+	}
+
+	GENERIC_MAPPING mapping;
+	mapping.GenericRead = FILE_GENERIC_READ;
+	mapping.GenericExecute = FILE_GENERIC_EXECUTE;
+	mapping.GenericWrite = FILE_GENERIC_WRITE;
+	mapping.GenericAll = FILE_ALL_ACCESS;
+
+	DWORD dwAccessDesired = FILE_GENERIC_READ;
+	MapGenericMask(&dwAccessDesired, &mapping);
+
+	DWORD dwAccessGranted;
+	BOOL bResult;
+	BOOL bAccessStatus = FALSE;
+	PRIVILEGE_SET PrivilegeSet;
+	DWORD dwPrivSetSize = sizeof(PRIVILEGE_SET);
+
+	PrivilegeSet.PrivilegeCount = 0;
+	PrivilegeSet.Control = 0;
+	bResult = AccessCheck(pSecurityDescriptor, hToken, dwAccessDesired, &mapping, &PrivilegeSet, &dwPrivSetSize, &dwAccessGranted, &bAccessStatus);
+	if (!bResult)
+	{
+		WRITE_DEBUG_MSG_WITH_GETLASTERROR(_T("AccessCheck failed"));
+	}
+
+	WRITE_DEBUG_MSG_WITH_STATUS(_T("AccessCheck returned "), bAccessStatus);
+
+	RpcRevertToSelf();
+	LocalFree(pSecurityDescriptor);
+	CloseHandle(hToken);
+	return bAccessStatus;
+}
+
 RpcCallPolicy getMatchingPolicy(const RpcEventParameters& rpcEvent)
 {
 	const ConfigVector& configurationVector = config.getActiveConfigurationVector();
@@ -505,9 +588,10 @@ RpcCallPolicy getMatchingPolicy(const RpcEventParameters& rpcEvent)
 		const bool UUIDMatch = checkUUID(lc.uuid, rpcEvent.uuidString);
 		const bool AddressMatch = checkAddress(lc.source_addr, rpcEvent.sourceAddress);
 		const bool OpNumMatch = checkOpNum(lc.opnum, rpcEvent.OpNum);
-		const bool ProtocolMatch = checkProtocol(lc.protocol, rpcEvent.protocol);		
+		const bool ProtocolMatch = checkProtocol(lc.protocol, rpcEvent.protocol);	
+		const bool SIDMatch = checkIfSIDBelongstoSD(lc.sid);
 
-		if (UUIDMatch && AddressMatch && OpNumMatch && ProtocolMatch)
+		if (UUIDMatch && AddressMatch && OpNumMatch && ProtocolMatch && SIDMatch)
 		{
 			WRITE_DEBUG_MSG(_T("Rule Matched for RPC call."));
 
@@ -1029,7 +1113,6 @@ void processRPCCall(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 
 long WINAPI detouredNdrStubCall2(void* pThis, void* pChannel, PRPC_MESSAGE pRpcMsg, unsigned long* pdwStubPhase)
 {
-	WRITE_DEBUG_MSG(L"NdrStubCall2 Called!....");
 	processRPCCall((wchar_t*)_T("NdrStubCall2"), pRpcMsg);
 
 	return realNdrStubCall2(pThis, pChannel, pRpcMsg, pdwStubPhase);

@@ -3,7 +3,9 @@
 
 # I Need More Information
 Check out our [RPC Firewall](https://zeronetworks.com/blog/stopping_lateral_movement_via_the_rpc_firewall/) blog post or our [BlackHat talk](https://www.youtube.com/watch?v=hz_YPIMeBMI) to gain better understanding of RPC, RPC attacks and the solution: the RPC Firewall.
+
 Join our [|Zero| Labs](https://join.slack.com/t/minus273celsius/shared_invite/zt-1ulg46s8x-N0P9sEzmv3SbYTlDXVSf2g) Slack Community workspace for any questions, issues, or simlpy to shout out.
+
 We would love to hear from you also via email (if you are that type of person). Contact us at [support@zeronetworks.com](mailto:support@zeronetworks.com)
 
 # Get Started 
@@ -141,7 +143,7 @@ This file uses the following configuration options:
 |uuid:| Match a specific uuid | both RPC Firewall and Filters|
 |action:| Can be either **allow** or **block** (default allow)| both RPC Firewall and Filters|
 |audit:| Can be either **true** or *false*. Controls whether events are written to the *RPCFW* log (default false)| both RPC Firewall and Filters|
-|sid:| matches an authenticated user to a [security identifier](https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers). Could be specific user or group.  | RPC Filters only
+|sid:| matches an authenticated user to a [security identifier](https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers). Could be specific user or group.  | both RPC Firewall and Filters
 
 
 
