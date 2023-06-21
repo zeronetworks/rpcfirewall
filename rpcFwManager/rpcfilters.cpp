@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <array>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -562,38 +563,31 @@ struct ipv6Struct
 	UINT8 addr[16];
 };
 
-ipv6Struct createMinIPv6(UINT8* ipv6, int maskLength) {
-	ipv6Struct ipv6st = {0};
-	std::copy(ipv6, ipv6 + 16, ipv6st.addr);
+void createMinIPv6(std::array<UINT8,16> &ipv6, int maskLength) {
+
 	int fullBlocks = maskLength / 16;
 	int remainingBits = maskLength % 16;
 
 	for (int i = fullBlocks + 1; i < 8; ++i) {
-		ipv6st.addr[i] = 0;
+		ipv6[i] = 0;
 	}
 
 	int mask = (1 << (16 - remainingBits)) - 1;
-	ipv6st.addr[fullBlocks] &= ~mask;
-
-	return ipv6st;
+	ipv6[fullBlocks] &= ~mask;
 }
 
-ipv6Struct createMaxIPv6(UINT8* ipv6, int maskLength) {
-
-	ipv6Struct ipv6st;
-	std::copy(ipv6, ipv6 + 16, ipv6st.addr);
+void createMaxIPv6(std::array<UINT8, 16> &ipv6, int maskLength) {
 
 	int fullBlocks = maskLength / 16;
 	int remainingBits = maskLength % 16;
 
 	for (int i = fullBlocks + 1; i < 8; ++i) {
-		ipv6st.addr[i] = 0xFF;
+		ipv6[i] = 0xFF;
 	}
 
 	int mask = (1 << (16 - remainingBits)) - 1;
-	ipv6st.addr[fullBlocks] |= mask;
+	ipv6[fullBlocks] |= mask;
 
-	return ipv6st;
 }
 
 bool getMinMaxAddressesIpv6(const std::wstring& ipAddress) {
@@ -617,12 +611,18 @@ bool getMinMaxAddressesIpv6(const std::wstring& ipAddress) {
 		return false;
 	}
 	
-	UINT8 ipv6Array[16];
-	if (InetPton(AF_INET6, ipOnly.c_str(), ipv6Array) != 1) {
+	std::array<UINT8, 16> ipv6ArrayMin;
+	std::array<UINT8, 16> ipv6ArrayMax;
+
+	UINT8 ipv6arr[16];
+
+	if (InetPton(AF_INET6, ipOnly.c_str(), ipv6arr) != 1) {
 		throw std::invalid_argument("Invalid IPv6 address");
 	}
 
-	createMinIPv6(ipv6Array, prefixLength);
+	for (int i = 0; i < 16; i++) ipv6ArrayMax[i] = ipv6ArrayMin[i] = ipv6arr[i];
+
+	createMinIPv6(ipv6ArrayMin, prefixLength);
 
 	return true;
 }

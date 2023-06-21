@@ -52,7 +52,7 @@
 //
 // RPC Firewall protection added.%n%nProcess Information:%n%tProcess ID:%t%2%n%tImage Path:%t%1
 //
-#define PROCESS_PROTECTION_ADDED         ((DWORD)0x60020001L)
+#define PROCESS_PROTECTION_ADDED         ((DWORD)0x40020001L)
 
 //
 // MessageId: PROCESS_PROTECTION_REMOVED
@@ -61,7 +61,7 @@
 //
 // RPC Firewall protection removed.%n%nProcess Information:%n%tProcess ID:%t%2%n%tImage Path:%t%1
 //
-#define PROCESS_PROTECTION_REMOVED       ((DWORD)0x60020002L)
+#define PROCESS_PROTECTION_REMOVED       ((DWORD)0x40020002L)
 
 //
 // MessageId: RPC_SERVER_CALL
@@ -70,5 +70,5 @@
 //
 // An RPC server function was called.%n%nProcess Information:%n%tProcess ID:%t%2%n%tImage Path:%t%3%n%tRPCRT_Func:%t%1%n%nNetwork Information:%n%tProtocol:%t%4%n%tEndpoint:%t%5%n%tClient Network Address:%t%6%n%tClient Port:%t%12%n%tServer Network Address:%t%13%n%tServer Port:%t%14%nRPC Information:%n%tInterfaceUuid:%t%7%n%tOpNum:%t%t%8%n%nSubject:%n%tSecurity ID:%t%9%n%nDetailed Authentication Information:%n%tAuthentication Level:%t%10%n%tAuthentication Service:%t%11
 //
-#define RPC_SERVER_CALL                  ((DWORD)0x60020003L)
+#define RPC_SERVER_CALL                  ((DWORD)0x40020003L)
 
