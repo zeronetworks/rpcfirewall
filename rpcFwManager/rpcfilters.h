@@ -17,7 +17,7 @@ struct LineConfig
 {
 	UUIDFilter uuid;
 	OpNumFilter opnum;
-	AddressFilter source_addr;
+	AddressFilter min_addr;
 	RpcCallPolicy policy;
 	SIDFilter sid;
 	protocolFilter protocol;

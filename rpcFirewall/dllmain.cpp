@@ -257,6 +257,79 @@ std::wstring convertAuthSvcToString(unsigned long authSvc)
 	return TEXT("UNKNOWN");
 }
 
+bool isIpv4Addr(const std::wstring& testIp)
+{
+	UINT32 ipv4;
+
+	if (InetPton(AF_INET, testIp.c_str(), &ipv4) <= 0) return false;
+
+	return true;
+}
+
+bool isIPv4CIDR(const std::wstring& testIp)
+{
+	UINT32 ipv4;
+
+	size_t slashPos = testIp.find(L"/");
+	if (slashPos == std::string::npos) {
+		return false;
+	}
+
+	unsigned int prefixLength;
+
+	try {
+		prefixLength = std::stoi(testIp.substr(slashPos + 1));
+	}
+	catch (const std::exception&) {
+		return false;
+	}
+
+	std::wstring ipOnly = testIp.substr(0, slashPos);
+	if (!isIpv4Addr(ipOnly) || prefixLength > 32)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool isIpv6Address(const std::wstring& testIp)
+{
+	BYTE ipv6[16];
+
+	if (InetPton(AF_INET6, testIp.c_str(), &ipv6) <= 0) return false;
+
+	return true;
+
+}
+
+bool isIPv6CIDR(const std::wstring& testIp)
+{
+	UINT8 ipv6[16];
+
+	size_t slashPos = testIp.find(L"/");
+	if (slashPos == std::string::npos) {
+		return false;
+	}
+
+	unsigned int prefixLength;
+
+	try {
+		prefixLength = std::stoi(testIp.substr(slashPos + 1));
+	}
+	catch (const std::exception&) {
+		return false;
+	}
+
+	std::wstring ipOnly = testIp.substr(0, slashPos);
+	if (!isIpv6Address(ipOnly) || prefixLength > 128)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 std::tuple<size_t, size_t, bool> getConfigOffsets(std::string confStr)
 {
 	size_t start_pos = confStr.find("!start!");
@@ -330,11 +403,130 @@ OpNumFilter extractOpNumFilterFromConfigLine(const std::wstring& confLine)
 	}
 }
 
-AddressFilter extractAddressFromConfigLine(const std::wstring& confLine)
+unsigned long Ipv4StringToNumber(const std::wstring &ipv4)
+{
+	unsigned long ipv4Number;
+	InetPton(AF_INET, ipv4.c_str(), &ipv4Number);
+	return ntohl(ipv4Number);
+}
+
+AddressRangeIpv4 getMinMaxAddressesIPv4(const std::wstring& ipAddressCIDR) {
+	
+	size_t slashPos = ipAddressCIDR.find(L"/");
+	if (slashPos == std::string::npos) {
+		return AddressRangeIpv4{};
+	}
+
+	unsigned int prefixLength;
+
+	try {
+		prefixLength = std::stoi(ipAddressCIDR.substr(slashPos + 1));
+	}
+	catch (const std::exception&) {
+		return AddressRangeIpv4{};
+	}
+
+	std::wstring ipOnly = ipAddressCIDR.substr(0, slashPos);
+	if (!isIpv4Addr(ipOnly) || prefixLength > 32)
+	{
+		return AddressRangeIpv4{};
+	}
+
+	 unsigned long baseAddress = Ipv4StringToNumber(ipOnly);
+
+	// Calculate the minimum and maximum addresses
+	unsigned long mask = static_cast<unsigned long>(std::pow(2, 32 - prefixLength)) - 1;
+	unsigned long minAddress = baseAddress & ~mask;
+	unsigned long maxAddress = baseAddress | mask;
+
+	AddressRangeIpv4 aripv4;
+	aripv4.minAddr = minAddress;
+	aripv4.maxAddr = maxAddress;
+	return aripv4;
+
+}
+
+AddressRangeIpv6 getMinMaxAddressesIpv6(const std::wstring& ipAddress) {
+	size_t slashPos = ipAddress.find(L"/");
+	if (slashPos == std::string::npos) {
+		return AddressRangeIpv6{};
+	}
+
+	unsigned int prefixLength;
+
+	try {
+		prefixLength = std::stoi(ipAddress.substr(slashPos + 1));
+	}
+	catch (const std::exception&) {
+		return AddressRangeIpv6{};
+	}
+
+	std::wstring ipOnly = ipAddress.substr(0, slashPos);
+	if (!isIpv6Address(ipOnly) || prefixLength > 128)
+	{
+		return AddressRangeIpv6{};
+	}
+	sockaddr_in6 sa;
+	int size = sizeof(sa);
+	if (InetPton(AF_INET6, ipOnly.c_str(), &(sa.sin6_addr)) != 1) {
+		throw std::invalid_argument("Invalid IPv6 address");
+	}
+
+	// Convert the IPv6 address to two 64-bit unsigned integers
+	unsigned __int64 highAddress = static_cast<unsigned __int64>(sa.sin6_addr.u.Word[0]) << 48 |
+		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[1]) << 32 |
+		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[2]) << 16 |
+		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[3]);
+
+	unsigned __int64 lowAddress = static_cast<unsigned __int64>(sa.sin6_addr.u.Word[4]) << 48 |
+		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[5]) << 32 |
+		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[6]) << 16 |
+		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[7]);
+
+	// Calculate the mask
+	unsigned __int64 mask = (static_cast<unsigned __int64>(1) << (128 - prefixLength)) - 1;
+
+	// Calculate the minimum and maximum addresses
+	unsigned __int64 minAddress = (highAddress & ~mask) | (lowAddress & mask);
+	unsigned __int64 maxAddress = (highAddress | ~mask) | (lowAddress & ~mask);
+
+	AddressRangeIpv6 aripv6;
+	aripv6.minAddr = minAddress;
+	aripv6.maxAddr = maxAddress;
+	return aripv6;
+}
+
+
+AddressRangeFilter extractAddressFromConfigLine(const std::wstring& confLine)
 {
 	const std::wstring address = extractKeyValueFromConfigLine(confLine, _T("addr:"));
+	AddressRange addrRange = AddressRange{};
 
-	return address.empty() ? AddressFilter{} : AddressFilter{ address };
+	if (!address.empty())
+	{
+		if (isIPv4CIDR(address))
+		{
+			addrRange.ipv4 = getMinMaxAddressesIPv4(address);
+			addrRange.ipv6 = AddressRangeIpv6{};
+		}
+		else if (isIPv6CIDR(address))
+		{
+			//TODO: IPV6 Stuff
+		}
+		else if (isIpv4Addr(address))
+		{
+			unsigned long addrNum = Ipv4StringToNumber(address);
+			
+			addrRange.ipv4->minAddr = addrNum;
+			addrRange.ipv4->maxAddr = addrNum;
+			addrRange.ipv6 = AddressRangeIpv6{};
+		}
+		else if (isIpv6Address(address))
+		{
+			//TODO: IPV6 Stuff
+		}
+	}
+	return AddressRangeFilter{ addrRange };
 }
 
 bool extractActionFromConfigLine(const std::wstring& confLine)
@@ -416,7 +608,7 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 
 				lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
 				lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
-				lineConfig.source_addr = extractAddressFromConfigLine(confLineString);
+				//lineConfig.min_addr = extractAddressFromConfigLine(confLineString);
 				lineConfig.policy = extractPolicyFromConfigLine(confLineString);
 				lineConfig.verbose = extractVerboseFromConfigLine(confLineString);
 				lineConfig.protocol = extractProtocolFromConfigLine(confLineString);
@@ -476,14 +668,16 @@ bool checkOpNum(const OpNumFilter& opNumFilter, const std::wstring& opNumString)
 	return opNumFilter == std::stoi(opNumString);
 }
 
-bool checkAddress(const AddressFilter& addrFilter, const std::wstring& srcAddr)
+bool checkAddress(const AddressRangeFilter& addrRangeFilter, const std::wstring& srcAddr)
 {
-	if (!addrFilter.has_value())
+	if (!addrRangeFilter.has_value())
 	{
 		return true;
 	}
 	
-	return addrFilter == srcAddr;
+	//TODO:  Update this code to fir the AddressRangeFilter...
+	return false;
+	//return addrRangeFilter == srcAddr;
 }
 
 
@@ -586,7 +780,7 @@ RpcCallPolicy getMatchingPolicy(const RpcEventParameters& rpcEvent)
 	for (const LineConfig& lc : configurationVector)
 	{
 		const bool UUIDMatch = checkUUID(lc.uuid, rpcEvent.uuidString);
-		const bool AddressMatch = checkAddress(lc.source_addr, rpcEvent.sourceAddress);
+		const bool AddressMatch = checkAddress(lc.addr, rpcEvent.sourceAddress);
 		const bool OpNumMatch = checkOpNum(lc.opnum, rpcEvent.OpNum);
 		const bool ProtocolMatch = checkProtocol(lc.protocol, rpcEvent.protocol);	
 		const bool SIDMatch = checkIfSIDBelongstoSD(lc.sid);
