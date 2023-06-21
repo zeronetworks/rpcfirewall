@@ -139,7 +139,7 @@ This file uses the following configuration options:
 |opnum:| Match a RPC opnum | RPC Firewall|
 |verbose:| Can be either **true** or *false*. When true, outputs debug informaiton for specific RPC calls (default false)| RPC Firewall|
 |prot:| Matches the used protocol to any of the [protocol sequence constants](https://docs.microsoft.com/en-us/windows/win32/rpc/protocol-sequence-constants)| both RPC Firewall and Filters|
-|addr:| Match a remote IP address (IPv4 or IPv6)| RPC Firewall and partially by RPC Filters, [read more here](#using-rpc-firewall-or-rpc-filters)|
+|addr:| Match a remote IP address (IPv4 or IPv6, including CIDR)| RPC Firewall and partially by RPC Filters, [read more here](#using-rpc-firewall-or-rpc-filters)|
 |uuid:| Match a specific uuid | both RPC Firewall and Filters|
 |action:| Can be either **allow** or **block** (default allow)| both RPC Firewall and Filters|
 |audit:| Can be either **true** or *false*. Controls whether events are written to the *RPCFW* log (default false)| both RPC Firewall and Filters|
