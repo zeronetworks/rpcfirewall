@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
-#include <array>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -558,79 +557,8 @@ FWPM_FILTER_CONDITION0 createIPv4CIDRCondition(std::wstring& remoteIPCIDR)
 	return ipv4Condition;
 }
 
-struct ipv6Struct
-{
-	UINT8 addr[16];
-};
-
-void createMinIPv6(std::array<UINT8,16> &ipv6, int maskLength) {
-
-	int fullBlocks = maskLength / 16;
-	int remainingBits = maskLength % 16;
-
-	for (int i = fullBlocks + 1; i < 8; ++i) {
-		ipv6[i] = 0;
-	}
-
-	int mask = (1 << (16 - remainingBits)) - 1;
-	ipv6[fullBlocks] &= ~mask;
-}
-
-void createMaxIPv6(std::array<UINT8, 16> &ipv6, int maskLength) {
-
-	int fullBlocks = maskLength / 16;
-	int remainingBits = maskLength % 16;
-
-	for (int i = fullBlocks + 1; i < 8; ++i) {
-		ipv6[i] = 0xFF;
-	}
-
-	int mask = (1 << (16 - remainingBits)) - 1;
-	ipv6[fullBlocks] |= mask;
-
-}
-
-bool getMinMaxAddressesIpv6(const std::wstring& ipAddress) {
-	size_t slashPos = ipAddress.find(L"/");
-	if (slashPos == std::string::npos) {
-		return false;
-	}
-
-	unsigned int prefixLength;
-
-	try {
-		prefixLength = std::stoi(ipAddress.substr(slashPos + 1));
-	}
-	catch (const std::exception&) {
-		return false;
-	}
-
-	std::wstring ipOnly = ipAddress.substr(0, slashPos);
-	if (!isIpv6Address(ipOnly) || prefixLength > 128)
-	{
-		return false;
-	}
-	
-	std::array<UINT8, 16> ipv6ArrayMin;
-	std::array<UINT8, 16> ipv6ArrayMax;
-
-	UINT8 ipv6arr[16];
-
-	if (InetPton(AF_INET6, ipOnly.c_str(), ipv6arr) != 1) {
-		throw std::invalid_argument("Invalid IPv6 address");
-	}
-
-	for (int i = 0; i < 16; i++) ipv6ArrayMax[i] = ipv6ArrayMin[i] = ipv6arr[i];
-
-	createMinIPv6(ipv6ArrayMin, prefixLength);
-
-	return true;
-}
-
-
 FWPM_FILTER_CONDITION0 createIPv6CIDRCondition(const std::wstring& remoteIPCIDR)
 {
-	getMinMaxAddressesIpv6(remoteIPCIDR);
 	std::wstring ipv6;
 	unsigned int prefixLength;
 
