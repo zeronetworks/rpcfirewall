@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <array>
 
 struct AddressRangeIpv4 {
 	uint32_t minAddr;
@@ -8,8 +9,8 @@ struct AddressRangeIpv4 {
 };
 
 struct AddressRangeIpv6 {
-	unsigned __int64 minAddr;
-	unsigned __int64 maxAddr;
+	std::array<UINT16,8> minAddr;
+	std::array<UINT16,8> maxAddr;
 };
 
 
@@ -18,7 +19,7 @@ struct AddressRange {
 	std::optional<AddressRangeIpv6> ipv6;
 };
 
-
+	
 using OpNumFilter = std::optional<DWORD>;
 using UUIDFilter = std::optional<std::wstring>;
 using AddressRangeFilter = std::optional<AddressRange>;

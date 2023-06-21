@@ -257,6 +257,90 @@ std::wstring convertAuthSvcToString(unsigned long authSvc)
 	return TEXT("UNKNOWN");
 }
 
+void createMinIPv6(std::array<UINT16, 8>& ipv6, int maskLength) {
+
+	int fullBlocks = maskLength / 16;
+	int remainingBits = maskLength % 16;
+
+	for (int i = fullBlocks + 1; i < 8; ++i) {
+		ipv6[i] = 0;
+	}
+
+	int mask = (1 << (16 - remainingBits)) - 1;
+	ipv6[fullBlocks] &= ~mask;
+}
+
+void createMaxIPv6(std::array<UINT16, 8>& ipv6, int maskLength) {
+
+	int fullBlocks = maskLength / 16;
+	int remainingBits = maskLength % 16;
+
+	for (int i = fullBlocks + 1; i < 8; ++i) {
+		ipv6[i] = 0xFFFF;
+	}
+
+	int mask = (1 << (16 - remainingBits)) - 1;
+	ipv6[fullBlocks] |= mask;
+
+}
+
+bool IsAddress1SmallerThanAddress2(std::array<UINT16, 8>& addr1, std::array<UINT16, 8>& addr2)
+{
+	for (int i = 0; i < 8; i++)
+	{
+		if (addr1[i] < addr2[i])
+		{	
+			return true;
+		}
+	}
+	return false;
+}
+
+bool IsAddress1BiggerThanAddress2(std::array<UINT16, 8>& addr1, std::array<UINT16, 8>& addr2)
+{
+	for (int i = 0; i < 8; i++)
+	{
+		if (addr1[i] > addr2[i])
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool IsAddress1BiggerThanAddress2(const std::wstring &addr1, std::array<UINT16, 8>& addr2)
+{
+	UINT8 ipv6arr[16];
+	std::array<UINT16, 8> ipv6Arr16 = {0};
+
+	if (InetPton(AF_INET6, addr1.c_str(), ipv6arr) == 1)
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			ipv6Arr16[i] = ipv6arr[2 * i] * 256 + ipv6arr[2 * i + 1];
+		}
+
+	}
+
+	return IsAddress1BiggerThanAddress2(ipv6Arr16, addr2);
+}
+
+bool IsAddress1SmallerThanAddress2(const std::wstring& addr1, std::array<UINT16, 8>& addr2)
+{
+	UINT8 ipv6arr[16];
+	std::array<UINT16, 8> ipv6Arr16 = { 0 };
+
+	if (InetPton(AF_INET6, addr1.c_str(), ipv6arr) == 1)
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			ipv6Arr16[i] = ipv6arr[2 * i] * 256 + ipv6arr[2 * i + 1];
+		}
+	}
+
+	return IsAddress1SmallerThanAddress2(ipv6Arr16, addr2);
+}
+
 bool isIpv4Addr(const std::wstring& testIp)
 {
 	UINT32 ipv4;
@@ -447,58 +531,56 @@ AddressRangeIpv4 getMinMaxAddressesIPv4(const std::wstring& ipAddressCIDR) {
 }
 
 AddressRangeIpv6 getMinMaxAddressesIpv6(const std::wstring& ipAddress) {
+	UINT8 ipv6arr[16];
+	AddressRangeIpv6 aripv6 = {};
+
+
 	size_t slashPos = ipAddress.find(L"/");
 	if (slashPos == std::string::npos) {
-		return AddressRangeIpv6{};
-	}
+		//regular address
+		if (InetPton(AF_INET6, ipAddress.c_str(), ipv6arr) == 1) 
+		{
+			for (int i = 0; i < 8; i++)
+			{
+				aripv6.minAddr[i] = aripv6.maxAddr[i] = ipv6arr[2 * i] * 256 + ipv6arr[2 * i + 1];
+			}
 
-	unsigned int prefixLength;
-
-	try {
-		prefixLength = std::stoi(ipAddress.substr(slashPos + 1));
+		}
 	}
-	catch (const std::exception&) {
-		return AddressRangeIpv6{};
-	}
-
-	std::wstring ipOnly = ipAddress.substr(0, slashPos);
-	if (!isIpv6Address(ipOnly) || prefixLength > 128)
+	else
 	{
-		return AddressRangeIpv6{};
+		unsigned int prefixLength;
+
+		try {
+			prefixLength = std::stoi(ipAddress.substr(slashPos + 1));
+		}
+		catch (const std::exception&) {
+			return AddressRangeIpv6{};
+		}
+
+		std::wstring ipOnly = ipAddress.substr(0, slashPos);
+		if (isIpv6Address(ipOnly) && prefixLength < 129)
+		{
+
+			if (InetPton(AF_INET6, ipOnly.c_str(), ipv6arr) == 1) {
+
+				for (int i = 0; i < 8; i++)
+				{
+					aripv6.minAddr[i] = aripv6.maxAddr[i] = ipv6arr[2 * i] * 256 + ipv6arr[2 * i + 1];
+				}
+
+				createMinIPv6(aripv6.minAddr, prefixLength);
+				createMaxIPv6(aripv6.maxAddr, prefixLength);
+			}
+		}
 	}
-	sockaddr_in6 sa;
-	int size = sizeof(sa);
-	if (InetPton(AF_INET6, ipOnly.c_str(), &(sa.sin6_addr)) != 1) {
-		throw std::invalid_argument("Invalid IPv6 address");
-	}
 
-	// Convert the IPv6 address to two 64-bit unsigned integers
-	unsigned __int64 highAddress = static_cast<unsigned __int64>(sa.sin6_addr.u.Word[0]) << 48 |
-		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[1]) << 32 |
-		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[2]) << 16 |
-		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[3]);
-
-	unsigned __int64 lowAddress = static_cast<unsigned __int64>(sa.sin6_addr.u.Word[4]) << 48 |
-		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[5]) << 32 |
-		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[6]) << 16 |
-		static_cast<unsigned __int64>(sa.sin6_addr.u.Word[7]);
-
-	// Calculate the mask
-	unsigned __int64 mask = (static_cast<unsigned __int64>(1) << (128 - prefixLength)) - 1;
-
-	// Calculate the minimum and maximum addresses
-	unsigned __int64 minAddress = (highAddress & ~mask) | (lowAddress & mask);
-	unsigned __int64 maxAddress = (highAddress | ~mask) | (lowAddress & ~mask);
-
-	AddressRangeIpv6 aripv6;
-	aripv6.minAddr = minAddress;
-	aripv6.maxAddr = maxAddress;
 	return aripv6;
 }
 
-
 AddressRangeFilter extractAddressFromConfigLine(const std::wstring& confLine)
 {
+	WRITE_DEBUG_MSG(L"Extracting address from config");
 	const std::wstring address = extractKeyValueFromConfigLine(confLine, _T("addr:"));
 	AddressRange addrRange = AddressRange{};
 
@@ -508,22 +590,30 @@ AddressRangeFilter extractAddressFromConfigLine(const std::wstring& confLine)
 		{
 			addrRange.ipv4 = getMinMaxAddressesIPv4(address);
 			addrRange.ipv6 = AddressRangeIpv6{};
+			WRITE_DEBUG_MSG_WITH_STATUS(L"Got IPv4 CIDR address with min value: ",addrRange.ipv4->minAddr);
 		}
 		else if (isIPv6CIDR(address))
 		{
-			//TODO: IPV6 Stuff
+			addrRange.ipv4 = AddressRangeIpv4{};
+			addrRange.ipv6 = getMinMaxAddressesIpv6(address);
+			WRITE_DEBUG_MSG(L"Got IPv6 CIDR address");
 		}
 		else if (isIpv4Addr(address))
 		{
 			unsigned long addrNum = Ipv4StringToNumber(address);
+			AddressRangeIpv4 aripv4;
+			aripv4.minAddr = addrNum;
+			aripv4.maxAddr = addrNum;
 			
-			addrRange.ipv4->minAddr = addrNum;
-			addrRange.ipv4->maxAddr = addrNum;
+			addrRange.ipv4 = aripv4;
+			WRITE_DEBUG_MSG_WITH_STATUS(L"Got regular IPv4 address with min value: ", addrRange.ipv4->minAddr);
 			addrRange.ipv6 = AddressRangeIpv6{};
 		}
 		else if (isIpv6Address(address))
 		{
-			//TODO: IPV6 Stuff
+			WRITE_DEBUG_MSG(L"Got IPv6 regular address");
+			addrRange.ipv4 = AddressRangeIpv4{};
+			addrRange.ipv6 = getMinMaxAddressesIpv6(address);
 		}
 	}
 	return AddressRangeFilter{ addrRange };
@@ -608,7 +698,7 @@ void loadPrivateBufferToPassiveVectorConfiguration()
 
 				lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
 				lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
-				//lineConfig.min_addr = extractAddressFromConfigLine(confLineString);
+				lineConfig.addr = extractAddressFromConfigLine(confLineString);
 				lineConfig.policy = extractPolicyFromConfigLine(confLineString);
 				lineConfig.verbose = extractVerboseFromConfigLine(confLineString);
 				lineConfig.protocol = extractProtocolFromConfigLine(confLineString);
@@ -670,14 +760,44 @@ bool checkOpNum(const OpNumFilter& opNumFilter, const std::wstring& opNumString)
 
 bool checkAddress(const AddressRangeFilter& addrRangeFilter, const std::wstring& srcAddr)
 {
+	WRITE_DEBUG_MSG(L"Checking address filter...");
 	if (!addrRangeFilter.has_value())
 	{
+		WRITE_DEBUG_MSG(L"address range has no value. Match.");
 		return true;
 	}
 	
-	//TODO:  Update this code to fir the AddressRangeFilter...
-	return false;
-	//return addrRangeFilter == srcAddr;
+	if (isIpv4Addr(srcAddr))
+	{
+		if (!(addrRangeFilter.value().ipv4.has_value()))
+		{
+			WRITE_DEBUG_MSG(L"Ipv4 Match because no ipv4 address to compare to...");
+			return true;
+		}
+
+		UINT32 srcAddrNum = Ipv4StringToNumber(srcAddr);
+		std::wstring msg = L"Checking if " + std::to_wstring(srcAddrNum) + L" is between " + std::to_wstring(addrRangeFilter.value().ipv4.value().minAddr) + L" and " + std::to_wstring(addrRangeFilter.value().ipv4.value().maxAddr);
+		WRITE_DEBUG_MSG (msg.c_str());
+		return (srcAddrNum >= addrRangeFilter.value().ipv4.value().minAddr) && (srcAddrNum <= addrRangeFilter.value().ipv4.value().maxAddr);
+		
+	}
+
+	if (isIpv6Address(srcAddr))
+	{
+		if (!(addrRangeFilter.value().ipv6.has_value()))
+		{
+			WRITE_DEBUG_MSG(L"IPv6 has no value. Match.");
+			return true;
+		}
+		AddressRangeIpv6 addrRangeIpv6 = addrRangeFilter.value().ipv6.value();
+
+		WRITE_DEBUG_MSG(L"Checking if IPv6 is in range...");
+		WRITE_DEBUG_MSG(std::wstring(L"received address: ") + srcAddr);
+
+		return !(IsAddress1BiggerThanAddress2(srcAddr, addrRangeIpv6.maxAddr) || IsAddress1SmallerThanAddress2(srcAddr, addrRangeIpv6.minAddr));
+	}
+
+	return true;
 }
 
 
