@@ -2,9 +2,26 @@
 
 #include <optional>
 
+struct AddressRangeIpv4 {
+	uint32_t minAddr;
+	uint32_t maxAddr;
+};
+
+struct AddressRangeIpv6 {
+	unsigned __int64 minAddr;
+	unsigned __int64 maxAddr;
+};
+
+
+struct AddressRange {
+	std::optional<AddressRangeIpv4> ipv4;
+	std::optional<AddressRangeIpv6> ipv6;
+};
+
+
 using OpNumFilter = std::optional<DWORD>;
 using UUIDFilter = std::optional<std::wstring>;
-using AddressFilter = std::optional<std::wstring>;
+using AddressRangeFilter = std::optional<AddressRange>;
 using protocolFilter = std::optional<std::wstring>;
 using SIDFilter = std::optional<std::wstring>;
 
@@ -18,7 +35,7 @@ struct LineConfig
 {
 	UUIDFilter uuid;
 	OpNumFilter opnum;
-	AddressFilter source_addr;
+	AddressRangeFilter addr;
 	RpcCallPolicy policy;
 	protocolFilter protocol;
 	SIDFilter sid;

@@ -325,7 +325,7 @@ void createRPCFiltersFromConfiguration()
 			{
 				lineConfig.opnum = extractOpNumFilterFromConfigLine(confLineString);
 				lineConfig.uuid = extractUUIDFilterFromConfigLine(confLineString);
-				lineConfig.source_addr = extractAddressFromConfigLine(confLineString);
+				lineConfig.min_addr = extractAddressFromConfigLine(confLineString);
 				lineConfig.policy = extractPolicyFromConfigLine(confLineString);
 				lineConfig.sid = extractSIDFromConfigLine(confLineString);
 				lineConfig.protocol = extractProtoclFromConfigLine(confLineString);
