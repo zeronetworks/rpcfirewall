@@ -2,7 +2,7 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/zeronetworks/rpcfirewall/total)
 
 # I Need More Information
-Check out our [RPC Firewall](https://zeronetworks.com/blog/stopping_lateral_movement_via_the_rpc_firewall/) blog post or our [BlackHat talk](https://www.youtube.com/watch?v=hz_YPIMeBMI) to gain better understanding of RPC, RPC attacks and the solution: the RPC Firewall.
+Check out our [RPC Firewall](https://zeronetworks.com/blog/the-ransomware-kill-switch-becomes-even-more-deadly-the-rpc-firewall-2-0-released/) blog post or our [BlackHat talk](https://www.youtube.com/watch?v=hz_YPIMeBMI) to gain better understanding of RPC, RPC attacks and the solution: the RPC Firewall.
 
 Join our [|Zero| Labs](https://join.slack.com/t/minus273celsius/shared_invite/zt-1ulg46s8x-N0P9sEzmv3SbYTlDXVSf2g) Slack Community workspace for any questions, issues, or simlpy to shout out.
 
