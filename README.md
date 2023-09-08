@@ -61,6 +61,7 @@ It is made up from 3 components:
 While there are pros and cons for using each method, there are a couple of major benefits for using *RPC Firewall* which require special attention. These are:
 1. **Granularity**: The RPC Firewall is applied for each RPC call, and can be used to create more granular controls for specific RPC functions. 
 2. **Source Address Identification**: The *RPC Firewall* is better at determining the source address of the caller. *RPC Filters* cannot identify the source address of calls made over named pipes (SMB), which means **RPC filtering rules will fail for RPC calls made over named pipes!!!**
+3. **Bugs!**: RPC Filters suffers from various bugs which Microsoft are not enthusiastic on fixing. A couple of examples are: IP ranges don't work, and you can't apply a "catch all" filter, as it could damadge several Domain Controller services such as NetLogon. 
 
 On the other hand, *RPC Filters* are greate for bulk allow or deny of entire UUIDs, as they do so without any issues. 
 
