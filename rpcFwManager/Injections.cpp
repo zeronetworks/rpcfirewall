@@ -200,6 +200,11 @@ ProcVector getRelevantProcVector(DWORD pid, std::wstring& pName)
 			{
 				procVector.push_back(std::make_pair(pe32.th32ProcessID, pe32.szExeFile));
 			}
+			else if(compareStringsCaseinsensitive(pe32.szExeFile, L"SearchUI.exe") || compareStringsCaseinsensitive(pe32.szExeFile, L"ShellExperienceHost.exe"))
+			{
+				//Skipping process based on name
+				outputMessage(L"Skipping process based on name", pe32.th32ProcessID);
+			}
 			else if (pid == 0)
 			{
 				procVector.push_back(std::make_pair(pe32.th32ProcessID, pe32.szExeFile));
