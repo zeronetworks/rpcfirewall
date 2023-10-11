@@ -434,6 +434,9 @@ void serviceInstall(DWORD startType)
 		return;
 	}
 
+	TCHAR szPathWithQuotes[MAX_PATH + 2]; // +2 for the quotes
+	_stprintf_s(szPathWithQuotes, MAX_PATH + 2, L"\"%s\"", szPath);
+
 	serviceHandleWrapper schService;
 
 	schService.h = CreateService(
@@ -444,7 +447,7 @@ void serviceInstall(DWORD startType)
 		SERVICE_WIN32_OWN_PROCESS, // service type 
 		SERVICE_DEMAND_START,      // start type 
 		SERVICE_ERROR_NORMAL,      // error control type 
-		szPath,                    // path to service's binary 
+		szPathWithQuotes,                    // path to service's binary 
 		NULL,                      // no load ordering group 
 		NULL,                      // no tag identifier 
 		NULL,                      // no dependencies 
