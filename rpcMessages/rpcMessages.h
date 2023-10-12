@@ -32,6 +32,7 @@ struct RpcEventParameters
 	std::wstring clientName;
 	std::wstring authnLevel;
 	std::wstring authnSvc;
+	std::wstring clientSID;
 };
 
 DllExport bool deleteEventSource();
