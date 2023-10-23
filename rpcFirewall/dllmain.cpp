@@ -622,7 +622,6 @@ AddressRangeFilter extractAddressFromConfigLine(const std::wstring& confLine)
 bool extractActionFromConfigLine(const std::wstring& confLine)
 {
 	std::wstring action = extractKeyValueFromConfigLine(confLine, _T("action:"));
-
 	return action.find(_T("block")) == std::string::npos;
 }
 
@@ -832,9 +831,8 @@ bool checkIfSIDBelongstoSD(SIDFilter sidFilter)
 
 	std::wstring securityDescriptorString = L"O:BAG:BAD:(A;;FA;;;" + sidFilter.value() + L")";
 
-	PSECURITY_DESCRIPTOR pSecurityDescriptor = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
-
-
+	PSECURITY_DESCRIPTOR pSecurityDescriptor = nullptr;
+	
 	if (!ConvertStringSecurityDescriptorToSecurityDescriptorW(securityDescriptorString.c_str(),
 		SDDL_REVISION_1, &pSecurityDescriptor, nullptr))
 	{
