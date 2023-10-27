@@ -246,6 +246,7 @@ std::wstring convertAuthSvcToString(unsigned long authSvc)
 	{
 	case RPC_C_AUTHN_DPA: return TEXT("DPA");
 	case RPC_C_AUTHN_GSS_KERBEROS: return TEXT("KERBEROS");
+	case 68: return TEXT("NETLOGON");
 	case RPC_C_AUTHN_GSS_NEGOTIATE: return TEXT("NEGOTIATE");
 	case RPC_C_AUTHN_GSS_SCHANNEL: return TEXT("SCHANNEL");
 	case RPC_C_AUTHN_MQ: return TEXT("MQ");
