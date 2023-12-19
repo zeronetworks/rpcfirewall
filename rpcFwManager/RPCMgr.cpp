@@ -475,6 +475,9 @@ void cmdStatusRPCFW()
 
 	outputMessage(L"\n");
 	printProcessesWithRPCFW();
+	outputMessage(L"\n");
+	printProtectedProcesses();
+
 
 	outputMessage(L"\n\tconfiguration:");
 	outputMessage(L"\t----------------------");

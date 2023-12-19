@@ -3,6 +3,8 @@
 
 typedef std::vector<std::pair<DWORD, std::wstring>> ProcVector;
 
+typedef std::vector<std::tuple<DWORD, std::wstring, DWORD>> ProcProtectionStatusVector;
+
 void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 
 	HANDLE hProcess = OpenProcess(MAXIMUM_ALLOWED, false, processID);
@@ -138,7 +140,41 @@ void classicHookRPCProcesses(DWORD processID, wchar_t* dllToInject)
 	}
 }
 
-ProcVector getProtectedProcesses()
+ProcProtectionStatusVector getProtectedProcesses()
+{
+	ProcProtectionStatusVector procVector;
+
+	PROCESSENTRY32W pe32;
+	pe32.dwSize = sizeof(PROCESSENTRY32W);
+
+	HANDLE hTool32 = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	bool bProcess = Process32FirstW(hTool32, &pe32);
+
+	if (bProcess == true) {
+		while ((Process32Next(hTool32, &pe32)) == TRUE)
+		{
+			HANDLE ph = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pe32.th32ProcessID);
+			if (ph != nullptr)
+			{
+				PROCESS_PROTECTION_LEVEL_INFORMATION ppli;
+				if (GetProcessInformation(ph, ProcessProtectionLevelInfo, &ppli, sizeof(PROCESS_PROTECTION_LEVEL_INFORMATION)))
+				{
+					if (ppli.ProtectionLevel < PROTECTION_LEVEL_NONE)
+					{
+						procVector.push_back(std::make_tuple(pe32.th32ProcessID, pe32.szExeFile, ppli.ProtectionLevel));
+					}
+
+				}
+				CloseHandle(ph);
+			}
+		}
+	}
+	CloseHandle(hTool32);
+
+	return procVector;
+}
+
+ProcVector getRpcFirewalledProcesses()
 {
 	ProcVector procVector;
 
@@ -162,12 +198,62 @@ ProcVector getProtectedProcesses()
 	return procVector;
 }
 
-void printProcessesWithRPCFW()
+std::wstring GetProtectionLevelString(DWORD protectionLevel) {
+	switch (protectionLevel) {
+	case PROTECTION_LEVEL_WINTCB:
+		return L"WinTcb";
+	case PROTECTION_LEVEL_WINTCB_LIGHT:
+		return L"WinTcb Light";
+	case PROTECTION_LEVEL_WINDOWS:
+		return L"Windows";
+	case PROTECTION_LEVEL_WINDOWS_LIGHT:
+		return L"Windows Light";
+	case PROTECTION_LEVEL_ANTIMALWARE_LIGHT:
+		return L"AntiMalware Light";
+	case PROTECTION_LEVEL_LSA_LIGHT:
+		return L"LSA Light";
+	default:
+		return L"Unknown";
+	}
+}
+
+void printProtectedProcesses()
 {
-	outputMessage(L"\tProtected processes:");
+	outputMessage(L"\tProtected Processes (can't be injected with the RPCFW module)");
 	outputMessage(L"\t-------------------");
 
-	ProcVector procVec = getProtectedProcesses();
+	ProcProtectionStatusVector procVec = getProtectedProcesses();
+	size_t vSize = procVec.size();
+	size_t i = 0;
+
+	for (i; i < vSize; i++)
+	{
+		std::wstring pid = std::to_wstring(std::get<0>(procVec[i]));
+		std::wstring procName = std::get<1>(procVec[i]);
+		std::wstring protectionLevel = GetProtectionLevelString(std::get<2>(procVec[i]));
+		std::wstring tabs;
+		if (protectionLevel.length() < 8) {
+			tabs = L"\t\t\t";
+		}
+		else if (protectionLevel.length() < 16) {
+			tabs = L"\t\t";
+		}
+		else {
+			tabs = L"\t";
+		}
+
+
+		outputMessage((L"\t" + pid + L"\t" + protectionLevel + tabs + procName).c_str());
+	}
+	if (i == 0) outputMessage(L"\No protected processes found.");
+}
+
+void printProcessesWithRPCFW()
+{
+	outputMessage(L"\tRPC Firewalled processes:");
+	outputMessage(L"\t-------------------");
+
+	ProcVector procVec = getRpcFirewalledProcesses();
 	size_t vSize = procVec.size();
 	size_t i = 0;
 
@@ -189,6 +275,7 @@ ProcVector getRelevantProcVector(DWORD pid, std::wstring& pName)
 
 	PROCESSENTRY32W pe32;
 	pe32.dwSize = sizeof(PROCESSENTRY32W);
+
 
 	HANDLE hTool32 = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	bool bProcess = Process32FirstW(hTool32, &pe32);

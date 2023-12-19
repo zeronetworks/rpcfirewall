@@ -14,3 +14,5 @@ void crawlProcesses(DWORD, std::wstring& );
 void crawlProcesses(DWORD);
 
 void printProcessesWithRPCFW();
+
+void printProtectedProcesses();
