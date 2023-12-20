@@ -17,6 +17,7 @@
 #include <comdef.h>
 #include <sstream>
 #include <tuple>
+//#include <winternl.h>
 
 #include "Injections.h"
 #include "rpcMessages.h"

@@ -5,6 +5,8 @@ typedef std::vector<std::pair<DWORD, std::wstring>> ProcVector;
 
 typedef std::vector<std::tuple<DWORD, std::wstring, DWORD>> ProcProtectionStatusVector;
 
+PFN_NtQuerySystemInformation pGlobalNtQuerySystemInformation = nullptr;
+
 void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 
 	HANDLE hProcess = OpenProcess(MAXIMUM_ALLOWED, false, processID);
@@ -49,6 +51,80 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 
 	CloseHandle(hProcess);
 	CloseHandle(hRemoteThread);
+}
+
+bool armNtQuerySysInfoFunction()
+{
+	if (pGlobalNtQuerySystemInformation != nullptr) return true;
+
+	HMODULE hNtDll = LoadLibrary(L"ntdll.dll");
+	if (hNtDll == nullptr) {
+		outputMessage(L"Error: armNtQuerySysInfoFunction could not load ntdll.dll...\n");
+		return false;
+	}
+
+	pGlobalNtQuerySystemInformation = reinterpret_cast<PFN_NtQuerySystemInformation>(GetProcAddress(hNtDll, "NtQuerySystemInformation"));
+	if (pGlobalNtQuerySystemInformation == nullptr) {
+		outputMessage(L"Error: Couldn't find NtQuerySystemInformation function\n");
+		FreeLibrary(hNtDll);
+		return false;
+	}
+
+	return true;
+}
+
+bool isProcessSuspended(DWORD dwPID)
+{
+	if (!armNtQuerySysInfoFunction()) return false;
+
+	ULONG bufferSize = 0;
+	NTSTATUS status = pGlobalNtQuerySystemInformation(SystemProcessInformation, nullptr, 0, &bufferSize);
+	if (bufferSize == 0) {
+		outputMessage(L"Error: Couldn't call NtQuerySystemInformation with SystemProcessInformation\n");
+		return false;
+	}
+
+	// Allocate buffer to store thread information
+	PVOID buffer = malloc(bufferSize);
+	if (buffer == nullptr) {
+		outputMessage(L"Error: Failed to allocate buffer.\n");
+		return false;
+	}
+
+	// Query system information again with the allocated buffer
+	status = pGlobalNtQuerySystemInformation(SystemProcessInformation, buffer, bufferSize, nullptr);
+	if (!NT_SUCCESS(status)) {
+		outputMessage(L"Error: Failed to query NtQuerySystemInformation again.\n");
+		free(buffer);
+		return false;
+	}
+
+	// Process the thread information
+	PSYSTEM_PROCESS_INFORMATION pProcessInfo = static_cast<PSYSTEM_PROCESS_INFORMATION>(buffer);
+	while (pProcessInfo->NextEntryOffset > 0) {
+		if ((DWORD)pProcessInfo->UniqueProcessId == dwPID)
+		{
+			PSYSTEM_THREAD_INFORMATION pThreadInfo = (PSYSTEM_THREAD_INFORMATION)((PBYTE)pProcessInfo + sizeof(SYSTEM_PROCESS_INFORMATION));
+			for (int t = 2; t <= pProcessInfo->NumberOfThreads; t++)
+			{
+				if (pThreadInfo->ThreadState != 5 || pThreadInfo->WaitReason != 5)
+				{
+					free(buffer);
+					return false;
+				}
+				pThreadInfo = (PSYSTEM_THREAD_INFORMATION)((PBYTE)pThreadInfo + sizeof(SYSTEM_THREAD_INFORMATION));
+			}
+			outputMessage(L"Process is suspended, skipping.\n");
+			free(buffer);
+			return true;
+		}
+		// Move to the next thread information block
+		pProcessInfo = (PSYSTEM_PROCESS_INFORMATION)((PBYTE)pProcessInfo + pProcessInfo->NextEntryOffset);
+	}
+	// Clean up
+	free(buffer);
+	return false;
+
 }
 
 std::pair<bool,bool> containsRPCModules(DWORD dwPID)
@@ -130,6 +206,8 @@ bool containsRPCFWModule(DWORD dwPID)
 
 void classicHookRPCProcesses(DWORD processID, wchar_t* dllToInject)
 {
+	if (isProcessSuspended(processID)) return;
+
 	std::pair<bool,bool> containsModules = containsRPCModules(processID);
 	bool containsRPC = containsModules.first;
 	bool containsRPCFW = containsModules.second;
@@ -286,11 +364,6 @@ ProcVector getRelevantProcVector(DWORD pid, std::wstring& pName)
 			if (!pName.empty() && compareStringsCaseinsensitive(pe32.szExeFile, (wchar_t*)pName.c_str()))
 			{
 				procVector.push_back(std::make_pair(pe32.th32ProcessID, pe32.szExeFile));
-			}
-			else if(compareStringsCaseinsensitive(pe32.szExeFile, L"SearchUI.exe") || compareStringsCaseinsensitive(pe32.szExeFile, L"ShellExperienceHost.exe"))
-			{
-				//Skipping process based on name
-				outputMessage(L"Skipping process based on name", pe32.th32ProcessID);
 			}
 			else if (pid == 0)
 			{
