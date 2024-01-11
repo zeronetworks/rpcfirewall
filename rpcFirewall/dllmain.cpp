@@ -452,9 +452,27 @@ std::wstring extractKeyValueFromConfigLineInner(const std::wstring& confLine, co
 	return val;
 }
 
+void removeCharFromStrig(const std::wstring& chr, std::wstring& s)
+{
+	size_t pos = s.find(chr.c_str());
+	while (pos != std::wstring::npos) {
+		s.replace(pos, 1, L"");
+		pos = s.find(chr.c_str(), pos);
+	}
+}
+
+void removeEOLCharsFromString(std::wstring& s)
+{
+	removeCharFromStrig(L"\r", s);
+	removeCharFromStrig(L"\n", s);
+}
+
 std::wstring extractKeyValueFromConfigLine(const std::wstring& confLine, const std::wstring& key)
 {
 	std::wstring fixedConfLine = confLine;
+
+	removeEOLCharsFromString(fixedConfLine);
+	removeEOLCharsFromString(fixedConfLine);
 
 	fixedConfLine.replace(fixedConfLine.size() - 1, 1, _T(" "));
 
@@ -1417,6 +1435,7 @@ bool processRPCCallInternal(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 		byte buffSrc[0x80] = {0};
 		unsigned long buffersize = 0x80;
 
+		std::wstring srcAddrFromConnectionTmp;
 		std::wstring srcAddrFromConnection;
 		unsigned short srcPort = 0;
 
@@ -1427,7 +1446,14 @@ bool processRPCCallInternal(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 		}
 		else
 		{
-			srcPort = getAddressAndPortFromBuffer(srcAddrFromConnection, buffSrc);
+			srcPort = getAddressAndPortFromBuffer(srcAddrFromConnectionTmp, buffSrc);
+		}
+
+		// Removing possible excess chars from Ipv6 addresses
+		for (wchar_t ch : srcAddrFromConnectionTmp) {
+			if (ch != L'\\' && ch != L'[' && ch != L']') {
+				srcAddrFromConnection += ch;
+			}
 		}
 
 		byte buffDst[0x80] = { 0 };

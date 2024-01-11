@@ -141,6 +141,7 @@ void getHelp()
 	_tprintf(TEXT("Usage: rpcFwManager /<Command> [options] \n\n"));
 	_tprintf(TEXT("command:\n"));
 	_tprintf(TEXT("----------\n"));
+	_tprintf(TEXT("show\t\t - print various rpc related info (protected processes, for now...).\n"));
 	_tprintf(TEXT("install\t\t - configure EventLogs, auditing, put DLLs in the %%SystemRoot%%\\system32 folder.\n"));
 	_tprintf(TEXT("uninstall\t - undo installation changes.\n"));
 	_tprintf(TEXT("start [options/pid/process]\t- Apply RPC protections according to the configuration file.\n"));
@@ -475,14 +476,19 @@ void cmdStatusRPCFW()
 
 	outputMessage(L"\n");
 	printProcessesWithRPCFW();
-	outputMessage(L"\n");
-	printProtectedProcesses();
 
 
 	outputMessage(L"\n\tconfiguration:");
 	outputMessage(L"\t----------------------");
 	printMappedMeomryConfiguration();
 
+}
+
+void cmdShow()
+{
+	elevateCurrentProcessToSystem();
+	outputMessage(L"\n");
+	printProtectedProcesses();
 }
 
 void cmdStatus(std::wstring& param)
@@ -615,6 +621,10 @@ int _tmain(int argc, wchar_t* argv[])
 		else if (cmmd.find(_T("/status")) != std::string::npos)
 		{
 			cmdStatus(param);
+		}
+		else if (cmmd.find(_T("/show")) != std::string::npos)
+		{
+			cmdShow();
 		}
 		else
 		{
