@@ -607,7 +607,7 @@ AddressRangeFilter extractAddressFromConfigLine(const std::wstring& confLine)
 			aripv4.maxAddr = addrNum;
 			
 			addrRange.ipv4 = aripv4;
-			WRITE_DEBUG_MSG_WITH_STATUS(L"Got regular IPv4 address with min value: ", addrRange.ipv4->minAddr);
+			WRITE_DEBUG_MSG_WITH_STATUS(L"Got regular IPv4 address with value: ", addrRange.ipv4->minAddr);
 			addrRange.ipv6 = AddressRangeIpv6{};
 		}
 		else if (isIpv6Address(address))
