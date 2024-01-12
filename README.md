@@ -146,7 +146,11 @@ This file uses the following configuration options:
 |audit:| Can be either **true** or *false*. Controls whether events are written to the *RPCFW* log (default false)| both RPC Firewall and Filters|
 |sid:| matches an authenticated user to a [security identifier](https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/security-identifiers). Could be specific user or group.  | both RPC Firewall and Filters
 
-
+## Seeing More Things
+To see more RPC related "things", there is a _show_ command. For now, it only shows protected processes, which cannot be protected with the RPC firewall module. 
+```bash
+RpcFwManager.exe /show
+```
 
 The configuration order is important, as the first match determines the outcome of the RPC call.
 
