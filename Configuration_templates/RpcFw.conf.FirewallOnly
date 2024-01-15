@@ -1,25 +1,98 @@
-Open to Any - NRPC,EPM, BKRP, DRSR, DSSP,LSAD, 
-SAMR, NPSO, SRVS, WKST,FRS,DFSNM,BRWSA,NRPC:
+Open to Any - NRPC,EPM, BKRP, DRSR, DSSP, NPSO, SRVS, WKST,FRS,DFSNM,BRWSA:
 -------------------------------------------------------------------
-fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ab
-fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ac
 fw:action:allow audit:true uuid:f5cc5a18-4264-101a-8c59-08002b2f8426
-fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:16
-fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:21
-fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:28
-fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:45
-fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-46c3f87e345a opnum:0
 fw:action:allow audit:true uuid:f5cc59b4-4264-101a-8c59-08002b2f8426
 fw:action:allow audit:true uuid:5b821720-f63b-11d0-aad2-00c04fc324db
 fw:action:allow audit:true uuid:6BFFD098-A112-3610-9833-46C3F874532D
-fw:action:allow audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
 fw:action:allow audit:true uuid:51b836e8-484d-4d03-b0fc-22e265cb3f7b
 fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-012892020162
 fw:action:allow audit:true uuid:e1af8308-5d1f-11c9-91a4-08002b14a0fa
 fw:action:allow audit:true uuid:51b836e8-484d-4d03-b0fc-22e265cb3f7b
-fw:action:allow audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
 fw:action:allow audit:true uuid:3919286a-b10c-11d0-9ba8-00c04fd92ef5
+
+Block write operations NRPC 
+----------------------------
+fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:6
+fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:8
+fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:10
+fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:16
+fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:30
+fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:41
+fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:48
+fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:49
 fw:action:allow audit:true uuid:12345678-1234-abcd-ef00-01234567cffb
+
+Block corercive DFSNM operations
+------------------------------------
+fw:action:block audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673 opnum:12
+fw:action:block audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673 opnum:13
+fw:action:block audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673 opnum:23
+fw:action:block audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673 opnum:24
+fw:action:allow audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
+
+Allow Common SRVS operations
+----------------------------
+fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-46c3f87e345a opnum:0
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:16
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:21
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:28
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:45
+
+Block LSAD write operations
+--------------------------------------------
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:4
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:8
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:10
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:12
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:16
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:19
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:20
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:24
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:27
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:29
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:30
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:34
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:37
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:38
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:40
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:41
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:43
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:47
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:49
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:51
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:59
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ab opnum:74
+fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ab
+
+Block SAMR write operations, Allow the rest
+--------------------------------------------
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:2
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:9 
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:10 
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:12
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:14
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:21 
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:22 
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:23
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:24
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:26
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:29 
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:30 
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:31 
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:32
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:35
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:37
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:38 
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:45
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:50 
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:52
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:53
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:54
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:55
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:58
+fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:66
+fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ac
+
 
 DCSync Protecion: <edit the DC addresses to match your environemt!!>:
 -----------------------------------------------
@@ -27,9 +100,12 @@ fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 addr:<dc_addr1> action:allow audit:
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 addr:<dc_addr2> action:allow audit:true 
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:0 action:allow audit:true 
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:1 action:allow audit:true
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:13 action:allow audit:true
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:16 action:allow audit:true
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:12 action:allow audit:true 
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:19 action:allow audit:true 
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:29 action:allow audit:true 
+fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:30 action:allow audit:true 
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 action:block audit:true 
 
 Default block:
