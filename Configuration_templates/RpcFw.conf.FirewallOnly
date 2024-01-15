@@ -108,7 +108,6 @@ fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:12 action:allow audit:true
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:19 action:allow audit:true 
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:29 action:allow audit:true 
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:30 action:allow audit:true 
-fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 action:block audit:true 
 
 Default block:
 -----------------------------------------------
