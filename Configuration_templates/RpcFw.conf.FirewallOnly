@@ -13,6 +13,10 @@ Common DSSP operation
 --------------------------
 fw:action:allow audit:true uuid:3919286a-b10c-11d0-9ba8-00c04fd92ef5 opnum:0
 
+BackupKey allow
+-----------------
+fw:action:allow audit:true uuid:3dde7c30-165d-11d1-ab8f-00805f14db40 opnum:0
+
 Block write operations NRPC 
 ----------------------------
 fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:6
