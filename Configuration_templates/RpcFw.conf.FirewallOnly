@@ -19,7 +19,6 @@ fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:6
 fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:8
 fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:10
 fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:16
-fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:30
 fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:41
 fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:48
 fw:action:block audit:true uuid:12345678-1234-abcd-ef00-01234567cffb opnum:49
