@@ -9,14 +9,15 @@ PFN_NtQuerySystemInformation pGlobalNtQuerySystemInformation = nullptr;
 
 void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 
+	std::wstring wstr(dllToInject);
+	std::string szInjectionDLLName(wstr.begin(), wstr.end());
+
 	HANDLE hProcess = OpenProcess(MAXIMUM_ALLOWED, false, processID);
 	if (hProcess == nullptr)
 	{
 		_tprintf(TEXT("OpenProcess failed for pid %u: [%d]\n"), processID,GetLastError());
 		return;
 	}
-
-	const char* szInjectionDLLName = _bstr_t(dllToInject);
 
 	void* LLParam = (LPVOID)VirtualAllocEx(hProcess, nullptr, MAX_PATH, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 	if (LLParam == nullptr)
@@ -26,7 +27,7 @@ void hookProcessLoadLibrary(DWORD processID, WCHAR* dllToInject)  {
 		return;
 	}
 
-	if (WriteProcessMemory(hProcess, LLParam, szInjectionDLLName, strlen(szInjectionDLLName), 0) == 0)
+	if (WriteProcessMemory(hProcess, LLParam, szInjectionDLLName.c_str(), strlen(szInjectionDLLName.c_str()), 0) == 0)
 	{
 		_tprintf(TEXT("Error when calling WriteProcessMemory %d \n"), GetLastError());
 		CloseHandle(hProcess);
