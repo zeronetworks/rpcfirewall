@@ -1,5 +1,9 @@
 #include "stdafx.h"
 #include "common.h"
+#include <iostream>
+#include <iomanip>
+#include "iphlpapi.h"
+#include <algorithm>
 
 typedef std::vector<std::pair<DWORD, std::wstring>> ProcVector;
 
@@ -253,6 +257,19 @@ ProcProtectionStatusVector getProtectedProcesses()
 	return procVector;
 }
 
+std::wstring extractValueInBrackets(const std::wstring& str) {
+	std::wstring v;
+
+	size_t startPos = str.find(L'[');
+	if (startPos != std::wstring::npos) {
+		size_t endPos = str.find(L']', startPos);
+		if (endPos != std::wstring::npos) {
+			v = str.substr(startPos + 1, endPos - startPos - 1);
+		}
+	}
+	return v;
+}
+
 ProcVector getRpcFirewalledProcesses()
 {
 	ProcVector procVector;
@@ -292,7 +309,272 @@ std::wstring GetProtectionLevelString(DWORD protectionLevel) {
 	case PROTECTION_LEVEL_LSA_LIGHT:
 		return L"LSA Light";
 	default:
-		return L"Unknown";
+		return L"Unprotected";
+	}
+}
+
+std::wstring getProtectionStateByPid(DWORD pid)
+{
+	std::wstring pil;
+	HANDLE ph = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+	if (ph != nullptr)
+	{
+		PROCESS_PROTECTION_LEVEL_INFORMATION ppli;
+		if (GetProcessInformation(ph, ProcessProtectionLevelInfo, &ppli, sizeof(PROCESS_PROTECTION_LEVEL_INFORMATION)))
+		{
+			pil = GetProtectionLevelString(ppli.ProtectionLevel);
+		}
+		CloseHandle(ph);
+	}
+	return pil;
+}
+
+RpcInterface getRpcInterfacesFromParams(std::wstring uuid, std::wstring annotaion, std::wstring binding)
+{
+	RpcInterface* RpcInt = new RpcInterface();
+
+	RpcInt->uuid = uuid;
+	RpcInt->szAnnot = annotaion;
+	RpcInt->binding = binding;
+
+	return *RpcInt;
+}
+
+void getPIDForEndpoints(RpcInterfaceVector& rpcVector, PMIB_TCPTABLE_OWNER_PID pTcpTable)
+{
+	for (size_t rpcIntNumber = 0; rpcIntNumber < rpcVector.size(); ++rpcIntNumber)
+	{
+		RpcInterface& rpcInt = rpcVector[rpcIntNumber];
+
+		if (rpcInt.pid == 0)
+		{
+			std::wstring endpoint = extractValueInBrackets(rpcInt.binding);
+			if (endpoint.find(L"\\") != std::wstring::npos)
+			{
+				endpoint = L"\\\\." + endpoint;
+
+				HANDLE hNamedPipe = CreateFile(endpoint.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+
+				if (hNamedPipe != INVALID_HANDLE_VALUE) {
+
+					DWORD dwProcessId;
+					BOOL success = GetNamedPipeServerProcessId(hNamedPipe, &dwProcessId);
+					if (success)
+					{
+						rpcInt.pid = dwProcessId;
+					}
+					else
+					{
+						//_tprintf(TEXT("GetNamedPipeServerProcessId failed!\n"));
+					}
+
+					CloseHandle(hNamedPipe); // Close the handle when done
+				}
+				else {
+
+					//_tprintf(TEXT("Invalid handle!\n"));
+				}
+
+			}
+			else
+			{
+				wchar_t* endPtr;
+				unsigned long portVal = std::wcstoul(endpoint.c_str(), &endPtr, 10);
+
+				if (!endpoint.empty() && *endPtr == L'\0') {
+
+					for (DWORD i = 0; i < pTcpTable->dwNumEntries; ++i) {
+						if (pTcpTable->table[i].dwLocalPort == htons(portVal)) {
+							rpcInt.pid = pTcpTable->table[i].dwOwningPid;
+							break;
+						}
+					}
+				}
+
+			}
+
+			if (rpcInt.pid > 0) {
+				rpcInt.ppl = getProtectionStateByPid(rpcInt.pid);
+			}
+			else
+			{
+				//_tprintf(TEXT("Zero PID!\n"));
+			}
+		}
+	}
+}
+
+RpcInterfaceVector getRPCEndpointVector()
+{
+	RpcInterfaceVector intVector;
+	RpcBindingWrapper hRpc;
+	RPC_EP_INQ_HANDLE hInq = nullptr;
+	RpcStringWrapper szStringBinding;
+
+	RPC_STATUS rpcErr = RpcMgmtEpEltInqBegin(hRpc.binding,RPC_C_EP_ALL_ELTS,nullptr,NULL,nullptr,&hInq);
+
+	if (rpcErr != RPC_S_OK) {
+		_tprintf(TEXT("RpcMgmtEpEltInqBegin error: %d : %s\n"), rpcErr);
+	}
+	else
+	{
+		do {
+			RPC_IF_ID IfId;
+			RPC_IF_ID_VECTOR* pVector;
+			RPC_STATS_VECTOR* pStats;
+			RpcBindingWrapper hEnumBind;
+			UUID uuid;
+			RpcStringWrapper szAnnot;
+
+			rpcErr = RpcMgmtEpEltInqNext(hInq,&IfId,&hEnumBind.binding,&uuid,szAnnot.getRpcPtr());
+
+			if (rpcErr == RPC_S_OK) {
+				RpcStringWrapper uuidStr;
+				RpcStringWrapper comUUID;
+				RpcStringWrapper princName;
+
+				if (RpcBindingToStringBinding(hEnumBind.binding, uuidStr.getRpcPtr()) == RPC_S_OK) 
+				{
+					std::wstring wstrBind(uuidStr.str);
+
+					if (wstrBind.find(L"ncalrpc") == std::wstring::npos)
+					{
+
+						if (UuidToString(&(IfId.Uuid), uuidStr.getRpcPtr()) != RPC_S_OK) {
+								// Error...?
+						}
+	
+						if (UuidToString(&uuid, comUUID.getRpcPtr()) != RPC_S_OK) {
+
+							// Error...?
+						}
+
+						RpcBindingWrapper hIfidsBind;
+						rpcErr = RpcBindingFromStringBinding((RPC_WSTR)wstrBind.c_str(), &hIfidsBind.binding);
+
+						if (rpcErr != RPC_S_OK) {
+							// Error...?
+							continue;
+						}
+
+						if ((rpcErr = RpcMgmtInqIfIds(hIfidsBind.binding, &pVector)) == RPC_S_OK) {
+							unsigned int i;
+							for (i = 0; i < pVector->Count; i++) {
+								RpcStringWrapper localUuidStr;
+								UuidToString(&pVector->IfId[i]->Uuid, localUuidStr.getRpcPtr());
+
+								intVector.push_back(getRpcInterfacesFromParams(std::wstring(localUuidStr.str), std::wstring(szAnnot.str), wstrBind));
+
+								LPCWSTR szIfIIDInfo = NULL;
+							}
+							RpcIfIdVectorFree(&pVector);
+						}
+						else {
+							intVector.push_back(getRpcInterfacesFromParams(std::wstring(uuidStr.str), std::wstring(szAnnot.str), wstrBind));
+						}
+
+					}
+				}
+			}
+		} while (rpcErr != RPC_X_NO_MORE_ENTRIES);
+	}
+	return intVector;
+
+}
+
+void removeDuplicates(RpcInterfaceVector& rpcVector) {
+	// Iterate through the vector
+	for (size_t i = 0; i < rpcVector.size(); ++i) {
+		// Store current entry for comparison
+		RpcInterface& currentEntry = rpcVector[i];
+
+		// Iterate through the vector starting from the next entry
+		for (size_t j = i + 1; j < rpcVector.size(); ) {
+			// Check if pid, uuid, and binding are the same
+			if (currentEntry.pid == rpcVector[j].pid &&
+				currentEntry.uuid == rpcVector[j].uuid &&
+				currentEntry.binding == rpcVector[j].binding) {
+				// Erase duplicate entry
+				rpcVector.erase(rpcVector.begin() + j);
+			}
+			else {
+				// Move to the next entry
+				++j;
+			}
+		}
+	}
+}
+
+void fixZeroPIDEntriesInRpcVectorAndSort(RpcInterfaceVector& vec) {
+
+	std::sort(vec.begin(), vec.end(),
+		[](const RpcInterface& a, const RpcInterface& b) {
+			return a.pid < b.pid;
+		});
+
+	for (size_t i = 0; i < vec.size(); ++i) {
+		if (vec[i].pid == 0) {
+			for (size_t j = i + 1; j < vec.size(); ++j) {
+				if (vec[j].binding == vec[i].binding && vec[j].pid != 0) {
+					vec[i].pid = vec[j].pid;
+					vec[i].ppl = vec[j].ppl;
+					break;
+				}
+			}
+		}
+	}
+
+	removeDuplicates(vec);
+
+	std::sort(vec.begin(), vec.end(),
+		[](const RpcInterface& a, const RpcInterface& b) {
+			return a.pid < b.pid;
+		});
+}
+
+void printRPCEndpoints()
+{
+	WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+		// Bad...
+	}
+
+	DWORD dwSize = 0;
+	if (GetExtendedTcpTable(NULL, &dwSize, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0) != ERROR_INSUFFICIENT_BUFFER) {
+	}
+
+	std::vector<char> buffer(dwSize);
+	PMIB_TCPTABLE_OWNER_PID pTcpTable = reinterpret_cast<PMIB_TCPTABLE_OWNER_PID>(&buffer[0]);
+
+	// Retrieve TCP table
+	if (GetExtendedTcpTable(pTcpTable, &dwSize, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0) != NO_ERROR) {
+		//Bad...
+	}
+
+	RpcInterfaceVector vectorOfInterfaces = getRPCEndpointVector();
+
+	getPIDForEndpoints(vectorOfInterfaces, pTcpTable);
+
+	WSACleanup();
+
+	fixZeroPIDEntriesInRpcVectorAndSort(vectorOfInterfaces);
+
+	// Print the header row
+	std::wcout << std::setw(5) << L"PID,"
+		<< std::setw(10) << L"ProtectionLevel,"
+		<< std::setw(20) << L"Binding,"
+		<< std::setw(50) << L"UUID,"
+		<< std::setw(20) << L"Annotation"
+		<< std::endl;
+
+	// Print each RpcInterface as a row in the table
+	for (const RpcInterface& rpcInterface : vectorOfInterfaces) {
+		std::wcout << rpcInterface.pid << L","
+			<< std::setw(10) << rpcInterface.ppl << L","
+			<< std::setw(50) << rpcInterface.binding << L","
+			<< std::setw(40) << rpcInterface.uuid << L","
+			<< std::setw(20) << rpcInterface.szAnnot
+			<< std::endl;
 	}
 }
 

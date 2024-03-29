@@ -6,6 +6,18 @@ extern HANDLE globalMappedMemory;
 extern HANDLE globalUnprotectEvent;
 extern bool interactive;
 
+struct RpcInterface
+{
+	std::wstring binding;
+	std::wstring uuid;
+	std::wstring szAnnot;
+	std::wstring endpoint;
+	std::wstring ppl;
+	DWORD pid;
+};
+
+typedef std::vector<RpcInterface> RpcInterfaceVector;
+
 std::wstring getFullPathOfFile(const std::wstring&);
 
 void writeDebugMessage(const wchar_t*);

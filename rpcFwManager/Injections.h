@@ -7,6 +7,38 @@ typedef LONG KPRIORITY;
 #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
 #endif
 
+struct RpcStringWrapper
+{
+    RPC_WSTR* getRpcPtr()
+    {
+        return (RPC_WSTR*)&str;
+    }
+
+    ~RpcStringWrapper()
+    {
+        if (str != nullptr)
+        {
+            RpcStringFree(getRpcPtr());
+        }
+    }
+
+    wchar_t* str = nullptr;
+};
+
+struct RpcBindingWrapper
+{
+    ~RpcBindingWrapper()
+    {
+        if (binding != nullptr)
+        {
+            RpcBindingFree(&binding);
+        }
+    }
+
+    RPC_BINDING_HANDLE binding = nullptr;
+};
+
+
 typedef enum _SYSTEM_INFORMATION_CLASS {
     SystemBasicInformation = 0,
     SystemPerformanceInformation = 2,
@@ -91,5 +123,7 @@ void crawlProcesses(DWORD, std::wstring& );
 void crawlProcesses(DWORD);
 
 void printProcessesWithRPCFW();
+
+void printRPCEndpoints();
 
 void printProtectedProcesses();

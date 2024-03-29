@@ -484,11 +484,12 @@ void cmdStatusRPCFW()
 
 }
 
-void cmdShow()
+void cmdShowInterfaces()
 {
 	elevateCurrentProcessToSystem();
 	outputMessage(L"\n");
-	printProtectedProcesses();
+	printRPCEndpoints();
+	//	printProtectedProcesses();
 }
 
 void cmdStatus(std::wstring& param)
@@ -622,9 +623,9 @@ int _tmain(int argc, wchar_t* argv[])
 		{
 			cmdStatus(param);
 		}
-		else if (cmmd.find(_T("/show")) != std::string::npos)
+		else if (cmmd.find(_T("/int")) != std::string::npos)
 		{
-			cmdShow();
+			cmdShowInterfaces();
 		}
 		else
 		{
