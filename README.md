@@ -2,14 +2,14 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/zeronetworks/rpcfirewall/total)
 
 # I Need More Information
-Check out our [RPC Firewall](https://zeronetworks.com/blog/the-ransomware-kill-switch-becomes-even-more-deadly-the-rpc-firewall-2-0-released/) blog post or our [BlackHat talk](https://www.youtube.com/watch?v=hz_YPIMeBMI) to gain better understanding of RPC, RPC attacks and the solution: the RPC Firewall.
+Check out our [RPC Firewall](https://zeronetworks.com/blog/the-ransomware-kill-switch-becomes-even-more-deadly-the-rpc-firewall-2-0-released/) blog post or our [BlackHat talk](https://www.youtube.com/watch?v=hz_YPIMeBMI) to gain better understanding of RPC, RPC attacks, and the solution: RPC Firewall.
 
-Join our [|Zero| Labs](https://join.slack.com/t/minus273celsius/shared_invite/zt-1ulg46s8x-N0P9sEzmv3SbYTlDXVSf2g) Slack Community workspace for any questions, issues, or simlpy to shout out.
+Join our [|Zero| Labs](https://join.slack.com/t/minus273celsius/shared_invite/zt-1ulg46s8x-N0P9sEzmv3SbYTlDXVSf2g) Slack Community workspace for any questions, issues, or simply to shout out.
 
 We would love to hear from you also via email (if you are that type of person). Contact us at [support@zeronetworks.com](mailto:support@zeronetworks.com)
 
 # Get Started 
-The following tutorial shows basic installation and setup of the RPC Firewall, as well as a demo of how it protects against various RPC based attacks.
+The following tutorial shows basic installation and setup of RPC Firewall, as well as a demo of how it protects against various RPC-based attacks.
 
 [![RPC Firewall 2.0 Tutorial](https://img.youtube.com/vi/BNzfmYwkioY/0.jpg)](https://www.youtube.com/watch?v=BNzfmYwkioY)
 
@@ -23,7 +23,7 @@ DCSync attack? over RPC. Remote DCOM? over RPC. WMIC? over RPC. SharpHound? over
 Throughout this document, we will use the following terms: 
 * **RPC Firewall**: Refers to the actual RpcFirewall.dll, which is loaded into various RPC servers in order to protect them.
 * **RPC Filters**: Refers to the native Windows RPC filtering mechanism.
-* **RPCFW Configuration**: Refers to the RpcFw.conf file, which is used to control how the *RPC Firewall* and *RPC Filters* behave.
+* **RPCFW Configuration**: Refers to the RpcFw.conf file, which is used to control how *RPC Firewall* and *RPC Filters* behave.
 * **RPCFW Manager**: The command line interface, which gives users access to both *RPC Firewall* and *RPC Filters*
 
 # What is it used for?
@@ -49,7 +49,7 @@ Once a potentially malicious RPC call is detected, it is blocked and audited. Th
 
 To supplement protection, you can use the RPC Filtering capabilities, which are also supported via the RpcFwManager.exe.
 
-An example of such configuration can be found [here](./Configuration_templates/RpcFw.conf.BlockList).
+An example of such configuration can be found [here](./Configuration_templates/RpcFw.conf.FiltersOnly).
 
 # What are the RPC Firewall Components?
 It is made up from 3 components:
@@ -60,14 +60,14 @@ It is made up from 3 components:
 # Using RPC Firewall or RPC Filters?
 While there are pros and cons for using each method, there are a couple of major benefits for using *RPC Firewall* which require special attention. These are:
 1. **Granularity**: The RPC Firewall is applied for each RPC call, and can be used to create more granular controls for specific RPC functions. 
-2. **Source Address Identification**: The *RPC Firewall* is better at determining the source address of the caller. *RPC Filters* cannot identify the source address of calls made over named pipes (SMB), which means **RPC filtering rules will fail for RPC calls made over named pipes!!!**
+2. **Source Address Identification**: *RPC Firewall* is better at determining the source address of the caller. *RPC Filters* cannot identify the source address of calls made over named pipes (SMB), which means **RPC filtering rules will fail for RPC calls made over named pipes!!!**
 3. **Bugs!**: RPC Filters suffers from various bugs which Microsoft are not enthusiastic on fixing. A couple of examples are: IP ranges don't work, and you can't apply a "catch all" filter, as it could damadge several Domain Controller services such as NetLogon. 
 
 On the other hand, *RPC Filters* are greate for bulk allow or deny of entire UUIDs, as they do so without any issues. 
 
 # How to use?
 ## What's the status?
-Prior to running any command, it is recommended to check the status of the deployment. This could be acheived by issuing the '/status' command: 
+Prior to running any command, it is recommended to check the status of the deployment. This is done by issuing the '/status' command: 
 ```bash
 RpcFwManager.exe /status
 ```
@@ -75,42 +75,42 @@ RpcFwManager.exe /status
 This will show the status of both the *RPC Firewall* and the *RPC Filters*. This will output detailed information about the installation status, and also the running status of the deployment.
 
 ## The 'fw' / 'flt' suffixes
-Almost every command can be suffixed with *fw* or *flt* at the end. This tells the *RPCFW Manager* wether the command applied to the *RPC Firewall* ('fw'), *RPC Filters* ('flt') or both when not using any suffix.
+Almost every command can be suffixed with *fw* or *flt* at the end. This tells *RPCFW Manager* whether the command is applied to *RPC Firewall* ('fw'), *RPC Filters* ('flt') or both when not using any suffix.
 
 ## Installing / Uninstalling 
 Peform installation of the relevant feature (*RPC Filters* / *RPC FIrewall* / both). 
-* **RPC Firewall Installation**: Configures the envent log, drop relevant dlls into the %SystemRoot%\System32 folder, and configures the **RPCFW** application log for the Event Viewer. It also installs the "RPC Firewall" service, which will be used for persistency.
-* **RPC Filters Installation**: Enables the security audit of RPC events. These could be found under the Securit log, with event ID 5712. 
+* **RPC Firewall Installation**: Configures the event log, drop relevant dlls into the %SystemRoot%\System32 folder, and configures the **RPCFW** application log for the Event Viewer. It also installs the "RPC Firewall" service, which will be used for persistence.
+* **RPC Filters Installation**: Enables the security audit of RPC events. These can be found under the Securit log, with event ID 5712. 
 
-Make sure the event viewer is closed during install/uninstall. Also, it is good practice to stop & uninstall before installation, to make sure there aren't any previous versions installed.
+_Make sure the event viewer is closed during install/uninstall._ Also, it is good practice to stop & uninstall before installation, to make sure there aren't any previous versions installed.
 ```bash
 RpcFwManager.exe /stop
 RpcFwManager.exe /uninstall
 RpcFwManager.exe /install
 ```
 
-Uninstalling does the opposite. Also here it is good practive to 'stop' whatever is running prior.
+Uninstalling does the opposite. Also here it is good practice to ensure the service is stopped prior to uninstallation.
 ```bash
 RpcFwManager.exe /stop
 RpcFwManager.exe /uninstall
 ```
 
 ## Starting / Stopping 
-*RPC Filters*, by their nature, are applied systemwide, to any RPC server. Applying such filters is also persistent across reboots. 
-Any new or old process, will be protected by *RPC Filters*, according to the *RPCFW Configuration*.
+*RPC Filters*, by their nature, are applied system-wide, to any RPC server. Applying such filters is also persistent across reboots. 
+Any new or old process will be protected by *RPC Filters*, according to the *RPCFW Configuration*.
 
 *RPC Firewall* is injected and protects any RPC server process which is listening for remote RPC calls. 
-This is done by injecting the *RPC Firewall* into processes which load the RPCRT4.DLL (the RPC Runtime). Once loaded, the *RPC Firewall* detect whether the RPC server is listening for remote RPC calls. If not, it unloads itself.
+This is done by injecting *RPC Firewall* into processes which load the RPCRT4.DLL (the RPC Runtime). Once loaded, *RPC Firewall* will detect whether the RPC server is listening for remote RPC calls. If not, it unloads itself.
 If the process is a valid RPC server, the rpcFirewall starts to audit & monitor incoming RPC calls, according to the *RPCFW Configuration*.
 
-The recommended method to protect RPC services is by using the *'/start'* command. This starts the *RPC Firewall* service (for 'fw' or no suffix), and creates the *RPC Filters* (for 'flt' or no suffix).
+The recommended method to protect RPC services is by using the *'/start'* command. This starts the *RPC Firewall* service (for 'fw' or no suffix), and creates *RPC Filters* (for 'flt' or no suffix).
 ```bash
 RpcFwManager.exe /start
 ```
 
-It is also possible to use the *RPC Firewall* ad-hoc, to protect specific processes. This will no start the *RPC Firewall* service, and will not persist reboots. 
+It is also possible to use *RPC Firewall* ad-hoc, to protect specific processes. This will not start the *RPC Firewall* service, and will not persist across reboots. 
 
-To protect a single process by pid:
+To protect a single process by Process ID (PID):
 ```bash
 RpcFwManager.exe /start pid <pid>
 ```
@@ -123,7 +123,7 @@ To stop the protection, simply issue the *'/stop'* command with the appropriate 
 ```bash
 RpcFwManager.exe /stop
 ```
-According to the used suffix ('fw' or 'flt' or none), this will stop the *RPC Firewall* service and unload the *RPC Firewall* dll from all processes. For *RPC Filters*, it will delete all filters generated by the *RPCFW Manager*.
+According to the suffix used ('fw' or 'flt' or none), this will stop the *RPC Firewall* service and unload the *RPC Firewall* dll from all processes. For *RPC Filters*, it will delete all filters generated by the *RPCFW Manager*.
 
 ## Persistency
 Once started, the *RPC Firewall*  will persiste across reboots. 
@@ -133,7 +133,7 @@ Once started, the *RPC Firewall*  will persiste across reboots.
 The *RPCFW Manager * looks for a *RpcFw.conf* file, in the same directory of the executable. 
 This file uses the following configuration options: 
 
-*Important*: Each each configuration line should be prefixed with either *'fw:'* or *'flt:'* to indicate whether the line is applied for the *RPC Firewall* or *RPC Filter*.
+*Important*: Each each configuration line should be prefixed with either *'fw:'* or *'flt:'* to indicate whether the line is applied for *RPC Firewall* or *RPC Filter*.
 
 |Parameter Name | Explanation | Supported by ...|
 |---------- | ----------- | ------------ |
@@ -154,7 +154,7 @@ RpcFwManager.exe /show
 
 The configuration order is important, as the first match determines the outcome of the RPC call.
 
-For example, the following configuration snippet will protect a DC from a DCSync using the *RPC Firewall*. 
+For example, the following configuration snippet will protect a DC from a DCSync using *RPC Firewall*. 
 It does so by enabling the "dangerous" opnum 3 [DRSGetNCChanges](https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/b63730ac-614c-431c-9501-28d6aca91894) of the MS-DRSR UUID only from other domain controllers. 
 ```bash
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 addr:<dc_addr1> opnum:3 action:allow
@@ -170,7 +170,7 @@ RpcFwManager.exe /update
 ## Viewing Logs
 For *RPC Firewall*, open the Event Viewer -> Applications and Services Logs -> RPCFW.
 Event Ids 1 and 2 refer to 'protect' and 'unprotect' events. Event 3 audits the actual RPC calls.
-Also, add the Keywords column. This column would contain Audit Success/Failure, implying wether the RPC call was blocked or not.
+Also, add the Keywords column. This column would contain Audit Success/Failure, implying whether the RPC call was blocked or not.
 
 For *RPC Filters*, open the Event Viewer -> Security-> RPCFW. Filter for event ID 5712.
 
@@ -178,7 +178,7 @@ For *RPC Filters*, open the Event Viewer -> Security-> RPCFW. Filter for event I
 Yes! Don't be shy to do a pull request. 
 
 # I want RPC Firewall to do more things!
-We want this also! please reach out to us with any thoughts, ideas or issues you are having: [support@zeronetworks.com](mailto:support@zeronetworks.com)
+We want this also!  Please reach out to us with any thoughts, ideas or issues you are having: [support@zeronetworks.com](mailto:support@zeronetworks.com)
 
 # Is there a License?
 For more details see [LICENSE](LICENSE).
