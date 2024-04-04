@@ -461,7 +461,55 @@ void getPIDForTCPPorts(CustomRpcInterfaceVector& rpcVector, PMIB_TCPTABLE_OWNER_
 	}
 }
 
-void performRpcCall(std::wstring correctBinding, DWORD pid, std::promise<CustomRpcInterfaceVector>& promise) {
+void performRpcCall(std::wstring correctBinding, DWORD pid, CustomRpcInterfaceVector& rpcVector) 
+{
+
+	try {
+		RPC_BINDING_HANDLE bindingHandle;
+		RPC_STATUS rpcErr = RpcBindingFromStringBinding((RPC_WSTR)correctBinding.c_str(), &bindingHandle);
+		if (rpcErr != RPC_S_OK) {
+			return; // Return empty rpcVector
+		}
+
+		rpcErr = RpcBindingSetOption(bindingHandle, RPC_C_OPT_CALL_TIMEOUT, 1500);
+		if (rpcErr != RPC_S_OK) {
+			RpcBindingFree(&bindingHandle);
+			return; // Return empty rpcVector
+		}
+
+		rpcErr = RpcBindingSetAuthInfo(
+			bindingHandle,
+			NULL,
+			RPC_C_AUTHN_LEVEL_PKT_PRIVACY,
+			RPC_C_AUTHN_WINNT,
+			NULL,
+			RPC_C_AUTHZ_NAME
+		);
+
+		if (rpcErr == RPC_S_OK) {
+			RPC_IF_ID_VECTOR* pVector;
+			rpcErr = RpcMgmtInqIfIds(bindingHandle, &pVector);
+			if (rpcErr == RPC_S_OK) {
+				for (unsigned int i = 0; i < pVector->Count; i++) {
+					RpcStringWrapper localUuidStr;
+					UuidToString(&pVector->IfId[i]->Uuid, localUuidStr.getRpcPtr());
+					rpcVector.push_back(getRpcInterfacesFromParams(std::wstring(localUuidStr.str), L"", correctBinding, pid));
+				}
+				RpcIfIdVectorFree(&pVector);
+			}
+
+		}
+
+		RpcBindingFree(&bindingHandle);
+
+	}
+	catch (const std::exception& e) {
+		//std::wcout << correctBinding << L" exception!" << std::endl;
+
+	}
+}
+
+void performRpcCallAsync(std::wstring correctBinding, DWORD pid, std::promise<CustomRpcInterfaceVector>& promise) {
 	
 	CustomRpcInterfaceVector rpcVector;
 
@@ -545,24 +593,9 @@ void addRPCEndpointVectorInterfaceFromBinding(CustomRpcInterfaceVector& rpcVecto
 		}
 	}
 
-	std::promise<CustomRpcInterfaceVector> promise;
-	std::future<CustomRpcInterfaceVector> future = promise.get_future();
-
-	std::thread rpcThread([&, correctBinding, pid]() {
-		performRpcCall(correctBinding, pid, promise);
-		});
-
-	// Wait for the future with a timeout
-	if (future.wait_for(std::chrono::milliseconds(200)) == std::future_status::timeout) {
-		rpcThread.detach(); // Detach the thread if it exceeds the timeout
-	}
-	else {
-		rpcThread.join(); // Wait for the thread to finish
-		// Retrieve the returned CustomRpcInterfaceVector
-		CustomRpcInterfaceVector newInterfaces = future.get();
-
-		rpcVector.insert(rpcVector.end(), newInterfaces.begin(), newInterfaces.end());
-	}	
+	CustomRpcInterfaceVector newInterfaces;
+	performRpcCall(correctBinding, pid, newInterfaces);
+	rpcVector.insert(rpcVector.end(), newInterfaces.begin(), newInterfaces.end());
 }
 
 std::vector<std::wstring> getAllNamedPipes()
