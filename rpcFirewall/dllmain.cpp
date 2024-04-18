@@ -1293,22 +1293,24 @@ RpcEventParameters populateEventParameters(PRPC_MESSAGE pRpcMsg, wchar_t* szStri
 	std::wstring dstPrt = std::to_wstring(dstPort);
 	eventParams.dstPort = dstPrt;
 
-	std::wstring szWstringBindingServer = std::wstring(szStringBindingServer);
-	std::wstring szWstringBinding = std::wstring(szStringBinding);
+	if(szStringBindingServer && szStringBinding){
+		std::wstring szWstringBindingServer = std::wstring(szStringBindingServer);
+		std::wstring szWstringBinding = std::wstring(szStringBinding);
 
-	size_t pos = szWstringBinding.find(_T(":"), 0);
+		size_t pos = szWstringBinding.find(_T(":"), 0);
 	
-	eventParams.protocol = szWstringBinding.substr(0, pos);
-	srcAddr.empty() ? eventParams.sourceAddress = szWstringBinding.substr(pos + 1, szWstringBinding.length() - pos) : eventParams.sourceAddress = srcAddr;
-	dstAddr.empty() ? eventParams.destAddress = _T("0.0.0.0") : eventParams.destAddress = dstAddr;
+		eventParams.protocol = szWstringBinding.substr(0, pos);
+		srcAddr.empty() ? eventParams.sourceAddress = szWstringBinding.substr(pos + 1, szWstringBinding.length() - pos) : eventParams.sourceAddress = srcAddr;
+		dstAddr.empty() ? eventParams.destAddress = _T("0.0.0.0") : eventParams.destAddress = dstAddr;
 
-	if (pos != std::string::npos) {
-		szWstringBinding.replace(pos, 1, L",");
+		if (pos != std::string::npos) {
+			szWstringBinding.replace(pos, 1, L",");
+		}
+
+		pos = szWstringBindingServer.find(_T("["));
+		size_t endpos = szWstringBindingServer.find(_T("]"), pos + 1);
+		eventParams.endpoint = szWstringBindingServer.substr(pos + 1, endpos - pos - 1);
 	}
-
-	pos = szWstringBindingServer.find(_T("["));
-	size_t endpos = szWstringBindingServer.find(_T("]"), pos + 1);
-	eventParams.endpoint = szWstringBindingServer.substr(pos + 1, endpos - pos - 1);
 
 	byte* byteUuidPointer = (byte*)pRpcMsg->RpcInterfaceInformation;
 
