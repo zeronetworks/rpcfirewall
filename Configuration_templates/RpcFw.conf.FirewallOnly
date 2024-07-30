@@ -99,6 +99,12 @@ fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:58
 fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:66
 fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ac
 
+Allow only specific SRVS opnums: 
+-----------------------------
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:15 
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:16 
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:21 
+
 
 DCSync Protecion: <edit the DC addresses to match your environemt!!>:
 -----------------------------------------------
