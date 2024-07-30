@@ -58,12 +58,14 @@ fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:1 action:allow audit:true
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 opnum:12 action:allow audit:true 
 fw:uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2 action:block audit:true 
 
+
 Open to Any - NRPC,EPM, BKRP, DRSR, DSSP,LSAD, 
 SAMR, NPSO, SRVS, WKST,FRS,DFSNM,BRWSA,NRPC:
 -------------------------------------------------------------------
 fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ab
 fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ac
 fw:action:allow audit:true uuid:f5cc5a18-4264-101a-8c59-08002b2f8426
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:15 
 fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:16
 fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:21
 fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:28
