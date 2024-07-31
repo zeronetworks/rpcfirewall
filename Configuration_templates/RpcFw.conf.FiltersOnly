@@ -36,10 +36,9 @@ flt:action:block audit:true uuid:11899a43-2b68-4a76-92e3-a3d6ad8c26ce
 flt:action:block audit:true uuid:53b46b02-c73b-4a3e-8dee-b16b80672fc0
 flt:action:block audit:true uuid:1257B580-CE2F-4109-82D6-A9459D0BF6BC
 
-Block to BA - SAMR, NPSO, SRVS, WKST,FRS,DFSNM,BRWSA:
+Block to BA - SAMR, NPSO, WKST,FRS,DFSNM,BRWSA:
 ----------------------------------------------------------------------------------------
 flt:action:block audit:true sid:BA uuid:f5cc5a18-4264-101a-8c59-08002b2f8426
-flt:action:block audit:true sid:BA uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188
 flt:action:block audit:true sid:BA uuid:6bffd098-a112-3610-9833-46c3f87e345a
 flt:action:block audit:true sid:BA uuid:f5cc59b4-4264-101a-8c59-08002b2f8426
 flt:action:block audit:true sid:BA uuid:5b821720-f63b-11d0-aad2-00c04fc324db
@@ -48,14 +47,11 @@ flt:action:block audit:true sid:BA uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
 flt:action:block audit:true sid:BA uuid:51b836e8-484d-4d03-b0fc-22e265cb3f7b
 flt:action:block audit:true sid:BA uuid:6bffd098-a112-3610-9833-012892020162
 
-Open to Any - NRPC,EPM, BKRP, DRSR, DSSP
+Open to Any - NRPC,EPM, BKRP, DRSR, DSSP, SRVS
 ----------------------------------------------------------------------------------------
 flt:action:allow audit:true uuid:e1af8308-5d1f-11c9-91a4-08002b14a0fa
 flt:action:allow audit:true uuid:e3514235-4b06-11d1-ab04-00c04fc2dcd2
 flt:action:allow audit:true uuid:51b836e8-484d-4d03-b0fc-22e265cb3f7b
 flt:action:allow audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
 flt:action:allow audit:true uuid:3919286a-b10c-11d0-9ba8-00c04fd92ef5
-
-Default allow (only applicable to configured UUIDs)
-----------------------------------------------------------------------------------------
-flt:action:allow audit:true
+flt:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188
