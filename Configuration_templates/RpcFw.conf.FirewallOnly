@@ -36,9 +36,14 @@ fw:action:block audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673 opnum:23
 fw:action:block audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673 opnum:24
 fw:action:allow audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
 
-Allow Common SRVS operations
+Allow Common WKST operations
 ----------------------------
 fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-46c3f87e345a opnum:0
+fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-46c3f87e345a opnum:20
+
+Allow Common SRVS operations
+----------------------------
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 sid:BA 
 fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:16
 fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:21
 fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:28
@@ -98,13 +103,6 @@ fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:55
 fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:58
 fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:66
 fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ac
-
-Allow only specific SRVS opnums: 
------------------------------
-fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:15 
-fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:16 
-fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:21 
-
 
 DCSync Protecion: <edit the DC addresses to match your environemt!!>:
 -----------------------------------------------
