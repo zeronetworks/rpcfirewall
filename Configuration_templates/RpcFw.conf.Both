@@ -87,6 +87,7 @@ fw:action:allow audit:true uuid:4fc742e0-4a10-11cf-8273-00aa004ae673
 
 Allow Common WKST operations
 ----------------------------
+fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-46c3f87e345a sid:BA 
 fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-46c3f87e345a opnum:0
 fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-46c3f87e345a opnum:20
 
