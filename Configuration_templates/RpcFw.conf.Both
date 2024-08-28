@@ -93,6 +93,7 @@ fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-46c3f87e345a opnum:20
 Allow Common SRVS operations
 ----------------------------
 fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 sid:BA 
+fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:15
 fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:16
 fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:21
 fw:action:allow audit:true uuid:4b324fc8-1670-01d3-1278-5a47bf6ee188 opnum:28
