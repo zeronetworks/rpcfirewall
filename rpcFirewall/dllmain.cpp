@@ -1411,6 +1411,7 @@ bool processRPCCallInternal(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 			WRITE_DEBUG_MSG_WITH_STATUS(_T("RpcBindingServerFromClient failed"), status);
 			return true;
 		}
+		
 
 		RpcStringWrapper szStringBinding;
 		status = RpcBindingToStringBinding(serverBinding.binding, szStringBinding.getRpcPtr());
@@ -1472,7 +1473,16 @@ bool processRPCCallInternal(wchar_t* functionName, PRPC_MESSAGE pRpcMsg)
 			dstPort = getAddressAndPortFromBuffer(dstAddrFromConnection, buffDst);
 		}
 
-		const RpcEventParameters eventParams = populateEventParameters(pRpcMsg, szStringBindingServer.str, szStringBinding.str, functionName, srcAddrFromConnection, srcPort, dstAddrFromConnection, dstPort);
+		// Remove uuid prefix from protocol in anonymous binds
+		std::wstring protocol = szStringBinding.str;
+
+		const size_t protocolDelimiterPosition = protocol.find('@');
+		if (protocolDelimiterPosition != std::wstring::npos)
+		{
+			protocol = protocol.substr(protocolDelimiterPosition + 1);
+		}
+
+		const RpcEventParameters eventParams = populateEventParameters(pRpcMsg, szStringBindingServer.str, &protocol[0], functionName, srcAddrFromConnection, srcPort, dstAddrFromConnection, dstPort);
 		
 		policy = getMatchingPolicy(eventParams);
 
