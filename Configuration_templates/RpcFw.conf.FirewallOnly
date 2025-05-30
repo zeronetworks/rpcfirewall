@@ -7,7 +7,6 @@ fw:action:allow audit:true uuid:6BFFD098-A112-3610-9833-46C3F874532D
 fw:action:allow audit:true uuid:51b836e8-484d-4d03-b0fc-22e265cb3f7b
 fw:action:allow audit:true uuid:6bffd098-a112-3610-9833-012892020162
 fw:action:allow audit:true uuid:e1af8308-5d1f-11c9-91a4-08002b14a0fa
-fw:action:allow audit:true uuid:51b836e8-484d-4d03-b0fc-22e265cb3f7b
 
 Common DSSP operation
 --------------------------
