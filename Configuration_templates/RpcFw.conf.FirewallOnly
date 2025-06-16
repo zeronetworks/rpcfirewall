@@ -101,6 +101,7 @@ fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:54
 fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:55
 fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:58
 fw:action:block audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:66
+fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ac opnum:55 addr: <non_Windows_Computer eg: ESXi hosts>
 fw:action:allow audit:true uuid:12345778-1234-abcd-ef00-0123456789ac
 
 DCSync Protecion: <edit the DC addresses to match your environemt!!>:
